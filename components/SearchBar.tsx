@@ -1,20 +1,16 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
 
 export function SearchBar() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [value, setValue] = useState(searchParams.get("q") ?? "");
-
-  useEffect(() => {
-    setValue(searchParams.get("q") ?? "");
-  }, [searchParams]);
+  const initial = searchParams.get("q") ?? "";
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const q = value.trim();
+    const form = e.currentTarget;
+    const q = (new FormData(form).get("q") as string | null)?.trim() ?? "";
     if (!q) return;
     router.push(`/search?q=${encodeURIComponent(q)}`);
   }
@@ -40,11 +36,12 @@ export function SearchBar() {
           <path d="m21 21-4.3-4.3" />
         </svg>
         <input
+          key={initial}
           id="site-search"
+          name="q"
           type="search"
           placeholder="Search Quran and Hadith…"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
+          defaultValue={initial}
           className="w-full rounded-md border border-border bg-background px-3 py-1.5 pl-8 text-sm placeholder:text-muted-foreground focus:border-accent focus:outline-none"
         />
       </div>
