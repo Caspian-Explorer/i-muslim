@@ -35,10 +35,14 @@ export function LanguageSelector() {
 
   function toggle(lang: LangCode) {
     const set = new Set(current);
-    if (lang === "ar") return; // Arabic always on
-    if (set.has(lang)) set.delete(lang);
-    else set.add(lang);
-    set.add("ar");
+    if (set.has(lang)) {
+      set.delete(lang);
+    } else {
+      set.add(lang);
+    }
+    // At least one language must remain selected; if user toggles off the
+    // last one, restore Arabic as a sensible default for sacred text.
+    if (set.size === 0) set.add("ar");
     const next = Array.from(set) as LangCode[];
     const ordered = ALL_LANGS.filter((l) => next.includes(l));
     const serialized = serializeLangs(ordered);
@@ -57,20 +61,17 @@ export function LanguageSelector() {
       </span>
       {ALL_LANGS.map((lang) => {
         const active = current.includes(lang);
-        const locked = lang === "ar";
         return (
           <button
             key={lang}
             type="button"
             aria-pressed={active}
-            disabled={locked}
             onClick={() => toggle(lang)}
             className={
               active
                 ? "rounded-full border border-accent bg-accent px-3 py-1 text-xs font-medium text-accent-foreground"
                 : "rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             }
-            title={locked ? "Arabic is always shown" : undefined}
           >
             {LANG_LABELS[lang]}
           </button>

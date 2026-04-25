@@ -53,8 +53,10 @@ export function parseLangsParam(raw: string | undefined | null): LangCode[] {
     .map((s) => s.trim().toLowerCase())
     .filter((s): s is LangCode => (ALL_LANGS as readonly string[]).includes(s));
   const uniq = Array.from(new Set<LangCode>(parts));
-  if (!uniq.includes("ar")) uniq.unshift("ar");
-  return uniq.length > 1 ? uniq : [...DEFAULT_LANGS];
+  // Preserve language order from ALL_LANGS so display stays consistent
+  // regardless of input order. Allow Arabic to be deselected by the user.
+  if (uniq.length === 0) return [...DEFAULT_LANGS];
+  return ALL_LANGS.filter((l) => uniq.includes(l));
 }
 
 export function serializeLangs(langs: LangCode[]): string {
