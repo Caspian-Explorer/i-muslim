@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { ThemeToggle } from "./ThemeToggle";
 import { SearchBar } from "./SearchBar";
 
@@ -10,6 +11,8 @@ function SearchBarFallback() {
 }
 
 export function Nav() {
+  const t = useTranslations("nav");
+  const locale = useLocale();
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
@@ -22,17 +25,55 @@ export function Nav() {
 
         <nav className="flex items-center gap-1 text-sm">
           <Link
+            href="/prayer-times"
+            className="rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {t("prayerTimes")}
+          </Link>
+          <Link
             href="/quran"
             className="rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            Quran
+            {t("quran")}
           </Link>
           <Link
             href="/hadith"
             className="rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            Hadith
+            {t("hadith")}
           </Link>
+          <Link
+            href="/zakat"
+            className="rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {t("zakat")}
+          </Link>
+          <Link
+            href="/mosques"
+            className="rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {t("mosques")}
+          </Link>
+          <Link
+            href="/matrimonial"
+            className="rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {t("matrimonial")}
+          </Link>
+          <Link
+            href="/events"
+            className="rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {t("events")}
+          </Link>
+          {locale === "en" && (
+            <Link
+              href="/articles"
+              className="rounded-md px-3 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              {t("articles")}
+            </Link>
+          )}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">

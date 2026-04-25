@@ -15,6 +15,10 @@ An all-in-one Islamic companion web app that covers the daily needs of a Muslim 
 - **Duas** — curated supplications by occasion, Arabic + transliteration + translation. `TBD`
 - **Hijri Calendar** — date display, conversion, notable dates (Ramadan, Eid, etc.). `TBD`
 
+## Companion services
+
+- **Matrimonial** — profile create/browse/mutual-interest flow for marriage-intent matchmaking, plus admin moderation. Mutual filter is the halal default (a viewer only sees profiles whose preferences match in both directions); photos are gated until both sides accept. Phase 1 (current) is free and chat-less. Phase 2 introduces a premium tier (Stripe) with raised rate limits and advanced filters; Phase 3 adds wali (guardian) mode; Phase 4 adds chat. Schema fields for `subscription` and `rateLimit` are pre-shaped so the future tier is a switch, not a rewrite. See `app/(site)/matrimonial/`, `app/(admin)/admin/matrimonial/`, and `lib/matrimonial/`.
+
 ## Architecture
 
 - Next.js 16 App Router; server components by default, `"use client"` only where needed (geolocation, compass, interactive reader).
@@ -37,8 +41,8 @@ Candidates (not yet chosen):
 ## Non-goals (for now)
 
 - Native mobile apps (web only).
-- Community / social features (comments, sharing, profiles).
-- Payments, donations, subscriptions.
+- Community / social features beyond the matrimonial flow (comments, public sharing, profiles unrelated to matchmaking).
+- Payments, donations, subscriptions — outside the deferred matrimonial premium tier (Phase 2).
 - User-generated content.
 
 ## Open questions

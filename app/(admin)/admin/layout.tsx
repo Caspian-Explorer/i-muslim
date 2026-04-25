@@ -7,6 +7,9 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { Toaster } from "@/components/ui/sonner";
 import { MOCK_USERS } from "@/lib/admin/mock/users";
 import { MOCK_NOTIFICATIONS } from "@/lib/admin/mock/notifications";
+import { countOpenReports } from "@/lib/admin/data/business-reports";
+import { listProfiles } from "@/lib/matrimonial/store";
+import { countPendingMosques } from "@/lib/admin/data/mosques";
 
 export const metadata: Metadata = {
   title: {
@@ -29,11 +32,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const pendingUsers = MOCK_USERS.filter((u) => u.status === "pending").length;
   const flaggedContent = MOCK_NOTIFICATIONS.filter((n) => n.type === "flagged" && !n.read).length;
   const unansweredQa = MOCK_NOTIFICATIONS.filter((n) => n.type === "qa" && !n.read).length;
+  const [openReports, { profiles: matrimonialProfiles }, pendingMosques] = await Promise.all([
+    countOpenReports(),
+    listProfiles(),
+    countPendingMosques(),
+  ]);
+  const pendingMatrimonial = matrimonialProfiles.filter((p) => p.status === "pending").length;
 
   const badges: SidebarBadges = {
     pendingUsers,
     flaggedContent,
     unansweredQa,
+    openReports,
+    pendingMatrimonial,
+    pendingMosques,
   };
 
   return (
