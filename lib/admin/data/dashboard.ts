@@ -1,6 +1,7 @@
 import "server-only";
 import { getDb } from "@/lib/firebase/admin";
 import { buildMockDashboard } from "@/lib/admin/mock/dashboard";
+import { fetchUpcomingEvents } from "@/lib/admin/data/events";
 import type { DashboardData } from "@/types/admin";
 
 export async function fetchDashboard(): Promise<DashboardData> {
@@ -10,7 +11,7 @@ export async function fetchDashboard(): Promise<DashboardData> {
 
   try {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const [totalSnap, activeSnap, pendingSnap, donationsSnap] = await Promise.all([
+    const [totalSnap, activeSnap, pendingSnap, donationsSnap, upcomingEvents] = await Promise.all([
       db.collection("users").count().get().catch(() => null),
       db
         .collection("users")
@@ -30,6 +31,7 @@ export async function fetchDashboard(): Promise<DashboardData> {
         .count()
         .get()
         .catch(() => null),
+      fetchUpcomingEvents(14, 6).catch(() => null),
     ]);
 
     const kpis = { ...mock.kpis };
@@ -42,7 +44,12 @@ export async function fetchDashboard(): Promise<DashboardData> {
     };
 
     const touchedFirestore = Boolean(totalSnap || activeSnap || pendingSnap || donationsSnap);
-    return { ...mock, kpis, source: touchedFirestore ? "firestore" : "mock" };
+    return {
+      ...mock,
+      kpis,
+      upcomingEvents: upcomingEvents && upcomingEvents.length > 0 ? upcomingEvents : mock.upcomingEvents,
+      source: touchedFirestore ? "firestore" : "mock",
+    };
   } catch (err) {
     console.warn("[admin/data/dashboard] Firestore read failed, using mock:", err);
     return mock;

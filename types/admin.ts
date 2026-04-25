@@ -53,6 +53,70 @@ export interface UpcomingEvent {
   rsvpCount: number;
 }
 
+export type EventCategory =
+  | "prayer"
+  | "lecture"
+  | "iftar"
+  | "janazah"
+  | "class"
+  | "fundraiser"
+  | "community"
+  | "other";
+
+export type EventStatus = "draft" | "published" | "cancelled";
+
+export type EventLocationMode = "in-person" | "online" | "hybrid";
+
+export interface EventLocation {
+  mode: EventLocationMode;
+  venue?: string;
+  address?: string;
+  lat?: number;
+  lng?: number;
+  url?: string;
+}
+
+export type PrayerAnchor = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
+
+export interface EventStartAnchor {
+  prayer: PrayerAnchor;
+  offsetMinutes: number;
+}
+
+export interface HijriAnchor {
+  monthIndex: number;
+  day: number;
+  hourLocal: number;
+  minuteLocal: number;
+}
+
+export interface AdminEvent {
+  id: string;
+  title: { en: string; ar?: string };
+  description?: { en?: string; ar?: string };
+  category: EventCategory;
+  status: EventStatus;
+  startsAt: string;
+  endsAt?: string;
+  timezone: string;
+  location: EventLocation;
+  organizer: { name: string; contact?: string };
+  capacity?: number;
+  rsvpCount: number;
+  recurrence?: string;
+  startAnchor?: EventStartAnchor;
+  hijriAnchor?: HijriAnchor;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EventFilters {
+  q?: string;
+  category?: EventCategory;
+  status?: EventStatus;
+  window?: "upcoming" | "past" | "all";
+}
+
 export interface DashboardData {
   kpis: {
     totalUsers: { value: number; delta: number; sparkline: number[] };
