@@ -65,6 +65,39 @@
     "signOut": "Keluar",
     "signingOut": "Sedang keluar…"
   },
+  "siteUserMenu": {
+    "signIn": "Masuk",
+    "accountMenu": "Menu akun",
+    "fallbackName": "Anda",
+    "profile": "Profil",
+    "adminDashboard": "Dasbor admin",
+    "signOut": "Keluar",
+    "signingOut": "Sedang keluar…"
+  },
+  "profile": {
+    "title": "Profil Anda",
+    "description": "Kelola akun i-muslim Anda.",
+    "signInPrompt": "Masuk untuk melihat dan mengelola akun i-muslim Anda.",
+    "signInBody": "Gunakan akun Google Anda — kami tidak pernah melihat kata sandi Anda.",
+    "adminBadge": "Admin",
+    "yourSpace": "Ruang Anda",
+    "session": "Sesi",
+    "links": {
+      "matrimonial": "Profil pernikahan",
+      "matrimonialDescription": "Edit, sembunyikan, atau hapus profil Anda.",
+      "events": "Acara yang Anda ikuti",
+      "eventsDescription": "Telusuri acara mendatang yang dapat Anda ikuti.",
+      "submitMosque": "Tambah masjid",
+      "submitMosqueDescription": "Bantu memperluas direktori untuk komunitas Anda.",
+      "contact": "Hubungi kami",
+      "contactDescription": "Kirim pesan kepada tim."
+    },
+    "adminSection": {
+      "title": "Anda adalah admin",
+      "description": "Buka dasbor admin untuk memoderasi konten dan mengelola direktori.",
+      "cta": "Buka dasbor admin"
+    }
+  },
   "notifications": {
     "title": "Notifikasi",
     "tabAll": "Semua",
@@ -115,6 +148,7 @@
       "businesses": "Direktori Bisnis Halal",
       "courses": "Kelas & Kursus",
       "matrimonial": "Perjodohan",
+      "contactMessages": "Pesan Kontak",
       "reports": "Laporan",
       "audit": "Log Audit",
       "settings": "Pengaturan",
@@ -540,6 +574,94 @@
     "events": "Acara",
     "mosques": "Masjid",
     "articles": "Artikel"
+  },
+  "footer": {
+    "tagline": "Baca Al-Qur'an dan Sunnah, temukan waktu salat, masjid, dan kehidupan halal — semuanya di satu tempat.",
+    "colWorship": "Ibadah",
+    "colCommunity": "Komunitas",
+    "colCompany": "Tentang",
+    "prayerTimes": "Waktu Salat",
+    "quran": "Al-Qur'an",
+    "hadith": "Hadis",
+    "zakat": "Kalkulator Zakat",
+    "mosques": "Masjid",
+    "events": "Acara",
+    "matrimonial": "Pernikahan",
+    "businesses": "Bisnis Halal",
+    "articles": "Artikel",
+    "rss": "RSS",
+    "about": "Tentang",
+    "privacy": "Privasi",
+    "terms": "Syarat",
+    "contact": "Kontak",
+    "language": "Bahasa",
+    "copyright": "© {year} i-muslim",
+    "attribution": "Teks Al-Qur'an & terjemahan oleh <quran>quran.com</quran>; hadis oleh <hadith>fawazahmed0/hadith-api</hadith>."
+  },
+  "legal": {
+    "about": {
+      "title": "Tentang i-muslim",
+      "description": "Pendamping Islami serbaguna untuk Muslim modern.",
+      "p1": "i-muslim adalah pendamping Islami gratis dan tanpa iklan. Kami menghadirkan kebutuhan harian — Waktu Salat, Kiblat, Al-Qur'an, Hadis, kalender Hijriah, Zakat, direktori masjid, bisnis halal, dan pencarian jodoh — dalam satu pengalaman yang tenang dan cepat.",
+      "p2": "Konten suci kami sajikan apa adanya. Teks Al-Qur'an dan terjemahannya berasal dari quran.com; koleksi hadis berasal dari sumber komunitas terbuka. Kami tidak memparafrase atau memotong tanpa pemberitahuan.",
+      "p3": "Dibangun oleh Muslim untuk Muslim, dengan niat memudahkan membaca, salat, dan menjalin hubungan. Semoga Allah menerimanya dari kami dan dari Anda."
+    },
+    "privacy": {
+      "title": "Privasi",
+      "description": "Data apa yang dikumpulkan i-muslim dan bagaimana kami menggunakannya.",
+      "p1": "Kami mengumpulkan seminimal mungkin yang dibutuhkan untuk menjalankan fitur yang Anda gunakan — tidak lebih.",
+      "h1": "Lokasi",
+      "p2": "Waktu Salat, Kiblat, dan Masjid terdekat meminta lokasi Anda hanya saat Anda mengetuknya. Koordinat tetap di peramban Anda dan hanya dikirim ke pustaka kalkulasi yang menghasilkan waktu atau jarak. Kami tidak menyimpannya di server kami.",
+      "h2": "Data akun",
+      "p3": "Login hanya diperlukan untuk profil pernikahan, RSVP acara, dan pengiriman masjid atau bisnis. Kami menggunakan Firebase Authentication. Kami menyimpan email, nama tampilan, dan data yang Anda masukkan ke profil Anda.",
+      "h3": "Pelacakan",
+      "p4": "Kami tidak menjalankan pelacak iklan pihak ketiga. Kami tidak menjual data Anda. Kami tidak menggunakan Facebook pixel atau sejenisnya.",
+      "h4": "Kontak",
+      "p5": "Pertanyaan, permintaan penghapusan, atau apa pun terkait privasi: kirim email ke alamat di halaman <contact>kontak</contact>."
+    },
+    "terms": {
+      "title": "Syarat penggunaan",
+      "description": "Syarat dasar untuk menggunakan i-muslim.",
+      "p1": "Dengan menggunakan i-muslim, Anda menyetujui syarat ini. Sengaja kami buat ringkas.",
+      "h1": "Apa adanya",
+      "p2": "i-muslim disediakan apa adanya, tanpa jaminan. Perhitungan waktu salat dan Kiblat adalah upaya terbaik dan bergantung pada metode dan koordinat yang Anda pilih. Selalu cocokkan dengan masjid setempat untuk urusan ibadah.",
+      "h2": "Konten suci",
+      "p3": "Kami menyajikan Al-Qur'an dan hadis dengan setia. Jika Anda menemukan kesalahan transkripsi atau terjemahan, mohon laporkan.",
+      "h3": "Etika komunitas",
+      "p4": "Pencarian jodoh, direktori masjid, dan direktori bisnis adalah ruang komunitas. Jujurlah. Hormati orang lain. Jangan menyamar atau memposting informasi menyesatkan. Kami dapat menangguhkan akun yang menyalahgunakan ruang-ruang ini.",
+      "h4": "Perubahan",
+      "p5": "Kami dapat memperbarui syarat ini seiring berkembangnya aplikasi. Perubahan signifikan akan dicatat di halaman ini."
+    },
+    "contact": {
+      "title": "Kontak",
+      "description": "Kirim pesan kepada kami — kami membaca setiap pesan.",
+      "intro": "Punya pertanyaan, masukan, atau permintaan penghapusan? Gunakan formulir di bawah, dan kami akan membalas lewat email.",
+      "directoryNote": "Untuk masalah direktori — masjid yang ketinggalan, bisnis halal yang tutup, atau masalah pada profil pernikahan — gunakan alur pelaporan per kelistingan di halaman tersebut. Lebih cepat sampai ke kami dan menyertakan konteks yang relevan.",
+      "form": {
+        "name": "Nama Anda",
+        "namePlaceholder": "Nama lengkap",
+        "email": "Email",
+        "emailPlaceholder": "anda@contoh.com",
+        "subject": "Subjek",
+        "subjectPlaceholder": "Ringkasan singkat",
+        "message": "Pesan",
+        "messagePlaceholder": "Sampaikan apa yang ada di benak Anda…",
+        "submit": "Kirim pesan",
+        "submitting": "Mengirim…",
+        "success": "Terima kasih — pesan Anda sedang menuju kami. Kami akan membalas lewat email insya Allah.",
+        "successAck": "Kirim pesan lain",
+        "validation": {
+          "nameRequired": "Mohon masukkan nama Anda.",
+          "emailInvalid": "Mohon masukkan email yang valid.",
+          "subjectRequired": "Mohon masukkan subjek.",
+          "messageRequired": "Mohon tulis pesan minimal 10 karakter.",
+          "messageTooLong": "Pesan harus 5000 karakter atau kurang."
+        },
+        "errorRate": "Anda telah mengirim beberapa pesan baru-baru ini. Coba lagi nanti.",
+        "errorGeneric": "Terjadi kesalahan. Coba lagi.",
+        "errorNotConfigured": "Formulir kontak sementara tidak tersedia. Mohon kirim email langsung ke fuad.jalilov@gmail.com."
+      }
+    }
   },
   "articles": {
     "pageTitle": "Artikel",
@@ -1546,5 +1668,35 @@
       "sat": "Sab",
       "sun": "Min"
     }
+  },
+  "contactAdmin": {
+    "pageTitle": "Pesan kontak",
+    "subtitleLive": "Langsung dari Firestore.",
+    "subtitleMock": "Data contoh — konfigurasikan Firebase Admin untuk membaca pesan asli.",
+    "tabOpen": "Terbuka",
+    "tabResolved": "Selesai",
+    "empty": "Tidak ada pesan di sini.",
+    "columns": {
+      "from": "Dari",
+      "subject": "Subjek",
+      "received": "Diterima",
+      "actions": "Tindakan"
+    },
+    "viewMessage": "Lihat",
+    "markResolved": "Tandai selesai",
+    "reopen": "Buka kembali",
+    "delete": "Hapus",
+    "deleteConfirmTitle": "Hapus pesan",
+    "deleteConfirmDescription": "Hapus permanen pesan dari {name}. Tindakan ini tidak dapat dibatalkan.",
+    "deleteConfirmWord": "hapus",
+    "resolvedToast": "Pesan ditandai selesai.",
+    "reopenedToast": "Pesan dibuka kembali.",
+    "deletedToast": "Pesan dihapus.",
+    "replyByEmail": "Balas via email",
+    "messageDialogTitle": "Pesan dari {name}",
+    "metaSubject": "Subjek",
+    "metaReceived": "Diterima",
+    "metaLocale": "Bahasa",
+    "noPersistToast": "Konfigurasikan Firebase Admin untuk mengelola pesan kontak."
   }
 }

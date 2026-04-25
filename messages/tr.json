@@ -65,6 +65,39 @@
     "signOut": "Çıkış yap",
     "signingOut": "Çıkış yapılıyor…"
   },
+  "siteUserMenu": {
+    "signIn": "Giriş yap",
+    "accountMenu": "Hesap menüsü",
+    "fallbackName": "Sen",
+    "profile": "Profil",
+    "adminDashboard": "Yönetim paneli",
+    "signOut": "Çıkış yap",
+    "signingOut": "Çıkış yapılıyor…"
+  },
+  "profile": {
+    "title": "Profilin",
+    "description": "i-muslim hesabını yönet.",
+    "signInPrompt": "i-muslim hesabını görüntülemek ve yönetmek için giriş yap.",
+    "signInBody": "Google hesabını kullan — şifreni asla görmeyiz.",
+    "adminBadge": "Yönetici",
+    "yourSpace": "Senin alanın",
+    "session": "Oturum",
+    "links": {
+      "matrimonial": "Evlilik profili",
+      "matrimonialDescription": "Profilini düzenle, gizle veya sil.",
+      "events": "Etkinlik katılımları",
+      "eventsDescription": "Katılabileceğin yaklaşan etkinliklere göz at.",
+      "submitMosque": "Cami ekle",
+      "submitMosqueDescription": "Topluluğun için rehberi genişletmeye yardım et.",
+      "contact": "İletişim",
+      "contactDescription": "Ekibe bir mesaj gönder."
+    },
+    "adminSection": {
+      "title": "Sen yöneticisin",
+      "description": "İçeriği yönetmek ve rehberi denetlemek için yönetim panelini aç.",
+      "cta": "Yönetim panelini aç"
+    }
+  },
   "notifications": {
     "title": "Bildirimler",
     "tabAll": "Tümü",
@@ -115,6 +148,7 @@
       "businesses": "Helal İşletme Rehberi",
       "courses": "Dersler ve Kurslar",
       "matrimonial": "Evlilik",
+      "contactMessages": "İletişim Mesajları",
       "reports": "Raporlar",
       "audit": "Denetim Günlükleri",
       "settings": "Ayarlar",
@@ -540,6 +574,94 @@
     "events": "Etkinlikler",
     "mosques": "Camiler",
     "articles": "Makaleler"
+  },
+  "footer": {
+    "tagline": "Kur'an ve Sünneti okuyun, namaz vakitlerini ve camileri bulun, helal hayatı keşfedin — hepsi tek yerde.",
+    "colWorship": "İbadet",
+    "colCommunity": "Topluluk",
+    "colCompany": "Hakkında",
+    "prayerTimes": "Namaz Vakitleri",
+    "quran": "Kur'an",
+    "hadith": "Hadis",
+    "zakat": "Zekât Hesaplayıcı",
+    "mosques": "Camiler",
+    "events": "Etkinlikler",
+    "matrimonial": "Evlilik",
+    "businesses": "Helal İşletmeler",
+    "articles": "Makaleler",
+    "rss": "RSS",
+    "about": "Hakkımızda",
+    "privacy": "Gizlilik",
+    "terms": "Şartlar",
+    "contact": "İletişim",
+    "language": "Dil",
+    "copyright": "© {year} i-muslim",
+    "attribution": "Kur'an metni ve çevirileri <quran>quran.com</quran> tarafından; hadisler <hadith>fawazahmed0/hadith-api</hadith> tarafından."
+  },
+  "legal": {
+    "about": {
+      "title": "i-muslim Hakkında",
+      "description": "Modern Müslüman için her şey bir arada İslami bir yardımcı.",
+      "p1": "i-muslim ücretsiz, reklamsız bir İslami yardımcıdır. Günlük temelleri — Namaz Vakitleri, Kıble, Kur'an, Hadis, Hicri takvim, Zekât, cami rehberi, helal işletmeler ve evlilik bölümü — tek bir sakin ve hızlı deneyimde toplar.",
+      "p2": "Kutsal içerik aslına sadık biçimde sunulur. Kur'an metni ve çevirileri quran.com'dan; hadis koleksiyonları açık topluluk kaynaklarından gelir. Anlamı değiştirip kısaltmayız.",
+      "p3": "Müslümanlar tarafından Müslümanlar için, okumayı, namazı ve bağ kurmayı kolaylaştırma niyetiyle inşa edildi. Allah bizden ve sizden kabul etsin."
+    },
+    "privacy": {
+      "title": "Gizlilik",
+      "description": "i-muslim'in topladığı veriler ve bunları nasıl kullandığımız.",
+      "p1": "Yalnızca kullandığınız özelliklerin çalışması için gereken asgariyi topluyoruz — fazlasını değil.",
+      "h1": "Konum",
+      "p2": "Namaz Vakitleri, Kıble ve Yakındaki Camiler özellikleri konumunuzu yalnızca dokunduğunuzda ister. Koordinatlar tarayıcınızda kalır ve yalnızca vakitleri veya mesafeleri hesaplayan kütüphanelere gönderilir. Sunucularımızda saklamayız.",
+      "h2": "Hesap verileri",
+      "p3": "Oturum açma yalnızca evlilik profili, etkinlik katılım onayı ve cami/işletme gönderimi için gereklidir. Firebase Authentication kullanıyoruz. E-posta, görünen ad ve profilinize girdiğiniz verileri saklıyoruz.",
+      "h3": "Takip",
+      "p4": "Üçüncü taraf reklam takipçileri kullanmıyoruz. Verilerinizi satmıyoruz. Facebook pixel veya benzeri bir araç kullanmıyoruz.",
+      "h4": "İletişim",
+      "p5": "Sorular, silme talepleri veya gizlilikle ilgili her şey için: <contact>iletişim</contact> sayfasındaki adresten bize yazın."
+    },
+    "terms": {
+      "title": "Kullanım Şartları",
+      "description": "i-muslim'i kullanmak için temel şartlar.",
+      "p1": "i-muslim'i kullanarak bu şartları kabul etmiş olursunuz. Şartları kasten kısa tuttuk.",
+      "h1": "Olduğu gibi",
+      "p2": "i-muslim olduğu gibi, hiçbir garanti olmaksızın sunulur. Namaz vakti ve Kıble hesaplamaları seçtiğiniz yönteme ve koordinatlara bağlı en iyi gayrettir. İbadet konularında her zaman yerel camiinizle teyit edin.",
+      "h2": "Kutsal içerik",
+      "p3": "Kur'an ve hadisi aslına sadık biçimde sunarız. Bir aktarım veya çeviri hatası fark ederseniz lütfen bildirin.",
+      "h3": "Topluluk kuralları",
+      "p4": "Evlilik bölümü, cami rehberi ve işletme rehberi topluluk alanlarıdır. Dürüst olun. Saygılı olun. Başkalarının kimliğine bürünmeyin, yanıltıcı bilgi yayınlamayın. Bu alanları kötüye kullanan hesapları askıya alabiliriz.",
+      "h4": "Değişiklikler",
+      "p5": "Uygulama büyüdükçe bu şartları güncelleyebiliriz. Önemli değişiklikler bu sayfada belirtilecektir."
+    },
+    "contact": {
+      "title": "İletişim",
+      "description": "Bize bir mesaj gönderin — her birini okuyoruz.",
+      "intro": "Sorunuz, geri bildiriminiz veya kaldırma talebiniz mi var? Aşağıdaki formu kullanın, e-posta ile yanıtlayalım.",
+      "directoryNote": "Rehber sorunları için — eski bir cami kaydı, kapanmış bir helal işletme veya bir evlilik profilindeki sorun — lütfen ilgili sayfadaki bildirim akışını kullanın. Bize daha hızlı ulaşır ve gerekli bağlamı içerir.",
+      "form": {
+        "name": "Adınız",
+        "namePlaceholder": "Ad Soyad",
+        "email": "E-posta",
+        "emailPlaceholder": "siz@ornek.com",
+        "subject": "Konu",
+        "subjectPlaceholder": "Kısa özet",
+        "message": "Mesaj",
+        "messagePlaceholder": "Aklınızdakini yazın…",
+        "submit": "Mesajı gönder",
+        "submitting": "Gönderiliyor…",
+        "success": "Teşekkürler — mesajınız bize ulaştı. İnşaAllah e-posta ile yanıtlayacağız.",
+        "successAck": "Başka bir mesaj gönder",
+        "validation": {
+          "nameRequired": "Lütfen adınızı girin.",
+          "emailInvalid": "Lütfen geçerli bir e-posta adresi girin.",
+          "subjectRequired": "Lütfen bir konu girin.",
+          "messageRequired": "Lütfen en az 10 karakterlik bir mesaj yazın.",
+          "messageTooLong": "Mesaj 5000 karakteri aşmamalıdır."
+        },
+        "errorRate": "Yakın zamanda birkaç mesaj gönderdiniz. Lütfen daha sonra tekrar deneyin.",
+        "errorGeneric": "Bir şeyler yanlış gitti. Lütfen tekrar deneyin.",
+        "errorNotConfigured": "İletişim formu geçici olarak kullanılamıyor. Lütfen doğrudan fuad.jalilov@gmail.com adresine yazın."
+      }
+    }
   },
   "articles": {
     "pageTitle": "Makaleler",
@@ -1546,5 +1668,35 @@
       "sat": "Cmt",
       "sun": "Paz"
     }
+  },
+  "contactAdmin": {
+    "pageTitle": "İletişim mesajları",
+    "subtitleLive": "Firestore'dan canlı.",
+    "subtitleMock": "Örnek veri — gerçek mesajları okumak için Firebase Admin'i yapılandırın.",
+    "tabOpen": "Açık",
+    "tabResolved": "Kapatıldı",
+    "empty": "Burada mesaj yok.",
+    "columns": {
+      "from": "Gönderen",
+      "subject": "Konu",
+      "received": "Alındı",
+      "actions": "İşlemler"
+    },
+    "viewMessage": "Görüntüle",
+    "markResolved": "Kapat",
+    "reopen": "Yeniden aç",
+    "delete": "Sil",
+    "deleteConfirmTitle": "Mesajı sil",
+    "deleteConfirmDescription": "{name} kişisinden gelen bu mesajı kalıcı olarak sil. Geri alınamaz.",
+    "deleteConfirmWord": "sil",
+    "resolvedToast": "Mesaj kapatıldı.",
+    "reopenedToast": "Mesaj yeniden açıldı.",
+    "deletedToast": "Mesaj silindi.",
+    "replyByEmail": "E-posta ile yanıtla",
+    "messageDialogTitle": "{name} kişisinden mesaj",
+    "metaSubject": "Konu",
+    "metaReceived": "Alındı",
+    "metaLocale": "Dil",
+    "noPersistToast": "İletişim mesajlarını yönetmek için Firebase Admin'i yapılandırın."
   }
 }
