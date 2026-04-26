@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
-import { AlertCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HijriDate } from "@/components/admin/HijriDate";
 import { PrayerTimesWidget } from "@/components/admin/PrayerTimesWidget";
@@ -59,34 +58,6 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {data.source === "mock" && (
-        <div
-          role="status"
-          className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm"
-        >
-          <AlertCircle className="mt-0.5 size-4 shrink-0 text-warning" />
-          <div className="text-foreground">
-            {t("sampleDataBanner")}{" "}
-            <span className="text-muted-foreground">
-              {t.rich("sampleDataBannerHelp", {
-                file: () => (
-                  <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">.env.example</code>
-                ),
-                usersCol: () => (
-                  <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">users</code>
-                ),
-                donationsCol: () => (
-                  <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">donations</code>
-                ),
-                db: () => (
-                  <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">main</code>
-                ),
-              })}
-            </span>
-          </div>
-        </div>
-      )}
-
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label={t("kpi.totalUsers")}
@@ -127,49 +98,57 @@ export default async function DashboardPage() {
             <h2 className="text-sm font-semibold text-foreground">{t("activity.title")}</h2>
             <p className="text-xs text-muted-foreground">{t("activity.subtitle")}</p>
           </div>
-          <ul className="divide-y divide-border">
-            {data.recentActivity.map((entry) => (
-              <li key={entry.id} className="flex items-start gap-3 py-3">
-                <Avatar className="size-8 shrink-0">
-                  {entry.actorAvatarUrl && <AvatarImage src={entry.actorAvatarUrl} alt="" />}
-                  <AvatarFallback>{initials(entry.actor)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground">
-                    <span className="font-medium">{entry.actor}</span>{" "}
-                    <span className="text-muted-foreground">{entry.action}</span>{" "}
-                    <span>{entry.target}</span>
-                  </p>
-                  <span className="text-xs text-muted-foreground">{formatRelative(entry.createdAt)}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
+          {data.recentActivity.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">{t("activity.empty")}</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {data.recentActivity.map((entry) => (
+                <li key={entry.id} className="flex items-start gap-3 py-3">
+                  <Avatar className="size-8 shrink-0">
+                    {entry.actorAvatarUrl && <AvatarImage src={entry.actorAvatarUrl} alt="" />}
+                    <AvatarFallback>{initials(entry.actor)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground">
+                      <span className="font-medium">{entry.actor}</span>{" "}
+                      <span className="text-muted-foreground">{entry.action}</span>{" "}
+                      <span>{entry.target}</span>
+                    </p>
+                    <span className="text-xs text-muted-foreground">{formatRelative(entry.createdAt)}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="rounded-lg border border-border bg-card p-5 lg:col-span-2">
           <div className="pb-3">
             <h2 className="text-sm font-semibold text-foreground">{t("events.title")}</h2>
             <p className="text-xs text-muted-foreground">{t("events.subtitle")}</p>
           </div>
-          <ul className="divide-y divide-border">
-            {data.upcomingEvents.map((e) => (
-              <li key={e.id} className="flex items-center justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{e.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(e.startsAt).toLocaleDateString(locale, {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-sm bg-muted px-2 py-0.5 text-xs tabular-nums text-muted-foreground">
-                  {t("events.rsvps", { count: e.rsvpCount })}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {data.upcomingEvents.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">{t("events.empty")}</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {data.upcomingEvents.map((e) => (
+                <li key={e.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{e.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(e.startsAt).toLocaleDateString(locale, {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-sm bg-muted px-2 py-0.5 text-xs tabular-nums text-muted-foreground">
+                    {t("events.rsvps", { count: e.rsvpCount })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>

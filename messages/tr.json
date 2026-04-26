@@ -163,8 +163,7 @@
   "dashboard": {
     "greeting": "Selamün aleyküm, {name}",
     "fallbackFirstName": "kardeşim",
-    "sampleDataBanner": "Örnek veriler gösteriliyor.",
-    "sampleDataBannerHelp": "Firebase Admin'i yapılandırın ({file} dosyasına bakın) ve {db} veritabanındaki {usersCol} / {donationsCol} koleksiyonlarına belgeler ekleyerek canlı sayıları görün.",
+    "noDataYet": "Henüz veri yok",
     "kpi": {
       "totalUsers": "Toplam kullanıcı",
       "activeThisWeek": "Bu hafta aktif",
@@ -179,8 +178,8 @@
       "range365": "1 yıl"
     },
     "engagement": {
-      "title": "İçerik türüne göre etkileşim",
-      "subtitle": "Bu haftaki görüntülenmeler"
+      "title": "İçerik envanteri",
+      "subtitle": "İçerik türü başına yayımlanan öğeler"
     },
     "donations": {
       "title": "Bağış dağılımı",
@@ -188,12 +187,14 @@
     },
     "activity": {
       "title": "Son etkinlik",
-      "subtitle": "Yöneticilerin ve sistemin en son yaptıkları"
+      "subtitle": "Son kayıtlar, iletişim mesajları ve gönderimler",
+      "empty": "Henüz son etkinlik yok."
     },
     "events": {
       "title": "Yaklaşan etkinlikler",
       "subtitle": "Önümüzdeki 14 gün",
-      "rsvps": "{count} katılımcı"
+      "rsvps": "{count} katılımcı",
+      "empty": "Yaklaşan etkinlik yok."
     }
   },
   "prayerTimes": {

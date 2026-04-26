@@ -160,8 +160,7 @@
   "dashboard": {
     "greeting": "Assalamu alaikum, {name}",
     "fallbackFirstName": "friend",
-    "sampleDataBanner": "Showing sample data.",
-    "sampleDataBannerHelp": "Configure Firebase Admin (see {file}) and add documents to the {usersCol} / {donationsCol} collections in the {db} database to see live counts.",
+    "noDataYet": "No data yet",
     "kpi": {
       "totalUsers": "Total users",
       "activeThisWeek": "Active this week",
@@ -176,8 +175,8 @@
       "range365": "1 year"
     },
     "engagement": {
-      "title": "Engagement by content type",
-      "subtitle": "Views this week"
+      "title": "Content inventory",
+      "subtitle": "Published items per content type"
     },
     "donations": {
       "title": "Donation breakdown",
@@ -185,12 +184,14 @@
     },
     "activity": {
       "title": "Recent activity",
-      "subtitle": "What admins and the system did most recently"
+      "subtitle": "Latest signups, contact messages, and submissions",
+      "empty": "No recent activity yet."
     },
     "events": {
       "title": "Upcoming events",
       "subtitle": "Next 14 days",
-      "rsvps": "{count} RSVPs"
+      "rsvps": "{count} RSVPs",
+      "empty": "No upcoming events."
     }
   },
   "prayerTimes": {

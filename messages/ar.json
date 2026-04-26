@@ -163,8 +163,7 @@
   "dashboard": {
     "greeting": "السلام عليكم، {name}",
     "fallbackFirstName": "صديقي",
-    "sampleDataBanner": "يتم عرض بيانات تجريبية.",
-    "sampleDataBannerHelp": "أعدّ Firebase Admin (راجع {file}) وأضف مستندات إلى مجموعتي {usersCol} و {donationsCol} في قاعدة البيانات {db} لرؤية الأرقام الحقيقية.",
+    "noDataYet": "لا توجد بيانات بعد",
     "kpi": {
       "totalUsers": "إجمالي المستخدمين",
       "activeThisWeek": "النشطون هذا الأسبوع",
@@ -179,8 +178,8 @@
       "range365": "سنة"
     },
     "engagement": {
-      "title": "التفاعل حسب نوع المحتوى",
-      "subtitle": "المشاهدات هذا الأسبوع"
+      "title": "جرد المحتوى",
+      "subtitle": "العناصر المنشورة لكل نوع محتوى"
     },
     "donations": {
       "title": "توزيع التبرعات",
@@ -188,12 +187,14 @@
     },
     "activity": {
       "title": "النشاط الأخير",
-      "subtitle": "ما قام به المشرفون والنظام مؤخراً"
+      "subtitle": "أحدث التسجيلات ورسائل التواصل والإرساليات",
+      "empty": "لا يوجد نشاط حديث بعد."
     },
     "events": {
       "title": "الفعاليات القادمة",
       "subtitle": "خلال الأيام الأربعة عشر القادمة",
-      "rsvps": "{count} مشارك"
+      "rsvps": "{count} مشارك",
+      "empty": "لا توجد فعاليات قادمة."
     }
   },
   "prayerTimes": {

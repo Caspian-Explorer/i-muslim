@@ -9,6 +9,8 @@ interface Props {
 
 export function EngagementBarChart({ data }: Props) {
   const t = useTranslations("dashboard.engagement");
+  const tDash = useTranslations("dashboard");
+  const total = data.reduce((s, d) => s + d.value, 0);
   return (
     <div className="rounded-lg border border-border bg-card p-5">
       <div className="pb-4">
@@ -16,6 +18,11 @@ export function EngagementBarChart({ data }: Props) {
         <p className="text-xs text-muted-foreground">{t("subtitle")}</p>
       </div>
       <div className="h-64">
+        {total === 0 ? (
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            {tDash("noDataYet")}
+          </div>
+        ) : (
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
@@ -46,6 +53,7 @@ export function EngagementBarChart({ data }: Props) {
             <Bar dataKey="value" fill="var(--color-chart-1)" radius={[0, 4, 4, 0]} isAnimationActive={false} />
           </BarChart>
         </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

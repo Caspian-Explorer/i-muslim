@@ -176,9 +176,7 @@ export async function fetchUpcomingEvents(windowDays = 14, limit = 6): Promise<U
   const now = new Date();
   const horizon = new Date(now.getTime() + windowDays * 24 * 60 * 60 * 1000);
 
-  if (!db) {
-    return projectUpcoming(MOCK_EVENTS, now, horizon, limit);
-  }
+  if (!db) return [];
 
   try {
     const snap = await db
@@ -186,14 +184,14 @@ export async function fetchUpcomingEvents(windowDays = 14, limit = 6): Promise<U
       .where("status", "==", "published")
       .limit(500)
       .get();
-    if (snap.empty) return projectUpcoming(MOCK_EVENTS, now, horizon, limit);
+    if (snap.empty) return [];
     const events = snap.docs
       .map((d) => normalizeEvent(d.id, d.data() as Record<string, unknown>))
       .filter((e): e is AdminEvent => e !== null);
     return projectUpcoming(events, now, horizon, limit);
   } catch (err) {
-    console.warn("[admin/data/events] Upcoming Firestore read failed, using mock:", err);
-    return projectUpcoming(MOCK_EVENTS, now, horizon, limit);
+    console.warn("[admin/data/events] Upcoming Firestore read failed:", err);
+    return [];
   }
 }
 

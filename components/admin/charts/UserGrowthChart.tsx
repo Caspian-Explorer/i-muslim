@@ -27,6 +27,7 @@ export function UserGrowthChart({ data }: Props) {
   const [range, setRange] = useState<Range>("30");
   const series = useMemo(() => data[range] ?? [], [data, range]);
   const t = useTranslations("dashboard.userGrowth");
+  const tDash = useTranslations("dashboard");
   const locale = useLocale();
 
   const RANGES: Array<{ value: Range; labelKey: "range30" | "range90" | "range365" }> = [
@@ -66,8 +67,13 @@ export function UserGrowthChart({ data }: Props) {
         </div>
       </div>
       <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={series} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+        {series.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            {tDash("noDataYet")}
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={series} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <defs>
               <linearGradient id="user-growth-fill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.35} />
@@ -112,8 +118,9 @@ export function UserGrowthChart({ data }: Props) {
               fill="url(#user-growth-fill)"
               isAnimationActive={false}
             />
-          </AreaChart>
-        </ResponsiveContainer>
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

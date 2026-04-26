@@ -163,8 +163,7 @@
   "dashboard": {
     "greeting": "Assalamu'alaikum, {name}",
     "fallbackFirstName": "saudaraku",
-    "sampleDataBanner": "Menampilkan data contoh.",
-    "sampleDataBannerHelp": "Konfigurasikan Firebase Admin (lihat {file}) dan tambahkan dokumen ke koleksi {usersCol} / {donationsCol} di basis data {db} untuk melihat angka langsung.",
+    "noDataYet": "Belum ada data",
     "kpi": {
       "totalUsers": "Total pengguna",
       "activeThisWeek": "Aktif minggu ini",
@@ -179,8 +178,8 @@
       "range365": "1 tahun"
     },
     "engagement": {
-      "title": "Keterlibatan menurut jenis konten",
-      "subtitle": "Tampilan minggu ini"
+      "title": "Inventaris konten",
+      "subtitle": "Item yang dipublikasikan per jenis konten"
     },
     "donations": {
       "title": "Rincian donasi",
@@ -188,12 +187,14 @@
     },
     "activity": {
       "title": "Aktivitas terbaru",
-      "subtitle": "Apa yang baru dilakukan admin dan sistem"
+      "subtitle": "Pendaftaran terbaru, pesan kontak, dan pengajuan",
+      "empty": "Belum ada aktivitas terbaru."
     },
     "events": {
       "title": "Acara mendatang",
       "subtitle": "14 hari ke depan",
-      "rsvps": "{count} RSVP"
+      "rsvps": "{count} RSVP",
+      "empty": "Tidak ada acara mendatang."
     }
   },
   "prayerTimes": {

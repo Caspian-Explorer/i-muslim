@@ -133,5 +133,4 @@ export interface DashboardData {
   donationBreakdown: Array<{ category: string; value: number }>;
   recentActivity: ActivityEntry[];
   upcomingEvents: UpcomingEvent[];
-  source: "firestore" | "mock";
 }
