@@ -82,9 +82,15 @@ function ayahDocToVerse(d: AyahDoc): Verse {
 const _getSurahs = unstable_cache(
   async (): Promise<Chapter[]> => {
     const db = getDb();
-    if (!db) return [];
+    if (!db) {
+      console.error("[quran] Firestore not configured — returning empty surah list");
+      return [];
+    }
     const snap = await db.collection("quran_surahs").get();
-    if (snap.empty) return [];
+    if (snap.empty) {
+      console.error("[quran] quran_surahs collection is empty — run `npm run seed:quran`");
+      return [];
+    }
     return snap.docs
       .map((doc) => surahDocToChapter(doc.data() as SurahDoc))
       .sort((a, b) => a.id - b.id);
@@ -105,7 +111,10 @@ export async function getSurah(id: number): Promise<Chapter | null> {
 const _getAyahsForSurah = unstable_cache(
   async (surah: number): Promise<Verse[]> => {
     const db = getDb();
-    if (!db) return [];
+    if (!db) {
+      console.error(`[quran] Firestore not configured — returning empty ayah list for surah ${surah}`);
+      return [];
+    }
     const snap = await db
       .collection("quran_ayahs")
       .where("surah", "==", surah)
