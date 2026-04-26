@@ -10,13 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  EditorDialog,
+  EditorDialogBody,
+  EditorDialogContent,
+  EditorDialogDescription,
+  EditorDialogFooter,
+  EditorDialogHeader,
+  EditorDialogTitle,
+} from "@/components/ui/editor-dialog";
+import { FormGrid } from "@/components/admin/ui/form-layout";
 import type { AdminUser } from "@/types/admin";
 
 type Values = {
@@ -79,46 +81,50 @@ export function InviteUserDrawer({ open, onOpenChange, onInvite }: Props) {
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
-        <SheetHeader>
-          <SheetTitle>{t("title")}</SheetTitle>
-          <SheetDescription>{t("description")}</SheetDescription>
-        </SheetHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-5 space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="invite-name">{t("fullName")}</Label>
-            <Input id="invite-name" autoComplete="name" {...register("name")} />
-            {errors.name && <p className="text-xs text-danger">{errors.name.message}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="invite-email">{t("emailLabel")}</Label>
-            <Input id="invite-email" type="email" autoComplete="email" {...register("email")} />
-            {errors.email && <p className="text-xs text-danger">{errors.email.message}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="invite-role">{t("roleLabel")}</Label>
-            <select
-              id="invite-role"
-              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-              {...register("role")}
-            >
-              <option value="member">{tRoles("member")}</option>
-              <option value="scholar">{tRoles("scholar")}</option>
-              <option value="moderator">{tRoles("moderator")}</option>
-              <option value="admin">{tRoles("admin")}</option>
-            </select>
-          </div>
-          <SheetFooter className="-mx-5 mt-auto">
+    <EditorDialog open={open} onOpenChange={onOpenChange}>
+      <EditorDialogContent>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex h-full flex-col">
+          <EditorDialogHeader>
+            <EditorDialogTitle>{t("title")}</EditorDialogTitle>
+            <EditorDialogDescription>{t("description")}</EditorDialogDescription>
+          </EditorDialogHeader>
+          <EditorDialogBody className="space-y-4">
+            <FormGrid>
+              <div className="space-y-1.5">
+                <Label htmlFor="invite-name">{t("fullName")}</Label>
+                <Input id="invite-name" autoComplete="name" {...register("name")} />
+                {errors.name && <p className="text-xs text-danger">{errors.name.message}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="invite-email">{t("emailLabel")}</Label>
+                <Input id="invite-email" type="email" autoComplete="email" {...register("email")} />
+                {errors.email && <p className="text-xs text-danger">{errors.email.message}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="invite-role">{t("roleLabel")}</Label>
+                <select
+                  id="invite-role"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                  {...register("role")}
+                >
+                  <option value="member">{tRoles("member")}</option>
+                  <option value="scholar">{tRoles("scholar")}</option>
+                  <option value="moderator">{tRoles("moderator")}</option>
+                  <option value="admin">{tRoles("admin")}</option>
+                </select>
+              </div>
+            </FormGrid>
+          </EditorDialogBody>
+          <EditorDialogFooter>
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)} disabled={submitting}>
               {tCommon("cancel")}
             </Button>
             <Button type="submit" disabled={submitting} aria-busy={submitting}>
               {submitting ? t("sending") : <><Send /> {t("send")}</>}
             </Button>
-          </SheetFooter>
+          </EditorDialogFooter>
         </form>
-      </SheetContent>
-    </Sheet>
+      </EditorDialogContent>
+    </EditorDialog>
   );
 }

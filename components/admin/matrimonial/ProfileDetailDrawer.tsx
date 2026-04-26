@@ -8,13 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  EditorDialog,
+  EditorDialogBody,
+  EditorDialogContent,
+  EditorDialogDescription,
+  EditorDialogFooter,
+  EditorDialogHeader,
+  EditorDialogTitle,
+} from "@/components/ui/editor-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { toast } from "@/components/ui/sonner";
@@ -56,7 +57,7 @@ export function ProfileDetailDrawer({ profile, onOpenChange, onUpdate, onDelete 
   const tPrayer = useTranslations("matrimonial.prayer");
 
   if (!profile) {
-    return <Sheet open={false} onOpenChange={onOpenChange}><SheetContent /></Sheet>;
+    return null;
   }
 
   const age = ageFromDob(profile.dateOfBirth);
@@ -97,13 +98,13 @@ export function ProfileDetailDrawer({ profile, onOpenChange, onUpdate, onDelete 
   }
 
   return (
-    <Sheet open={Boolean(profile)} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col p-0">
-        <SheetHeader>
-          <SheetTitle>{tDrawer("title")}</SheetTitle>
-          <SheetDescription>{profile.displayName}</SheetDescription>
-        </SheetHeader>
-        <div className="flex-1 overflow-y-auto p-5">
+    <EditorDialog open={Boolean(profile)} onOpenChange={onOpenChange}>
+      <EditorDialogContent>
+        <EditorDialogHeader>
+          <EditorDialogTitle>{tDrawer("title")}</EditorDialogTitle>
+          <EditorDialogDescription>{profile.displayName}</EditorDialogDescription>
+        </EditorDialogHeader>
+        <EditorDialogBody>
           <div className="flex items-center gap-3">
             <Avatar className="size-12">
               <AvatarFallback>{initials(profile.displayName)}</AvatarFallback>
@@ -136,17 +137,19 @@ export function ProfileDetailDrawer({ profile, onOpenChange, onUpdate, onDelete 
               <TabsTrigger value="danger" className="text-danger">{tDrawer("tabDanger")}</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="profile" className="space-y-3 pt-3 text-sm">
-              <Row label="Email" value={profile.userId} mono />
-              <Row label="Education" value={profile.education} />
-              <Row label="Profession" value={profile.profession ?? "—"} />
-              <Row label="Marital history" value={profile.maritalHistory.replace("_", " ")} />
-              <Row label="Has children" value={profile.hasChildren ? tCommon("yes") : tCommon("no")} />
-              <Row label="Wants children" value={profile.wantsChildren} />
-              <Row label="Languages" value={profile.languages.join(", ") || "—"} />
-              <Row label="Joined" value={formatRelative(profile.createdAt)} />
-              <Row label="Last active" value={formatRelative(profile.lastActiveAt)} />
-              <div className="rounded-md border border-border p-3 text-sm text-muted-foreground">
+            <TabsContent value="profile" className="pt-3 text-sm">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Row label="Email" value={profile.userId} mono />
+                <Row label="Education" value={profile.education} />
+                <Row label="Profession" value={profile.profession ?? "—"} />
+                <Row label="Marital history" value={profile.maritalHistory.replace("_", " ")} />
+                <Row label="Has children" value={profile.hasChildren ? tCommon("yes") : tCommon("no")} />
+                <Row label="Wants children" value={profile.wantsChildren} />
+                <Row label="Languages" value={profile.languages.join(", ") || "—"} />
+                <Row label="Joined" value={formatRelative(profile.createdAt)} />
+                <Row label="Last active" value={formatRelative(profile.lastActiveAt)} />
+              </div>
+              <div className="mt-3 rounded-md border border-border p-3 text-sm text-muted-foreground">
                 {profile.bio}
               </div>
             </TabsContent>
@@ -210,13 +213,13 @@ export function ProfileDetailDrawer({ profile, onOpenChange, onUpdate, onDelete 
               </div>
             </TabsContent>
           </Tabs>
-        </div>
-        <SheetFooter>
+        </EditorDialogBody>
+        <EditorDialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
             {tCommon("close")}
           </Button>
-        </SheetFooter>
-      </SheetContent>
+        </EditorDialogFooter>
+      </EditorDialogContent>
 
       <ConfirmDialog
         open={confirmOpen}
@@ -227,7 +230,7 @@ export function ProfileDetailDrawer({ profile, onOpenChange, onUpdate, onDelete 
         confirmWord={profile.displayName}
         onConfirm={handleDelete}
       />
-    </Sheet>
+    </EditorDialog>
   );
 }
 

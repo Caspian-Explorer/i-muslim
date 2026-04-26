@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  EditorDialog,
+  EditorDialogBody,
+  EditorDialogContent,
+  EditorDialogFooter,
+  EditorDialogHeader,
+  EditorDialogTitle,
+} from "@/components/ui/editor-dialog";
+import { FormGrid } from "@/components/admin/ui/form-layout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { toast } from "@/components/ui/sonner";
 import {
@@ -168,74 +170,78 @@ export function CertBodiesClient({ initialCertBodies, canPersist }: Props) {
         </div>
       )}
 
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="flex w-full flex-col p-0 sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>{editing ? t("taxonomyEditCta") : t("taxonomyAddCta")}</SheetTitle>
-          </SheetHeader>
-          <form onSubmit={submit} className="flex-1 space-y-3 overflow-y-auto p-5">
-            <div className="space-y-1.5">
-              <Label>{t("slug")}</Label>
-              <Input
-                value={form.slug}
-                onChange={(e) => setForm((s) => ({ ...s, slug: e.target.value }))}
-                disabled={Boolean(editing)}
-                required
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Name</Label>
-              <Input
-                value={form.name}
-                onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
-                required
-              />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Country (ISO-2)</Label>
-                <Input
-                  value={form.country}
-                  onChange={(e) => setForm((s) => ({ ...s, country: e.target.value.toUpperCase().slice(0, 2) }))}
-                  maxLength={2}
-                  required
+      <EditorDialog open={open} onOpenChange={setOpen}>
+        <EditorDialogContent>
+          <form onSubmit={submit} className="flex h-full flex-col">
+            <EditorDialogHeader>
+              <EditorDialogTitle>{editing ? t("taxonomyEditCta") : t("taxonomyAddCta")}</EditorDialogTitle>
+            </EditorDialogHeader>
+            <EditorDialogBody className="space-y-3">
+              <FormGrid>
+                <div className="space-y-1.5">
+                  <Label>{t("slug")}</Label>
+                  <Input
+                    value={form.slug}
+                    onChange={(e) => setForm((s) => ({ ...s, slug: e.target.value }))}
+                    disabled={Boolean(editing)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Name</Label>
+                  <Input
+                    value={form.name}
+                    onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
+                    required
+                  />
+                </div>
+              </FormGrid>
+              <FormGrid cols={3}>
+                <div className="space-y-1.5">
+                  <Label>Country (ISO-2)</Label>
+                  <Input
+                    value={form.country}
+                    onChange={(e) => setForm((s) => ({ ...s, country: e.target.value.toUpperCase().slice(0, 2) }))}
+                    maxLength={2}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Website</Label>
+                  <Input
+                    value={form.website}
+                    onChange={(e) => setForm((s) => ({ ...s, website: e.target.value }))}
+                    placeholder="https://"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{t("logoStoragePath")}</Label>
+                  <Input
+                    value={form.logoStoragePath}
+                    onChange={(e) => setForm((s) => ({ ...s, logoStoragePath: e.target.value }))}
+                  />
+                </div>
+              </FormGrid>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.verifiedByPlatform}
+                  onChange={(e) => setForm((s) => ({ ...s, verifiedByPlatform: e.target.checked }))}
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Website</Label>
-                <Input
-                  value={form.website}
-                  onChange={(e) => setForm((s) => ({ ...s, website: e.target.value }))}
-                  placeholder="https://"
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>{t("logoStoragePath")}</Label>
-              <Input
-                value={form.logoStoragePath}
-                onChange={(e) => setForm((s) => ({ ...s, logoStoragePath: e.target.value }))}
-              />
-            </div>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.verifiedByPlatform}
-                onChange={(e) => setForm((s) => ({ ...s, verifiedByPlatform: e.target.checked }))}
-              />
-              {t("verifiedByPlatformLabel")}
-            </label>
-            <SheetFooter className="-mx-5">
+                {t("verifiedByPlatformLabel")}
+              </label>
+            </EditorDialogBody>
+            <EditorDialogFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={submitting}>
                 {tCommon("cancel")}
               </Button>
               <Button type="submit" disabled={submitting || !canPersist}>
                 {submitting ? t("saving") : editing ? t("save") : t("create")}
               </Button>
-            </SheetFooter>
+            </EditorDialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </EditorDialogContent>
+      </EditorDialog>
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}

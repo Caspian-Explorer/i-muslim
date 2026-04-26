@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  EditorDialog,
+  EditorDialogBody,
+  EditorDialogContent,
+  EditorDialogFooter,
+  EditorDialogHeader,
+  EditorDialogTitle,
+} from "@/components/ui/editor-dialog";
+import { FormGrid } from "@/components/admin/ui/form-layout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { toast } from "@/components/ui/sonner";
 import {
@@ -146,53 +148,59 @@ export function AmenitiesClient({ initialAmenities, canPersist }: Props) {
         </div>
       )}
 
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="flex w-full flex-col p-0 sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>{editing ? t("taxonomyEditCta") : t("taxonomyAddCta")}</SheetTitle>
-          </SheetHeader>
-          <form onSubmit={submit} className="flex-1 space-y-3 overflow-y-auto p-5">
-            <div className="space-y-1.5">
-              <Label>{t("slug")}</Label>
-              <Input
-                value={form.slug}
-                onChange={(e) => setForm((s) => ({ ...s, slug: e.target.value }))}
-                disabled={Boolean(editing)}
-                required
-              />
-            </div>
-            {(LOCALES as readonly Locale[]).map((l) => (
-              <div key={l} className="space-y-1.5">
-                <Label>{t("nameLocale", { locale: tLocale(l) })}</Label>
-                <Input
-                  value={form.name[l]}
-                  onChange={(e) =>
-                    setForm((s) => ({ ...s, name: { ...s.name, [l]: e.target.value } }))
-                  }
-                  dir={l === "ar" ? "rtl" : undefined}
-                  lang={l}
-                  required
-                />
-              </div>
-            ))}
-            <div className="space-y-1.5">
-              <Label>{t("iconKey")}</Label>
-              <Input
-                value={form.iconKey}
-                onChange={(e) => setForm((s) => ({ ...s, iconKey: e.target.value }))}
-              />
-            </div>
-            <SheetFooter className="-mx-5">
+      <EditorDialog open={open} onOpenChange={setOpen}>
+        <EditorDialogContent>
+          <form onSubmit={submit} className="flex h-full flex-col">
+            <EditorDialogHeader>
+              <EditorDialogTitle>{editing ? t("taxonomyEditCta") : t("taxonomyAddCta")}</EditorDialogTitle>
+            </EditorDialogHeader>
+            <EditorDialogBody className="space-y-3">
+              <FormGrid>
+                <div className="space-y-1.5">
+                  <Label>{t("slug")}</Label>
+                  <Input
+                    value={form.slug}
+                    onChange={(e) => setForm((s) => ({ ...s, slug: e.target.value }))}
+                    disabled={Boolean(editing)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{t("iconKey")}</Label>
+                  <Input
+                    value={form.iconKey}
+                    onChange={(e) => setForm((s) => ({ ...s, iconKey: e.target.value }))}
+                  />
+                </div>
+              </FormGrid>
+              <FormGrid cols={3}>
+                {(LOCALES as readonly Locale[]).map((l) => (
+                  <div key={l} className="space-y-1.5">
+                    <Label>{t("nameLocale", { locale: tLocale(l) })}</Label>
+                    <Input
+                      value={form.name[l]}
+                      onChange={(e) =>
+                        setForm((s) => ({ ...s, name: { ...s.name, [l]: e.target.value } }))
+                      }
+                      dir={l === "ar" ? "rtl" : undefined}
+                      lang={l}
+                      required
+                    />
+                  </div>
+                ))}
+              </FormGrid>
+            </EditorDialogBody>
+            <EditorDialogFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={submitting}>
                 {tCommon("cancel")}
               </Button>
               <Button type="submit" disabled={submitting || !canPersist}>
                 {submitting ? t("saving") : editing ? t("save") : t("create")}
               </Button>
-            </SheetFooter>
+            </EditorDialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </EditorDialogContent>
+      </EditorDialog>
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}

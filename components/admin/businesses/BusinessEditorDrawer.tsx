@@ -5,15 +5,16 @@ import { useTranslations } from "next-intl";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  EditorDialog,
+  EditorDialogBody,
+  EditorDialogContent,
+  EditorDialogDescription,
+  EditorDialogFooter,
+  EditorDialogHeader,
+  EditorDialogTitle,
+} from "@/components/ui/editor-dialog";
+import { Field, FormGrid, Section } from "@/components/admin/ui/form-layout";
 import { toast } from "@/components/ui/sonner";
 import {
   createBusinessAction,
@@ -253,17 +254,18 @@ export function BusinessEditorDrawer({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex w-full flex-col p-0 sm:max-w-2xl">
-        <SheetHeader>
-          <SheetTitle>{editing ? t("editTitle") : t("createTitle")}</SheetTitle>
-          <SheetDescription>
-            {editing ? t("editDescription") : t("createDescription")}
-          </SheetDescription>
-        </SheetHeader>
-        <form onSubmit={handleSubmit} className="flex-1 space-y-5 overflow-y-auto p-5">
+    <EditorDialog open={open} onOpenChange={onOpenChange}>
+      <EditorDialogContent>
+        <form onSubmit={handleSubmit} className="flex h-full flex-col">
+          <EditorDialogHeader>
+            <EditorDialogTitle>{editing ? t("editTitle") : t("createTitle")}</EditorDialogTitle>
+            <EditorDialogDescription>
+              {editing ? t("editDescription") : t("createDescription")}
+            </EditorDialogDescription>
+          </EditorDialogHeader>
+          <EditorDialogBody className="space-y-5">
           <Section title={t("sectionBasics")}>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <FormGrid cols={3}>
               <Field label={t("name")} required>
                 <Input value={form.name} onChange={(e) => update("name", e.target.value)} autoComplete="off" />
               </Field>
@@ -278,7 +280,21 @@ export function BusinessEditorDrawer({
                   ))}
                 </select>
               </Field>
-            </div>
+              <Field label={t("priceTier")}>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                  value={String(form.priceTier)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    update("priceTier", v === "any" ? "any" : (Number(v) as PriceTier));
+                  }}
+                >
+                  {PRICES.map((p) => (
+                    <option key={p} value={String(p)}>{p === "any" ? tPrice("any") : tPrice(String(p))}</option>
+                  ))}
+                </select>
+              </Field>
+            </FormGrid>
 
             <Field label={t("categoriesLabel")} required>
               <div className="flex flex-wrap gap-1.5">
@@ -300,7 +316,7 @@ export function BusinessEditorDrawer({
               </div>
             </Field>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <FormGrid>
               <Field label={t("descEnLabel")} required>
                 <Textarea value={form.descEn} onChange={(v) => update("descEn", v)} />
               </Field>
@@ -313,39 +329,26 @@ export function BusinessEditorDrawer({
               <Field label={t("descIdLabel")}>
                 <Textarea value={form.descId} onChange={(v) => update("descId", v)} lang="id" />
               </Field>
-            </div>
-
-            <Field label={t("priceTier")}>
-              <select
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                value={String(form.priceTier)}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  update("priceTier", v === "any" ? "any" : (Number(v) as PriceTier));
-                }}
-              >
-                {PRICES.map((p) => (
-                  <option key={p} value={String(p)}>{p === "any" ? tPrice("any") : tPrice(String(p))}</option>
-                ))}
-              </select>
-            </Field>
+            </FormGrid>
           </Section>
 
           <Section title={t("sectionTrust")}>
-            <Field label={t("halalStatusLabel")}>
-              <select
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                value={form.halalStatus}
-                onChange={(e) => update("halalStatus", e.target.value as HalalStatus)}
-              >
-                {HALAL.map((s) => (
-                  <option key={s} value={s}>{tHalal(s)}</option>
-                ))}
-              </select>
-            </Field>
+            <FormGrid>
+              <Field label={t("halalStatusLabel")}>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                  value={form.halalStatus}
+                  onChange={(e) => update("halalStatus", e.target.value as HalalStatus)}
+                >
+                  {HALAL.map((s) => (
+                    <option key={s} value={s}>{tHalal(s)}</option>
+                  ))}
+                </select>
+              </Field>
+            </FormGrid>
 
             {form.halalStatus === "certified" && (
-              <div className="grid gap-3 sm:grid-cols-3">
+              <FormGrid cols={3}>
                 <Field label={t("certBodyLabel")} required>
                   <select
                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
@@ -368,7 +371,7 @@ export function BusinessEditorDrawer({
                     onChange={(e) => update("certExpiresAt", e.target.value)}
                   />
                 </Field>
-              </div>
+              </FormGrid>
             )}
 
             <div className="flex flex-wrap items-center gap-4">
@@ -395,10 +398,19 @@ export function BusinessEditorDrawer({
           </Section>
 
           <Section title={t("sectionLocation")}>
-            <Field label={t("addressLine1")} required>
-              <Input value={form.line1} onChange={(e) => update("line1", e.target.value)} />
-            </Field>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <FormGrid>
+              <Field label={t("addressLine1")} required>
+                <Input value={form.line1} onChange={(e) => update("line1", e.target.value)} />
+              </Field>
+              <Field label={t("country")}>
+                <Input
+                  value={form.countryCode}
+                  onChange={(e) => update("countryCode", e.target.value.toUpperCase().slice(0, 2))}
+                  maxLength={2}
+                />
+              </Field>
+            </FormGrid>
+            <FormGrid cols={3}>
               <Field label={t("city")} required>
                 <Input value={form.city} onChange={(e) => update("city", e.target.value)} />
               </Field>
@@ -408,15 +420,8 @@ export function BusinessEditorDrawer({
               <Field label={t("postalCode")}>
                 <Input value={form.postalCode} onChange={(e) => update("postalCode", e.target.value)} />
               </Field>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Field label={t("country")}>
-                <Input
-                  value={form.countryCode}
-                  onChange={(e) => update("countryCode", e.target.value.toUpperCase().slice(0, 2))}
-                  maxLength={2}
-                />
-              </Field>
+            </FormGrid>
+            <FormGrid>
               <Field label={t("lat")} required>
                 <Input
                   type="number"
@@ -433,7 +438,7 @@ export function BusinessEditorDrawer({
                   onChange={(e) => update("lng", e.target.value)}
                 />
               </Field>
-            </div>
+            </FormGrid>
           </Section>
 
           <Section title={t("sectionHours")}>
@@ -441,7 +446,7 @@ export function BusinessEditorDrawer({
           </Section>
 
           <Section title={t("sectionContact")}>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <FormGrid cols={3}>
               <Field label={t("phone")}>
                 <Input value={form.phone} onChange={(e) => update("phone", e.target.value)} />
               </Field>
@@ -464,7 +469,7 @@ export function BusinessEditorDrawer({
                   onChange={(e) => update("ownerEmail", e.target.value)}
                 />
               </Field>
-            </div>
+            </FormGrid>
           </Section>
 
           <Section title={t("sectionAmenities")}>
@@ -500,8 +505,9 @@ export function BusinessEditorDrawer({
 
           {!canPersist && <p className="text-xs text-warning">{t("noPersistNote")}</p>}
           {error && <p className="text-xs text-danger">{error}</p>}
+          </EditorDialogBody>
 
-          <SheetFooter className="-mx-5">
+          <EditorDialogFooter>
             <Button
               type="button"
               variant="secondary"
@@ -513,39 +519,10 @@ export function BusinessEditorDrawer({
             <Button type="submit" disabled={submitting || !canPersist} aria-busy={submitting}>
               {submitting ? t("saving") : <><Save /> {editing ? t("save") : t("create")}</>}
             </Button>
-          </SheetFooter>
+          </EditorDialogFooter>
         </form>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
-      <div className="space-y-3">{children}</div>
-    </section>
-  );
-}
-
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label>
-        {label}
-        {required && <span className="ms-0.5 text-danger">*</span>}
-      </Label>
-      {children}
-    </div>
+      </EditorDialogContent>
+    </EditorDialog>
   );
 }
 

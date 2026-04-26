@@ -8,15 +8,16 @@ import { z } from "zod";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  EditorDialog,
+  EditorDialogBody,
+  EditorDialogContent,
+  EditorDialogDescription,
+  EditorDialogFooter,
+  EditorDialogHeader,
+  EditorDialogTitle,
+} from "@/components/ui/editor-dialog";
+import { Field, FormGrid, Section } from "@/components/admin/ui/form-layout";
 import { toast } from "@/components/ui/sonner";
 import {
   createEventAction,
@@ -337,246 +338,251 @@ export function EventEditorDrawer({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col p-0">
-        <SheetHeader>
-          <SheetTitle>{editing ? t("editTitle") : t("createTitle")}</SheetTitle>
-          <SheetDescription>
-            {editing ? t("editDescription") : t("createDescription")}
-          </SheetDescription>
-        </SheetHeader>
+    <EditorDialog open={open} onOpenChange={onOpenChange}>
+      <EditorDialogContent>
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="flex-1 overflow-y-auto p-5 space-y-5"
+          className="flex h-full flex-col"
         >
-          <Section title={t("sectionBasics")}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={t("titleEn")} error={errors.titleEn?.message} required>
-                <Input id="evt-title-en" autoComplete="off" {...register("titleEn")} />
-              </Field>
-              <Field label={t("titleAr")} hint={t("titleArHint")}>
-                <Input
-                  id="evt-title-ar"
-                  dir="rtl"
-                  lang="ar"
-                  autoComplete="off"
-                  {...register("titleAr")}
-                />
-              </Field>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={t("category")}>
-                <select
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                  {...register("category")}
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{tCategories(c)}</option>
-                  ))}
-                </select>
-              </Field>
-              <Field label={t("status")}>
-                <select
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                  {...register("status")}
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>{tStatuses(s)}</option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={t("descriptionEn")}>
-                <textarea
-                  rows={3}
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  {...register("descriptionEn")}
-                />
-              </Field>
-              <Field label={t("descriptionAr")}>
-                <textarea
-                  rows={3}
-                  dir="rtl"
-                  lang="ar"
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  {...register("descriptionAr")}
-                />
-              </Field>
-            </div>
-          </Section>
-
-          <Section title={t("sectionWhen")}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={t("startsAt")} error={errors.startsAt?.message} required>
-                <Input id="evt-starts-at" type="datetime-local" {...register("startsAt")} />
-              </Field>
-              <Field label={t("endsAt")} error={errors.endsAt?.message}>
-                <Input id="evt-ends-at" type="datetime-local" {...register("endsAt")} />
-              </Field>
-            </div>
-            <Field label={t("timezone")} error={errors.timezone?.message} hint={t("timezoneHint")}>
-              <Input id="evt-tz" autoComplete="off" {...register("timezone")} />
-            </Field>
-
-            <Field label={tRecurrence("modeLabel")} hint={tRecurrence("modeHint")}>
-              <select
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                {...register("recurrenceMode")}
-              >
-                <option value="none">{tRecurrence("none")}</option>
-                <option value="weekly">{tRecurrence("weekly")}</option>
-                <option value="daily">{tRecurrence("daily")}</option>
-                <option value="monthly">{tRecurrence("monthly")}</option>
-                <option value="hijri-anchor">{tRecurrence("hijriAnchor")}</option>
-              </select>
-            </Field>
-
-            {(recurrenceMode === "weekly" ||
-              recurrenceMode === "daily" ||
-              recurrenceMode === "monthly") && (
-              <Field
-                label={tRecurrence("countLabel")}
-                hint={tRecurrence("countHint")}
-                error={errors.recurrenceCount?.message}
-              >
-                <Input
-                  id="evt-rec-count"
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={999}
-                  placeholder={tRecurrence("countPlaceholder")}
-                  {...register("recurrenceCount")}
-                />
-              </Field>
-            )}
-
-            {recurrenceMode === "hijri-anchor" && (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label={tRecurrence("hijriMonthLabel")}>
+          <EditorDialogHeader>
+            <EditorDialogTitle>{editing ? t("editTitle") : t("createTitle")}</EditorDialogTitle>
+            <EditorDialogDescription>
+              {editing ? t("editDescription") : t("createDescription")}
+            </EditorDialogDescription>
+          </EditorDialogHeader>
+          <EditorDialogBody className="space-y-5">
+            <Section title={t("sectionBasics")}>
+              <FormGrid>
+                <Field label={t("titleEn")} error={errors.titleEn?.message} required>
+                  <Input id="evt-title-en" autoComplete="off" {...register("titleEn")} />
+                </Field>
+                <Field label={t("titleAr")} hint={t("titleArHint")}>
+                  <Input
+                    id="evt-title-ar"
+                    dir="rtl"
+                    lang="ar"
+                    autoComplete="off"
+                    {...register("titleAr")}
+                  />
+                </Field>
+              </FormGrid>
+              <FormGrid>
+                <Field label={t("category")}>
                   <select
                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                    {...register("hijriMonth")}
+                    {...register("category")}
                   >
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                      <option key={m} value={m}>{tHijriMonths(String(m))}</option>
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{tCategories(c)}</option>
                     ))}
                   </select>
                 </Field>
-                <Field label={tRecurrence("hijriDayLabel")}>
-                  <Input
-                    id="evt-hijri-day"
-                    type="number"
-                    inputMode="numeric"
-                    min={1}
-                    max={30}
-                    {...register("hijriDay")}
+                <Field label={t("status")}>
+                  <select
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                    {...register("status")}
+                  >
+                    {STATUSES.map((s) => (
+                      <option key={s} value={s}>{tStatuses(s)}</option>
+                    ))}
+                  </select>
+                </Field>
+              </FormGrid>
+              <FormGrid>
+                <Field label={t("descriptionEn")}>
+                  <textarea
+                    rows={3}
+                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    {...register("descriptionEn")}
                   />
                 </Field>
-              </div>
-            )}
+                <Field label={t("descriptionAr")}>
+                  <textarea
+                    rows={3}
+                    dir="rtl"
+                    lang="ar"
+                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    {...register("descriptionAr")}
+                  />
+                </Field>
+              </FormGrid>
+            </Section>
 
-            <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
-              <label className="flex items-start gap-2 text-sm">
-                <input type="checkbox" className="mt-0.5" {...register("prayerAnchorEnabled")} />
-                <span>
-                  <span className="font-medium text-foreground">
-                    {tRecurrence("prayerAnchorLabel")}
-                  </span>
-                  <span className="block text-xs text-muted-foreground">
-                    {tRecurrence("prayerAnchorHint")}
-                  </span>
-                </span>
-              </label>
-              {prayerAnchorEnabled && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label={tRecurrence("prayerLabel")}>
+            <Section title={t("sectionWhen")}>
+              <FormGrid cols={3}>
+                <Field label={t("startsAt")} error={errors.startsAt?.message} required>
+                  <Input id="evt-starts-at" type="datetime-local" {...register("startsAt")} />
+                </Field>
+                <Field label={t("endsAt")} error={errors.endsAt?.message}>
+                  <Input id="evt-ends-at" type="datetime-local" {...register("endsAt")} />
+                </Field>
+                <Field label={t("timezone")} error={errors.timezone?.message} hint={t("timezoneHint")}>
+                  <Input id="evt-tz" autoComplete="off" {...register("timezone")} />
+                </Field>
+              </FormGrid>
+
+              <FormGrid>
+                <Field label={tRecurrence("modeLabel")} hint={tRecurrence("modeHint")}>
+                  <select
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                    {...register("recurrenceMode")}
+                  >
+                    <option value="none">{tRecurrence("none")}</option>
+                    <option value="weekly">{tRecurrence("weekly")}</option>
+                    <option value="daily">{tRecurrence("daily")}</option>
+                    <option value="monthly">{tRecurrence("monthly")}</option>
+                    <option value="hijri-anchor">{tRecurrence("hijriAnchor")}</option>
+                  </select>
+                </Field>
+                {(recurrenceMode === "weekly" ||
+                  recurrenceMode === "daily" ||
+                  recurrenceMode === "monthly") && (
+                  <Field
+                    label={tRecurrence("countLabel")}
+                    hint={tRecurrence("countHint")}
+                    error={errors.recurrenceCount?.message}
+                  >
+                    <Input
+                      id="evt-rec-count"
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={999}
+                      placeholder={tRecurrence("countPlaceholder")}
+                      {...register("recurrenceCount")}
+                    />
+                  </Field>
+                )}
+              </FormGrid>
+
+              {recurrenceMode === "hijri-anchor" && (
+                <FormGrid>
+                  <Field label={tRecurrence("hijriMonthLabel")}>
                     <select
                       className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                      {...register("prayerAnchor")}
+                      {...register("hijriMonth")}
                     >
-                      {PRAYER_ANCHORS.map((p) => (
-                        <option key={p} value={p}>{tPrayerNames(p)}</option>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                        <option key={m} value={m}>{tHijriMonths(String(m))}</option>
                       ))}
                     </select>
                   </Field>
-                  <Field
-                    label={tRecurrence("offsetLabel")}
-                    hint={tRecurrence("offsetHint")}
-                    error={errors.prayerOffsetMinutes?.message}
-                  >
+                  <Field label={tRecurrence("hijriDayLabel")}>
                     <Input
-                      id="evt-prayer-offset"
+                      id="evt-hijri-day"
                       type="number"
                       inputMode="numeric"
-                      {...register("prayerOffsetMinutes")}
+                      min={1}
+                      max={30}
+                      {...register("hijriDay")}
                     />
                   </Field>
-                </div>
+                </FormGrid>
               )}
-            </div>
-          </Section>
 
-          <Section title={t("sectionWhere")}>
-            <Field label={t("locationMode")}>
-              <select
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                {...register("locationMode")}
-              >
-                {LOCATION_MODES.map((m) => (
-                  <option key={m} value={m}>{tLocations(m)}</option>
-                ))}
-              </select>
-            </Field>
-            {locationMode !== "online" && (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label={t("venue")} error={errors.venue?.message}>
-                  <Input id="evt-venue" autoComplete="off" {...register("venue")} />
-                </Field>
-                <Field label={t("address")}>
-                  <Input id="evt-address" autoComplete="off" {...register("address")} />
-                </Field>
+              <div className="space-y-3 rounded-md border border-border bg-muted/30 p-3">
+                <label className="flex items-start gap-2 text-sm">
+                  <input type="checkbox" className="mt-0.5" {...register("prayerAnchorEnabled")} />
+                  <span>
+                    <span className="font-medium text-foreground">
+                      {tRecurrence("prayerAnchorLabel")}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      {tRecurrence("prayerAnchorHint")}
+                    </span>
+                  </span>
+                </label>
+                {prayerAnchorEnabled && (
+                  <FormGrid>
+                    <Field label={tRecurrence("prayerLabel")}>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                        {...register("prayerAnchor")}
+                      >
+                        {PRAYER_ANCHORS.map((p) => (
+                          <option key={p} value={p}>{tPrayerNames(p)}</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field
+                      label={tRecurrence("offsetLabel")}
+                      hint={tRecurrence("offsetHint")}
+                      error={errors.prayerOffsetMinutes?.message}
+                    >
+                      <Input
+                        id="evt-prayer-offset"
+                        type="number"
+                        inputMode="numeric"
+                        {...register("prayerOffsetMinutes")}
+                      />
+                    </Field>
+                  </FormGrid>
+                )}
               </div>
+            </Section>
+
+            <Section title={t("sectionWhere")}>
+              <FormGrid>
+                <Field label={t("locationMode")}>
+                  <select
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                    {...register("locationMode")}
+                  >
+                    {LOCATION_MODES.map((m) => (
+                      <option key={m} value={m}>{tLocations(m)}</option>
+                    ))}
+                  </select>
+                </Field>
+                {locationMode !== "in-person" && (
+                  <Field label={t("meetingUrl")} error={errors.url?.message}>
+                    <Input
+                      id="evt-url"
+                      type="url"
+                      placeholder="https://"
+                      autoComplete="off"
+                      {...register("url")}
+                    />
+                  </Field>
+                )}
+              </FormGrid>
+              {locationMode !== "online" && (
+                <FormGrid>
+                  <Field label={t("venue")} error={errors.venue?.message}>
+                    <Input id="evt-venue" autoComplete="off" {...register("venue")} />
+                  </Field>
+                  <Field label={t("address")}>
+                    <Input id="evt-address" autoComplete="off" {...register("address")} />
+                  </Field>
+                </FormGrid>
+              )}
+            </Section>
+
+            <Section title={t("sectionOrganizer")}>
+              <FormGrid cols={3}>
+                <Field label={t("organizerName")} error={errors.organizerName?.message} required>
+                  <Input id="evt-org" autoComplete="off" {...register("organizerName")} />
+                </Field>
+                <Field label={t("organizerContact")}>
+                  <Input id="evt-org-contact" autoComplete="off" {...register("organizerContact")} />
+                </Field>
+                <Field label={t("capacity")} error={errors.capacity?.message} hint={t("capacityHint")}>
+                  <Input
+                    id="evt-capacity"
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    {...register("capacity")}
+                  />
+                </Field>
+              </FormGrid>
+            </Section>
+
+            {!canPersist && (
+              <p className="text-xs text-warning">{t("noPersistNote")}</p>
             )}
-            {locationMode !== "in-person" && (
-              <Field label={t("meetingUrl")} error={errors.url?.message}>
-                <Input
-                  id="evt-url"
-                  type="url"
-                  placeholder="https://"
-                  autoComplete="off"
-                  {...register("url")}
-                />
-              </Field>
-            )}
-          </Section>
+          </EditorDialogBody>
 
-          <Section title={t("sectionOrganizer")}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={t("organizerName")} error={errors.organizerName?.message} required>
-                <Input id="evt-org" autoComplete="off" {...register("organizerName")} />
-              </Field>
-              <Field label={t("organizerContact")}>
-                <Input id="evt-org-contact" autoComplete="off" {...register("organizerContact")} />
-              </Field>
-            </div>
-            <Field label={t("capacity")} error={errors.capacity?.message} hint={t("capacityHint")}>
-              <Input
-                id="evt-capacity"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                {...register("capacity")}
-              />
-            </Field>
-          </Section>
-
-          {!canPersist && (
-            <p className="text-xs text-warning">{t("noPersistNote")}</p>
-          )}
-
-          <SheetFooter className="-mx-5">
+          <EditorDialogFooter>
             <Button
               type="button"
               variant="secondary"
@@ -588,46 +594,9 @@ export function EventEditorDrawer({
             <Button type="submit" disabled={submitting || !canPersist} aria-busy={submitting}>
               {submitting ? tCommon("working") : <><Save /> {editing ? t("save") : t("create")}</>}
             </Button>
-          </SheetFooter>
+          </EditorDialogFooter>
         </form>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h3>
-      <div className="space-y-3">{children}</div>
-    </section>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  error,
-  required,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  error?: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label>
-        {label}
-        {required && <span className="ms-0.5 text-danger">*</span>}
-      </Label>
-      {children}
-      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
-      {error && <p className="text-xs text-danger">{error}</p>}
-    </div>
+      </EditorDialogContent>
+    </EditorDialog>
   );
 }
