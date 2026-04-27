@@ -1,4 +1,4 @@
-import type { Locale } from "@/i18n/config";
+import type { BundledLocale } from "@/i18n/config";
 
 export type BusinessStatus = "draft" | "published" | "archived";
 
@@ -6,7 +6,10 @@ export type HalalStatus = "certified" | "self_declared" | "muslim_owned" | "unve
 
 export type PriceTier = 1 | 2 | 3 | 4;
 
-export type LocalizedTextRequired = Record<Locale, string>;
+// Authored content (categories, amenities, business names) is translated only
+// for the bundled UI locales. Reserved/un-activated locales render with the
+// English value as a fallback at the call site.
+export type LocalizedTextRequired = Record<BundledLocale, string>;
 
 export interface PartialLocalizedText {
   en: string;

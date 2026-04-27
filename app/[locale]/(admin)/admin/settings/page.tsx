@@ -1,10 +1,12 @@
 import { getTranslations } from "next-intl/server";
 import { LanguagesForm } from "@/components/admin/settings/LanguagesForm";
 import { getLanguageSettings } from "@/lib/admin/data/language-settings";
+import { listReservedLocaleDocs } from "@/lib/admin/data/ui-locales";
 
 export default async function Page() {
-  const [settings, t] = await Promise.all([
+  const [settings, reservedDocs, t] = await Promise.all([
     getLanguageSettings(),
+    listReservedLocaleDocs(),
     getTranslations("adminSettings.languages"),
   ]);
 
@@ -18,6 +20,16 @@ export default async function Page() {
         initial={{
           uiEnabled: settings.uiEnabled,
           contentEnabled: settings.contentEnabled,
+          reservedLocales: reservedDocs.map((d) => ({
+            code: d.code,
+            activated: d.activated,
+            nativeName: d.nativeName,
+            englishName: d.englishName,
+            flag: d.flag,
+            rtl: d.rtl,
+            baseLocale: d.baseLocale,
+            messages: d.messages,
+          })),
         }}
       />
     </div>

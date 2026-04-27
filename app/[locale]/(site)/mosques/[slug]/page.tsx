@@ -4,7 +4,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ArrowLeft, Globe, Mail, MapPin, Phone, Users } from "lucide-react";
-import type { Locale } from "@/i18n/config";
+import { pickLocalized } from "@/lib/utils";
 import { fetchMosqueBySlug, fetchAllSlugs } from "@/lib/admin/data/mosques";
 import { countryName } from "@/lib/mosques/countries";
 import { mosqueJsonLd } from "@/lib/mosques/jsonld";
@@ -63,8 +63,10 @@ export default async function MosqueDetailPage({
   const enabledServices = (Object.keys(mosque.services) as Array<keyof typeof mosque.services>)
     .filter((k) => mosque.services[k]);
 
-  const localizedName = mosque.name[locale as Locale] ?? mosque.name.en;
-  const localizedDesc = mosque.description?.[locale as Locale] ?? mosque.description?.en;
+  const localizedName = pickLocalized(mosque.name, locale, "en") ?? mosque.name.en;
+  const localizedDesc = mosque.description
+    ? pickLocalized(mosque.description, locale, "en") ?? mosque.description.en
+    : undefined;
   const isVerified = Boolean(mosque.moderation?.reviewedAt);
 
   return (

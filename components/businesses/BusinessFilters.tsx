@@ -12,6 +12,7 @@ import type {
   PriceTier,
 } from "@/types/business";
 import type { Locale } from "@/i18n/config";
+import { pickLocalized } from "@/lib/utils";
 
 interface Props {
   categories: BusinessCategory[];
@@ -70,7 +71,7 @@ export function BusinessFilters({ categories, amenities, total }: Props) {
         >
           <option value="">{tCommon("publicAllCategories")}</option>
           {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name[locale] ?? c.name.en}</option>
+            <option key={c.id} value={c.id}>{pickLocalized(c.name, locale, "en") ?? c.name.en}</option>
           ))}
         </select>
         <select
@@ -92,7 +93,7 @@ export function BusinessFilters({ categories, amenities, total }: Props) {
         >
           <option value="">{t("amenity")}</option>
           {amenities.map((a) => (
-            <option key={a.id} value={a.id}>{a.name[locale] ?? a.name.en}</option>
+            <option key={a.id} value={a.id}>{pickLocalized(a.name, locale, "en") ?? a.name.en}</option>
           ))}
         </select>
         <select

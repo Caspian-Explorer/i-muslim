@@ -5,6 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Picks the value for `locale` from a localized text record, falling back to
+// English. Used to render admin-authored content (business names, mosque
+// descriptions, etc.) under any UI locale — including reserved ones for which
+// no per-locale value exists.
+export function pickLocalized<M extends object, K extends Extract<keyof M, string>>(
+  map: M,
+  locale: string,
+  fallback: K,
+): M[K] | undefined {
+  const dynKey = locale as K;
+  return (map as Record<K, M[K] | undefined>)[dynKey] ?? (map as Record<K, M[K] | undefined>)[fallback];
+}
+
 export function initials(name: string | null | undefined): string {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/);

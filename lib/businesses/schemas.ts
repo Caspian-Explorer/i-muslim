@@ -1,9 +1,12 @@
 import { z } from "zod";
-import { LOCALES } from "@/i18n/config";
+import { BUNDLED_LOCALES } from "@/i18n/config";
 
+// Authored taxonomy content (categories, amenities, cert bodies) is translated
+// only into the bundled UI locales. Reserved/un-activated locales render with
+// English fallback at the call site via lib/utils.ts pickLocalized().
 const localizedRequired = z.object(
-  Object.fromEntries(LOCALES.map((l) => [l, z.string().min(1)])) as Record<
-    (typeof LOCALES)[number],
+  Object.fromEntries(BUNDLED_LOCALES.map((l) => [l, z.string().min(1)])) as Record<
+    (typeof BUNDLED_LOCALES)[number],
     z.ZodString
   >,
 );

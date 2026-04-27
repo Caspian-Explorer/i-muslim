@@ -12,6 +12,7 @@ import { HalalBadge } from "@/components/businesses/HalalBadge";
 import { HoursDisplay } from "@/components/businesses/HoursDisplay";
 import { ReportListingDialog } from "@/components/businesses/ReportListingDialog";
 import type { Locale } from "@/i18n/config";
+import { pickLocalized } from "@/lib/utils";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -63,7 +64,7 @@ export default async function BusinessDetailPage({ params }: RouteParams) {
     .map((id) => amenities.find((a) => a.id === id))
     .filter((a): a is NonNullable<typeof a> => Boolean(a));
 
-  const description = business.description[locale] ?? business.description.en;
+  const description = pickLocalized(business.description, locale, "en") ?? business.description.en;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://i-muslim.com";
   const jsonLd = buildLocalBusinessJsonLd(business, baseUrl);
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${business.address.lat},${business.address.lng}`;
@@ -96,7 +97,7 @@ export default async function BusinessDetailPage({ params }: RouteParams) {
               {businessCategories.length > 0 && (
                 <>
                   <span aria-hidden>·</span>
-                  <span>{businessCategories[0]!.name[locale] ?? businessCategories[0]!.name.en}</span>
+                  <span>{pickLocalized(businessCategories[0]!.name, locale, "en") ?? businessCategories[0]!.name.en}</span>
                 </>
               )}
               {business.priceTier && (
@@ -174,7 +175,7 @@ export default async function BusinessDetailPage({ params }: RouteParams) {
               <div className="flex flex-wrap gap-1.5">
                 {businessAmenities.map((a) => (
                   <Badge key={a.id} variant="neutral">
-                    {a.name[locale] ?? a.name.en}
+                    {pickLocalized(a.name, locale, "en") ?? a.name.en}
                   </Badge>
                 ))}
               </div>

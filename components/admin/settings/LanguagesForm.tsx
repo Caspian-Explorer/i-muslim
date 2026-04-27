@@ -2,25 +2,23 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { Plus, Pencil, Power } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { LOCALES, DEFAULT_LOCALE, type Locale } from "@/i18n/config";
+import {
+  LOCALES,
+  LOCALE_META,
+  DEFAULT_LOCALE,
+  BUNDLED_LOCALES,
+  RESERVED_LOCALES,
+  type Locale,
+} from "@/i18n/config";
 import { ALL_LANGS, type LangCode } from "@/lib/translations";
-import { updateLanguageSettings } from "@/app/[locale]/(admin)/admin/settings/_actions";
-
-const UI_FLAGS: Record<Locale, string> = {
-  en: "🇬🇧",
-  ar: "🇸🇦",
-  tr: "🇹🇷",
-  id: "🇮🇩",
-};
-
-const UI_NATIVE: Record<Locale, string> = {
-  en: "English",
-  ar: "العربية",
-  tr: "Türkçe",
-  id: "Bahasa Indonesia",
-};
+import {
+  updateLanguageSettings,
+  deactivateUiLocaleAction,
+} from "@/app/[locale]/(admin)/admin/settings/_actions";
+import { ActivateLocaleDialog } from "./ActivateLocaleDialog";
 
 const CONTENT_FLAGS: Record<string, string> = {
   ar: "🇸🇦",
@@ -40,10 +38,22 @@ const CONTENT_NATIVE: Record<string, string> = {
 
 const CONTENT_DEFAULT: LangCode = "ar";
 
+export type ReservedLocaleSummary = {
+  code: Locale;
+  activated: boolean;
+  nativeName: string;
+  englishName: string;
+  flag: string;
+  rtl: boolean;
+  baseLocale: Locale;
+  messages: Record<string, unknown>;
+};
+
 export type LanguagesFormProps = {
   initial: {
     uiEnabled: Locale[];
     contentEnabled: LangCode[];
+    reservedLocales: ReservedLocaleSummary[];
   };
 };
 
@@ -63,11 +73,26 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
   const [contentEnabled, setContentEnabled] = useState<Set<LangCode>>(
     () => new Set(initial.contentEnabled),
   );
+  const [reserved, setReserved] = useState<ReservedLocaleSummary[]>(
+    initial.reservedLocales,
+  );
   const [pending, startTransition] = useTransition();
   const [savedSnapshot, setSavedSnapshot] = useState({
     ui: initial.uiEnabled,
     content: initial.contentEnabled,
   });
+
+  // Locales that have translations available (bundled or activated reserved).
+  // Only these appear in the Interface-languages toggle section because
+  // toggling on a non-activated reserved locale would just leak it into the
+  // public switcher with English content.
+  const usableLocales: Locale[] = useMemo(
+    () => [
+      ...BUNDLED_LOCALES,
+      ...reserved.filter((r) => r.activated).map((r) => r.code),
+    ],
+    [reserved],
+  );
 
   const dirty = useMemo(() => {
     const uiNow = LOCALES.filter((l) => uiEnabled.has(l));
@@ -119,6 +144,59 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
     });
   }
 
+  // ── Reserved-locale dialog state ──────────────────────────────────────
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingCode, setEditingCode] = useState<Locale | null>(null);
+  const editingDoc = useMemo(
+    () =>
+      editingCode
+        ? reserved.find((r) => r.code === editingCode && r.activated)
+        : undefined,
+    [editingCode, reserved],
+  );
+
+  function openActivateDialog(code: Locale) {
+    setEditingCode(code);
+    setDialogOpen(true);
+  }
+
+  function onDialogSaved() {
+    // The server action revalidates "/" layout, but we also keep local state
+    // in sync so the UI reflects the new activated/edited row immediately.
+    if (!editingCode) return;
+    setReserved((prev) =>
+      prev.map((r) =>
+        r.code === editingCode ? { ...r, activated: true } : r,
+      ),
+    );
+  }
+
+  function onDeactivate(code: Locale) {
+    startTransition(async () => {
+      const res = await deactivateUiLocaleAction(code);
+      if (res.ok) {
+        setReserved((prev) =>
+          prev.map((r) =>
+            r.code === code ? { ...r, activated: false } : r,
+          ),
+        );
+        // If the locale was enabled in uiEnabled, remove it — we don't want
+        // a deactivated locale leaking into the public switcher.
+        setUiEnabled((prev) => {
+          if (!prev.has(code)) return prev;
+          const next = new Set(prev);
+          next.delete(code);
+          return next;
+        });
+        toast.success(t("deactivatedToast"));
+      } else {
+        toast.error(t("errorToast"));
+      }
+    });
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────
+
   return (
     <div className="space-y-8">
       <Section
@@ -126,15 +204,16 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
         description={t("uiDescription")}
       >
         <ul className="divide-y divide-border rounded-lg border border-border bg-card">
-          {LOCALES.map((code) => {
+          {usableLocales.map((code) => {
             const isDefault = code === DEFAULT_LOCALE;
             const checked = uiEnabled.has(code) || isDefault;
+            const meta = LOCALE_META[code];
             return (
               <LanguageRow
                 key={code}
                 code={code}
-                flag={UI_FLAGS[code]}
-                native={UI_NATIVE[code]}
+                flag={meta?.flag ?? "🌐"}
+                native={meta?.nativeName ?? code.toUpperCase()}
                 checked={checked}
                 isDefault={isDefault}
                 defaultHint={t("defaultLockedHint")}
@@ -169,6 +248,77 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
         </ul>
       </Section>
 
+      <Section
+        title={t("reservedSection")}
+        description={t("reservedDescription")}
+      >
+        <ul className="divide-y divide-border rounded-lg border border-border bg-card">
+          {RESERVED_LOCALES.map((code) => {
+            const summary = reserved.find((r) => r.code === code);
+            const meta = LOCALE_META[code];
+            const activated = summary?.activated ?? false;
+            return (
+              <li
+                key={code}
+                className="flex items-center justify-between gap-3 px-4 py-3"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span aria-hidden className="text-xl leading-none">
+                    {summary?.flag || meta?.flag || "🌐"}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {summary?.nativeName || meta?.nativeName || code.toUpperCase()}
+                    </p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      {code}
+                      {activated ? ` · ${t("activatedHint")}` : ` · ${t("notActivatedHint")}`}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {activated ? (
+                    <>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => openActivateDialog(code)}
+                        disabled={pending}
+                      >
+                        <Pencil className="size-3.5" />
+                        {t("editTranslations")}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onDeactivate(code)}
+                        disabled={pending}
+                        aria-label={t("deactivate")}
+                        title={t("deactivate")}
+                      >
+                        <Power className="size-3.5" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => openActivateDialog(code)}
+                      disabled={pending}
+                    >
+                      <Plus className="size-3.5" />
+                      {t("activate.activate")}
+                    </Button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </Section>
+
       <div className="flex items-center justify-end gap-3">
         {dirty && (
           <span className="text-xs text-muted-foreground">
@@ -184,6 +334,28 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
           {pending ? tCommon("loading") : t("save")}
         </Button>
       </div>
+
+      <ActivateLocaleDialog
+        // Remount the dialog whenever the target locale changes so its
+        // form state is reinitialised from props without a useEffect.
+        key={editingCode ?? "none"}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        code={editingCode}
+        initial={
+          editingDoc
+            ? {
+                nativeName: editingDoc.nativeName,
+                englishName: editingDoc.englishName,
+                flag: editingDoc.flag,
+                rtl: editingDoc.rtl,
+                baseLocale: editingDoc.baseLocale,
+                messages: editingDoc.messages,
+              }
+            : undefined
+        }
+        onSaved={onDialogSaved}
+      />
     </div>
   );
 }

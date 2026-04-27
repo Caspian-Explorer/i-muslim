@@ -2,14 +2,22 @@ import { Link } from "@/i18n/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { getLanguageSettings } from "@/lib/admin/data/language-settings";
+import { listActivatedReservedLocales } from "@/lib/admin/data/ui-locales";
+import { BUNDLED_LOCALES, type Locale } from "@/i18n/config";
 
 export async function Footer() {
-  const [t, locale, languageSettings] = await Promise.all([
+  const [t, locale, languageSettings, activated] = await Promise.all([
     getTranslations("footer"),
     getLocale(),
     getLanguageSettings(),
+    listActivatedReservedLocales(),
   ]);
   const year = new Date().getFullYear();
+
+  // A locale appears in the public switcher iff it has translations available
+  // (bundled or activated) AND admin enabled it in Settings.
+  const usable = new Set<Locale>([...BUNDLED_LOCALES, ...activated]);
+  const availableLocales = languageSettings.uiEnabled.filter((l) => usable.has(l));
 
   const linkClass =
     "text-muted-foreground transition-colors hover:text-foreground";
@@ -131,7 +139,7 @@ export async function Footer() {
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>{t("copyright", { year })}</p>
           <div className="flex flex-wrap items-center gap-3">
-            <LocaleSwitcher availableLocales={languageSettings.uiEnabled} />
+            <LocaleSwitcher availableLocales={availableLocales} />
           </div>
           <p>
             {t.rich("attribution", {

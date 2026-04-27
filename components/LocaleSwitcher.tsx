@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { Globe } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { LOCALES, type Locale } from "@/i18n/config";
+import { LOCALES, LOCALE_META, type Locale } from "@/i18n/config";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,12 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const LOCALE_LABEL: Record<Locale, string> = {
-  en: "English",
-  ar: "العربية",
-  tr: "Türkçe",
-  id: "Bahasa",
-};
+function nativeName(code: Locale): string {
+  return LOCALE_META[code]?.nativeName ?? code.toUpperCase();
+}
 
 type LocaleSwitcherProps = {
   // When provided, only these locales appear in the dropdown. The current
@@ -55,7 +52,7 @@ export function LocaleSwitcher({ availableLocales }: LocaleSwitcherProps = {}) {
         disabled={pending}
       >
         <Globe className="size-3.5" />
-        <span>{LOCALE_LABEL[locale]}</span>
+        <span>{nativeName(locale)}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[10rem]">
         {visible.map((l) => (
@@ -64,7 +61,7 @@ export function LocaleSwitcher({ availableLocales }: LocaleSwitcherProps = {}) {
             onClick={() => switchLocale(l)}
             className={l === locale ? "font-medium" : ""}
           >
-            {LOCALE_LABEL[l]}
+            {nativeName(l)}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

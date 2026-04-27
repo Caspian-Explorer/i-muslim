@@ -11,14 +11,14 @@ import type {
   BusinessCertificationBody,
   LocalizedTextRequired,
 } from "@/types/business";
-import { LOCALES, type Locale } from "@/i18n/config";
+import { BUNDLED_LOCALES, type BundledLocale } from "@/i18n/config";
 
 type Source = "firestore" | "mock";
 
 function asLocalizedRequired(raw: unknown, fallback: string): LocalizedTextRequired {
   const r = (raw ?? {}) as Record<string, unknown>;
   const out = {} as LocalizedTextRequired;
-  for (const l of LOCALES as readonly Locale[]) {
+  for (const l of BUNDLED_LOCALES as readonly BundledLocale[]) {
     out[l] = typeof r[l] === "string" && (r[l] as string).length > 0 ? (r[l] as string) : fallback;
   }
   return out;

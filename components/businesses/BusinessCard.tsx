@@ -9,6 +9,7 @@ import type {
   BusinessCertificationBody,
 } from "@/types/business";
 import type { Locale } from "@/i18n/config";
+import { pickLocalized } from "@/lib/utils";
 
 interface Props {
   business: Business;
@@ -32,7 +33,7 @@ export function BusinessCard({ business, categories, certBodies }: Props) {
     : null;
   const photo = business.photos[0];
   const photoUrl = photo ? bucketUrl(photo.storagePath) : "";
-  const description = business.description[locale] ?? business.description.en;
+  const description = pickLocalized(business.description, locale, "en") ?? business.description.en;
 
   return (
     <Link
@@ -60,7 +61,7 @@ export function BusinessCard({ business, categories, certBodies }: Props) {
           {primaryCat && (
             <>
               <span aria-hidden>·</span>
-              <span>{primaryCat.name[locale] ?? primaryCat.name.en}</span>
+              <span>{pickLocalized(primaryCat.name, locale, "en") ?? primaryCat.name.en}</span>
             </>
           )}
           {business.priceTier && (

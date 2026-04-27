@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/sonner";
-import { LOCALES, type Locale } from "@/i18n/config";
+import { BUNDLED_LOCALES, type BundledLocale } from "@/i18n/config";
 import { CATEGORY_SLUGS } from "@/lib/blog/taxonomy";
 import { slugify } from "@/lib/blog/slug";
 import { readingMinutes } from "@/lib/blog/reading-time";
@@ -38,7 +38,7 @@ interface FormState {
   category: CategorySlug;
   heroImageUrl: string;
   heroImageAlt: string;
-  translations: Record<Locale, typeof EMPTY_TRANSLATION>;
+  translations: Record<BundledLocale, typeof EMPTY_TRANSLATION>;
 }
 
 function articleToForm(article: Article | null): FormState {
@@ -54,7 +54,7 @@ function articleToForm(article: Article | null): FormState {
     },
   };
   if (article) {
-    for (const locale of LOCALES) {
+    for (const locale of BUNDLED_LOCALES) {
       const t = article.translations[locale];
       if (!t) continue;
       base.translations[locale] = {
@@ -76,7 +76,7 @@ interface Props {
 export function ArticleEditorClient({ article, source }: Props) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => articleToForm(article));
-  const [activeLocale, setActiveLocale] = useState<Locale>("en");
+  const [activeLocale, setActiveLocale] = useState<BundledLocale>("en");
   const [pending, startTransition] = useTransition();
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -155,7 +155,7 @@ export function ArticleEditorClient({ article, source }: Props) {
 
   function buildPayload() {
     const translations: Record<string, unknown> = {};
-    for (const locale of LOCALES) {
+    for (const locale of BUNDLED_LOCALES) {
       const t = form.translations[locale];
       if (!t.title.trim()) continue;
       translations[locale] = {
@@ -281,9 +281,9 @@ export function ArticleEditorClient({ article, source }: Props) {
         </div>
       </div>
 
-      <Tabs value={activeLocale} onValueChange={(v) => setActiveLocale(v as Locale)}>
+      <Tabs value={activeLocale} onValueChange={(v) => setActiveLocale(v as BundledLocale)}>
         <TabsList>
-          {LOCALES.map((loc) => {
+          {BUNDLED_LOCALES.map((loc) => {
             const has = form.translations[loc].title.trim().length > 0;
             return (
               <TabsTrigger key={loc} value={loc}>
@@ -294,7 +294,7 @@ export function ArticleEditorClient({ article, source }: Props) {
           })}
         </TabsList>
 
-        {LOCALES.map((loc) => (
+        {BUNDLED_LOCALES.map((loc) => (
           <TabsContent key={loc} value={loc} className="space-y-4 pt-4">
             <div>
               <Label htmlFor={`title-${loc}`}>Title</Label>

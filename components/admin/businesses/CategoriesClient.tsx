@@ -23,7 +23,7 @@ import {
   updateCategoryAction,
   deleteCategoryAction,
 } from "@/lib/admin/actions/business-taxonomies";
-import { LOCALES, type Locale } from "@/i18n/config";
+import { BUNDLED_LOCALES, type BundledLocale } from "@/i18n/config";
 import type { BusinessCategory, LocalizedTextRequired } from "@/types/business";
 
 interface Props {
@@ -200,7 +200,7 @@ export function CategoriesClient({ initialCategories, canPersist }: Props) {
                 </div>
               </FormGrid>
               <FormGrid cols={3}>
-                {(LOCALES as readonly Locale[]).map((l) => (
+                {(BUNDLED_LOCALES as readonly BundledLocale[]).map((l) => (
                   <div key={l} className="space-y-1.5">
                     <Label>{t("nameLocale", { locale: tLocale(l) })}</Label>
                     <Input

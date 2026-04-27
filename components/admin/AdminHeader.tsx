@@ -7,13 +7,17 @@ import { ThemeMenu } from "./ThemeMenu";
 import { UserMenu } from "./UserMenu";
 import type { SidebarBadges } from "./Sidebar";
 import type { AdminSession } from "@/lib/auth/session";
+import { BUNDLED_LOCALES } from "@/i18n/config";
+import { listActivatedReservedLocales } from "@/lib/admin/data/ui-locales";
 
 interface AdminHeaderProps {
   session: AdminSession;
   badges?: SidebarBadges;
 }
 
-export function AdminHeader({ session, badges }: AdminHeaderProps) {
+export async function AdminHeader({ session, badges }: AdminHeaderProps) {
+  const activated = await listActivatedReservedLocales();
+  const availableLocales = [...BUNDLED_LOCALES, ...activated];
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
       <MobileSidebarDrawer badges={badges} />
@@ -27,7 +31,7 @@ export function AdminHeader({ session, badges }: AdminHeaderProps) {
         <div className="hidden md:block">
           <CommandPalette />
         </div>
-        <LanguageSwitcher />
+        <LanguageSwitcher availableLocales={availableLocales} />
         <ThemeMenu />
         <NotificationsPopover />
         <UserMenu name={session.name} email={session.email} picture={session.picture} />
