@@ -141,8 +141,7 @@ export function EventsPageClient({
       if (query) {
         const q = query.toLowerCase();
         const haystack = [
-          e.title.en,
-          e.title.ar ?? "",
+          e.title,
           e.organizer.name,
           e.location.venue ?? "",
           e.location.address ?? "",
@@ -159,7 +158,7 @@ export function EventsPageClient({
     () => [
       {
         id: "title",
-        accessorFn: (e) => e.title.en,
+        accessorFn: (e) => e.title,
         header: t("columns.title"),
         cell: ({ row }) => {
           const e = row.original;
@@ -171,7 +170,7 @@ export function EventsPageClient({
           return (
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-medium text-foreground truncate">{e.title.en}</span>
+                <span className="text-sm font-medium text-foreground truncate">{e.title}</span>
                 {recurrenceLabel && (
                   <span title={recurrenceLabel} aria-label={recurrenceLabel}>
                     <Repeat className="size-3 shrink-0 text-muted-foreground" />
@@ -186,15 +185,6 @@ export function EventsPageClient({
                   </span>
                 )}
               </div>
-              {e.title.ar && (
-                <div
-                  dir="rtl"
-                  lang="ar"
-                  className="text-xs text-muted-foreground truncate"
-                >
-                  {e.title.ar}
-                </div>
-              )}
             </div>
           );
         },
@@ -300,7 +290,7 @@ export function EventsPageClient({
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label={t("rowActions", { name: e.title.en })}
+                    aria-label={t("rowActions", { name: e.title })}
                   >
                     <MoreHorizontal className="size-4" />
                   </Button>
@@ -360,8 +350,8 @@ export function EventsPageClient({
     });
     toast.success(
       mode === "create"
-        ? t("createdToast", { name: saved.title.en })
-        : t("updatedToast", { name: saved.title.en }),
+        ? t("createdToast", { name: saved.title })
+        : t("updatedToast", { name: saved.title }),
     );
   }
 
@@ -371,7 +361,7 @@ export function EventsPageClient({
     if (!canPersist) {
       setEvents((prev) => prev.filter((e) => e.id !== target.id));
       setDeleteTarget(null);
-      toast.success(t("deletedToast", { name: target.title.en }));
+      toast.success(t("deletedToast", { name: target.title }));
       return;
     }
     const result = await deleteEventAction(target.id);
@@ -381,7 +371,7 @@ export function EventsPageClient({
     }
     setEvents((prev) => prev.filter((e) => e.id !== target.id));
     setDeleteTarget(null);
-    toast.success(t("deletedToast", { name: target.title.en }));
+    toast.success(t("deletedToast", { name: target.title }));
   }
 
   return (
@@ -610,10 +600,10 @@ export function EventsPageClient({
         onOpenChange={(next) => !next && setDeleteTarget(null)}
         title={t("deleteTitle")}
         description={
-          deleteTarget ? t("deleteDescription", { name: deleteTarget.title.en }) : ""
+          deleteTarget ? t("deleteDescription", { name: deleteTarget.title }) : ""
         }
         confirmLabel={tCommon("delete")}
-        confirmWord={deleteTarget?.title.en}
+        confirmWord={deleteTarget?.title}
         onConfirm={handleDelete}
       />
     </div>

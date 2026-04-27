@@ -104,18 +104,10 @@ function asLocation(raw: unknown): EventLocation {
 
 export function normalizeEvent(id: string, raw: Record<string, unknown>): AdminEvent | null {
   if (!raw) return null;
-  const titleRaw = (raw.title ?? {}) as Record<string, unknown>;
-  const titleEn = asString(titleRaw.en);
-  if (!titleEn) return null;
+  const title = asString(raw.title);
+  if (!title) return null;
 
-  const descriptionRaw = (raw.description ?? {}) as Record<string, unknown>;
-  const description: AdminEvent["description"] | undefined =
-    typeof descriptionRaw === "object"
-      ? {
-          en: asOptionalString(descriptionRaw.en),
-          ar: asOptionalString(descriptionRaw.ar),
-        }
-      : undefined;
+  const description = asOptionalString(raw.description);
 
   const rawCategory = typeof raw.category === "string" ? raw.category : "other";
   const category: EventCategory = CATEGORIES.includes(rawCategory as EventCategory)
@@ -131,9 +123,8 @@ export function normalizeEvent(id: string, raw: Record<string, unknown>): AdminE
 
   return {
     id,
-    title: { en: titleEn, ar: asOptionalString(titleRaw.ar) },
-    description:
-      description && (description.en || description.ar) ? description : undefined,
+    title,
+    description,
     category,
     status,
     startsAt: asIso(raw.startsAt),
@@ -160,7 +151,6 @@ export async function fetchEvents(): Promise<EventsResult> {
 
   try {
     const snap = await db.collection("events").orderBy("startsAt", "desc").limit(500).get();
-    if (snap.empty) return { events: MOCK_EVENTS, source: "mock" };
     const events = snap.docs
       .map((d) => normalizeEvent(d.id, d.data() as Record<string, unknown>))
       .filter((e): e is AdminEvent => e !== null);
@@ -213,7 +203,7 @@ function projectUpcoming(
   pairs.sort((a, b) => a.next.getTime() - b.next.getTime());
   return pairs.slice(0, limit).map(({ event, next }) => ({
     id: event.id,
-    title: event.title.en,
+    title: event.title,
     startsAt: next.toISOString(),
     rsvpCount: event.rsvpCount,
   }));

@@ -96,7 +96,7 @@ export default async function Home() {
                       </span>
                     </div>
                     <h3 className="mt-2 text-base font-semibold text-foreground line-clamp-2">
-                      {event.title.en}
+                      {event.title}
                     </h3>
                     <p className="mt-1 text-xs text-muted-foreground tabular-nums">
                       {hijri.day} {tHijriMonths(String(hijri.monthIndex))} {hijri.year}

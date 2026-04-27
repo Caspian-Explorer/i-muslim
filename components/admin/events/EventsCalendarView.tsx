@@ -178,12 +178,12 @@ export function EventsCalendarView({ events, onEdit }: Props) {
                       type="button"
                       onClick={() => onEdit(occ.event)}
                       className="flex w-full items-center gap-1 truncate rounded-sm px-1 py-0.5 text-start hover:bg-muted"
-                      title={`${occ.event.title.en} · ${occ.startsAt.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}`}
+                      title={`${occ.event.title} · ${occ.startsAt.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}`}
                     >
                       <span
                         className={cn("inline-block size-1.5 rounded-full shrink-0", categoryDot(occ.event.category))}
                       />
-                      <span className="truncate text-foreground">{occ.event.title.en}</span>
+                      <span className="truncate text-foreground">{occ.event.title}</span>
                     </button>
                   </li>
                 ))}

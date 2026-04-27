@@ -24,16 +24,8 @@ const prayerAnchorEnum = z.enum(["fajr", "dhuhr", "asr", "maghrib", "isha"]);
 
 const eventInputSchema = z
   .object({
-    title: z.object({
-      en: z.string().min(2),
-      ar: z.string().optional(),
-    }),
-    description: z
-      .object({
-        en: z.string().optional(),
-        ar: z.string().optional(),
-      })
-      .optional(),
+    title: z.string().min(2),
+    description: z.string().optional(),
     category: categoryEnum,
     status: statusEnum,
     startsAt: z.string().min(1),

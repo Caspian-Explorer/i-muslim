@@ -16,10 +16,8 @@ const NOW = new Date().toISOString();
 export const MOCK_EVENTS: AdminEvent[] = [
   {
     id: "evt_jumuah_unity",
-    title: { en: "Friday Khutbah — Unity", ar: "خطبة الجمعة — الوحدة" },
-    description: {
-      en: "Weekly Jumu'ah congregation with khutbah on building unity in the community.",
-    },
+    title: "Friday Khutbah — Unity",
+    description: "Weekly Jumu'ah congregation with khutbah on building unity in the community.",
     category: "prayer",
     status: "published",
     startsAt: inDays(2, 13, 15),
@@ -40,10 +38,8 @@ export const MOCK_EVENTS: AdminEvent[] = [
   },
   {
     id: "evt_tafsir_kahf",
-    title: { en: "Tafsir Circle: Surah Al-Kahf" },
-    description: {
-      en: "Halaqa exploring the lessons of Surah Al-Kahf with Q&A.",
-    },
+    title: "Tafsir Circle: Surah Al-Kahf",
+    description: "Halaqa exploring the lessons of Surah Al-Kahf with Q&A.",
     category: "lecture",
     status: "published",
     startsAt: inDays(3, 19, 30),
@@ -61,10 +57,8 @@ export const MOCK_EVENTS: AdminEvent[] = [
   },
   {
     id: "evt_iftar_community",
-    title: { en: "Community Iftar", ar: "إفطار جماعي" },
-    description: {
-      en: "Open iftar for families. RSVP required for catering count.",
-    },
+    title: "Community Iftar",
+    description: "Open iftar for families. RSVP required for catering count.",
     category: "iftar",
     status: "published",
     startsAt: inDays(7, 18, 45),
@@ -83,8 +77,8 @@ export const MOCK_EVENTS: AdminEvent[] = [
   },
   {
     id: "evt_youth_halaqa",
-    title: { en: "Youth Halaqa" },
-    description: { en: "Weekly halaqa for ages 14–22." },
+    title: "Youth Halaqa",
+    description: "Weekly halaqa for ages 14–22.",
     category: "class",
     status: "published",
     startsAt: inDays(10, 17, 30),
@@ -102,8 +96,8 @@ export const MOCK_EVENTS: AdminEvent[] = [
   },
   {
     id: "evt_fundraiser_walk",
-    title: { en: "Charity Walk for Gaza" },
-    description: { en: "5 km sponsored walk. All proceeds to verified relief partners." },
+    title: "Charity Walk for Gaza",
+    description: "5 km sponsored walk. All proceeds to verified relief partners.",
     category: "fundraiser",
     status: "published",
     startsAt: inDays(14, 9, 0),
@@ -122,8 +116,8 @@ export const MOCK_EVENTS: AdminEvent[] = [
   },
   {
     id: "evt_janazah_brother_ali",
-    title: { en: "Janazah — Br. Ali Hassan", ar: "صلاة الجنازة — علي حسن" },
-    description: { en: "Janazah after Dhuhr. Burial at Gardens of Peace." },
+    title: "Janazah — Br. Ali Hassan",
+    description: "Janazah after Dhuhr. Burial at Gardens of Peace.",
     category: "janazah",
     status: "published",
     startsAt: inDays(1, 13, 30),
@@ -141,8 +135,8 @@ export const MOCK_EVENTS: AdminEvent[] = [
   },
   {
     id: "evt_eid_breakfast",
-    title: { en: "Eid Family Breakfast", ar: "إفطار العيد العائلي" },
-    description: { en: "After Eid prayer — kids' activities and breakfast." },
+    title: "Eid Family Breakfast",
+    description: "After Eid prayer — kids' activities and breakfast.",
     category: "community",
     status: "draft",
     startsAt: inDays(21, 8, 30),
@@ -159,8 +153,8 @@ export const MOCK_EVENTS: AdminEvent[] = [
   },
   {
     id: "evt_cancelled_lecture",
-    title: { en: "Postponed: Sirah Lecture" },
-    description: { en: "Postponed to next month. New date will be announced." },
+    title: "Postponed: Sirah Lecture",
+    description: "Postponed to next month. New date will be announced.",
     category: "lecture",
     status: "cancelled",
     startsAt: inDays(-3, 19, 0),
@@ -174,8 +168,8 @@ export const MOCK_EVENTS: AdminEvent[] = [
   },
   {
     id: "evt_quran_class",
-    title: { en: "Beginner Quran Class", ar: "فصل القرآن للمبتدئين" },
-    description: { en: "Tajweed basics. 8-week course." },
+    title: "Beginner Quran Class",
+    description: "Tajweed basics. 8-week course.",
     category: "class",
     status: "published",
     startsAt: inDays(5, 18, 0),

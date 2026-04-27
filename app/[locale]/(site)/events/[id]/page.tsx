@@ -30,11 +30,11 @@ export async function generateMetadata({ params }: PageContext): Promise<Metadat
   if (!event) return { title: "Event not found" };
   const t = await getTranslations("eventsPublic");
   return {
-    title: t("metaDetailTitle", { name: event.title.en }),
-    description: event.description?.en ?? t("metaDescription"),
+    title: t("metaDetailTitle", { name: event.title }),
+    description: event.description ?? t("metaDescription"),
     openGraph: {
-      title: event.title.en,
-      description: event.description?.en,
+      title: event.title,
+      description: event.description,
       type: "website",
     },
   };
@@ -99,8 +99,8 @@ export default async function EventDetailPage({ params }: PageContext) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Event",
-    name: event.title.en,
-    description: event.description?.en,
+    name: event.title,
+    description: event.description,
     startDate: primaryStart.toISOString(),
     endDate: event.endsAt ? new Date(event.endsAt).toISOString() : undefined,
     eventAttendanceMode:
@@ -173,17 +173,8 @@ export default async function EventDetailPage({ params }: PageContext) {
           )}
         </div>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          {event.title.en}
+          {event.title}
         </h1>
-        {event.title.ar && (
-          <p
-            dir="rtl"
-            lang="ar"
-            className="text-xl text-muted-foreground"
-          >
-            {event.title.ar}
-          </p>
-        )}
       </header>
 
       <section className="mt-8 grid gap-3 rounded-xl border border-border bg-muted/20 p-5 text-sm">
@@ -246,26 +237,17 @@ export default async function EventDetailPage({ params }: PageContext) {
           </a>
           <ShareButtons
             url={`/events/${event.id}`}
-            title={event.title.en}
+            title={event.title}
           />
         </div>
       </section>
 
-      {event.description?.en && (
+      {event.description && (
         <section className="mt-10 prose prose-sm max-w-none text-foreground">
           <h2 className="text-lg font-semibold">{t("about")}</h2>
           <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-            {event.description.en}
+            {event.description}
           </p>
-          {event.description.ar && (
-            <p
-              dir="rtl"
-              lang="ar"
-              className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground"
-            >
-              {event.description.ar}
-            </p>
-          )}
         </section>
       )}
 

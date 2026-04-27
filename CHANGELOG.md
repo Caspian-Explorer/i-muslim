@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+- Admin Events page falsely treated an empty `events` Firestore collection as "no Firestore" and fell back to mock mode, which disabled the "New event" button — making first-event creation impossible. `fetchEvents`, `fetchPublicEvents`, and `fetchPublicEvent` now only fall back to mock when Firebase Admin is unconfigured; an empty collection stays "live" so CRUD is always available.
+
+### Changed
+- Event `title` and `description` collapsed from per-language `{ en, ar }` to plain `string` end-to-end (types, Zod schema, Firestore reads/writes, admin form, public list, detail page, ICS export, JSON-LD). The admin form now has a single Title field and a single Description field; the public site renders that single value regardless of the surrounding UI locale.
+
 ### Added
 - Admin Settings page is now tabbed (Interface / Qur'an / Hadith); the Interface tab merges the bundled and reserved locale lists into one. Reserved-locale rows show an "Activate" button when inactive and "Edit" + "Deactivate" once activated.
 - "Download base JSON" button in the activate-locale dialog so admins can grab the latest `messages/<base>.json` to translate offline before pasting back.

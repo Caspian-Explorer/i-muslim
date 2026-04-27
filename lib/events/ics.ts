@@ -42,10 +42,8 @@ export function buildIcs(event: AdminEvent, origin?: string): string {
     ? new Date(event.endsAt)
     : new Date(dtStart.getTime() + 60 * 60 * 1000);
 
-  const titleEn = event.title.en;
   const description = [
-    event.description?.en,
-    event.title.ar ? `(${event.title.ar})` : null,
+    event.description,
     event.organizer?.name ? `Organizer: ${event.organizer.name}` : null,
     origin ? `${origin}/events/${event.id}` : null,
   ]
@@ -70,7 +68,7 @@ export function buildIcs(event: AdminEvent, origin?: string): string {
     `DTSTAMP:${toIcsDateUtc(new Date())}`,
     `DTSTART:${toIcsDateUtc(dtStart)}`,
     `DTEND:${toIcsDateUtc(dtEnd)}`,
-    `SUMMARY:${escapeIcs(titleEn)}`,
+    `SUMMARY:${escapeIcs(event.title)}`,
     description ? `DESCRIPTION:${escapeIcs(description)}` : null,
     location ? `LOCATION:${escapeIcs(location)}` : null,
     event.recurrence ? event.recurrence.replace(/^DTSTART[^\n]*\n?/m, "").trim() : null,

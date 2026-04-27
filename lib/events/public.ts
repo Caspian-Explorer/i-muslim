@@ -35,15 +35,10 @@ export async function fetchPublicEvents(opts?: {
         .where("status", "==", "published")
         .limit(500)
         .get();
-      const fetched = snap.docs
+      events = snap.docs
         .map((d) => normalizeEvent(d.id, d.data() as Record<string, unknown>))
         .filter((e): e is AdminEvent => e !== null);
-      if (fetched.length > 0) {
-        events = fetched;
-        source = "firestore";
-      } else {
-        events = MOCK_EVENTS.filter((e) => e.status === "published");
-      }
+      source = "firestore";
     } catch (err) {
       console.warn("[events/public] firestore read failed, using mock:", err);
       events = MOCK_EVENTS.filter((e) => e.status === "published");
@@ -68,12 +63,12 @@ export async function fetchPublicEvent(id: string): Promise<AdminEvent | null> {
   if (db) {
     try {
       const doc = await db.collection("events").doc(id).get();
-      if (doc.exists) {
-        const event = normalizeEvent(doc.id, doc.data() as Record<string, unknown>);
-        if (event && event.status === "published") return event;
-      }
+      if (!doc.exists) return null;
+      const event = normalizeEvent(doc.id, doc.data() as Record<string, unknown>);
+      return event && event.status === "published" ? event : null;
     } catch (err) {
       console.warn("[events/public] fetchPublicEvent firestore read failed:", err);
+      return null;
     }
   }
   return MOCK_EVENTS.find((e) => e.id === id && e.status === "published") ?? null;

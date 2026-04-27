@@ -50,10 +50,8 @@ const PRAYER_ANCHORS: PrayerAnchor[] = ["fajr", "dhuhr", "asr", "maghrib", "isha
 type RecurrenceMode = "none" | "weekly" | "daily" | "monthly" | "hijri-anchor";
 
 type FormValues = {
-  titleEn: string;
-  titleAr: string;
-  descriptionEn: string;
-  descriptionAr: string;
+  title: string;
+  description: string;
   category: EventCategory;
   status: EventStatus;
   startsAt: string;
@@ -118,10 +116,8 @@ function defaultsFromEvent(event?: AdminEvent | null): FormValues {
     event?.timezone ??
     (typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC");
   return {
-    titleEn: event?.title.en ?? "",
-    titleAr: event?.title.ar ?? "",
-    descriptionEn: event?.description?.en ?? "",
-    descriptionAr: event?.description?.ar ?? "",
+    title: event?.title ?? "",
+    description: event?.description ?? "",
     category: event?.category ?? "lecture",
     status: event?.status ?? "draft",
     startsAt: isoToLocalInput(event?.startsAt),
@@ -169,10 +165,8 @@ export function EventEditorDrawer({
     () =>
       z
         .object({
-          titleEn: z.string().min(2, t("errorTitle")),
-          titleAr: z.string(),
-          descriptionEn: z.string(),
-          descriptionAr: z.string(),
+          title: z.string().min(2, t("errorTitle")),
+          description: z.string(),
           category: z.enum(CATEGORIES as [EventCategory, ...EventCategory[]]),
           status: z.enum(STATUSES as [EventStatus, ...EventStatus[]]),
           startsAt: z.string().min(1, t("errorStartsAt")),
@@ -289,17 +283,8 @@ export function EventEditorDrawer({
       : undefined;
 
     const input: EventInput = {
-      title: {
-        en: values.titleEn.trim(),
-        ar: values.titleAr.trim() || undefined,
-      },
-      description:
-        values.descriptionEn.trim() || values.descriptionAr.trim()
-          ? {
-              en: values.descriptionEn.trim() || undefined,
-              ar: values.descriptionAr.trim() || undefined,
-            }
-          : undefined,
+      title: values.title.trim(),
+      description: values.description.trim() || undefined,
       category: values.category,
       status: values.status,
       startsAt: startsAtIso,
@@ -352,20 +337,9 @@ export function EventEditorDrawer({
           </EditorDialogHeader>
           <EditorDialogBody className="space-y-5">
             <Section title={t("sectionBasics")}>
-              <FormGrid>
-                <Field label={t("titleEn")} error={errors.titleEn?.message} required>
-                  <Input id="evt-title-en" autoComplete="off" {...register("titleEn")} />
-                </Field>
-                <Field label={t("titleAr")} hint={t("titleArHint")}>
-                  <Input
-                    id="evt-title-ar"
-                    dir="rtl"
-                    lang="ar"
-                    autoComplete="off"
-                    {...register("titleAr")}
-                  />
-                </Field>
-              </FormGrid>
+              <Field label={t("title")} error={errors.title?.message} required>
+                <Input id="evt-title" autoComplete="off" {...register("title")} />
+              </Field>
               <FormGrid>
                 <Field label={t("category")}>
                   <select
@@ -388,24 +362,13 @@ export function EventEditorDrawer({
                   </select>
                 </Field>
               </FormGrid>
-              <FormGrid>
-                <Field label={t("descriptionEn")}>
-                  <textarea
-                    rows={3}
-                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    {...register("descriptionEn")}
-                  />
-                </Field>
-                <Field label={t("descriptionAr")}>
-                  <textarea
-                    rows={3}
-                    dir="rtl"
-                    lang="ar"
-                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    {...register("descriptionAr")}
-                  />
-                </Field>
-              </FormGrid>
+              <Field label={t("description")}>
+                <textarea
+                  rows={3}
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  {...register("description")}
+                />
+              </Field>
             </Section>
 
             <Section title={t("sectionWhen")}>

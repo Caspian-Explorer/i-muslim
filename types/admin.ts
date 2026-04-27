@@ -92,8 +92,8 @@ export interface HijriAnchor {
 
 export interface AdminEvent {
   id: string;
-  title: { en: string; ar?: string };
-  description?: { en?: string; ar?: string };
+  title: string;
+  description?: string;
   category: EventCategory;
   status: EventStatus;
   startsAt: string;
