@@ -12,7 +12,10 @@ const CONTENT_DEFAULT: LangCode = "ar";
 
 export type LanguageSettings = {
   uiEnabled: Locale[];
-  contentEnabled: LangCode[];
+  // Translation languages enabled for /quran/* — independent of Hadith so
+  // an admin can ship a Qur'an translation before hadith data is seeded.
+  quranEnabled: LangCode[];
+  hadithEnabled: LangCode[];
 };
 
 function uniqInOrder<T extends string>(values: T[], ordering: readonly T[]): T[] {
@@ -41,7 +44,8 @@ function sanitizeContent(raw: unknown): LangCode[] {
 function defaults(): LanguageSettings {
   return {
     uiEnabled: [...LOCALES],
-    contentEnabled: [...ALL_LANGS],
+    quranEnabled: [...ALL_LANGS],
+    hadithEnabled: [...ALL_LANGS],
   };
 }
 
@@ -55,9 +59,16 @@ export const getLanguageSettings = cache(async (): Promise<LanguageSettings> => 
       .get();
     if (!snap.exists) return defaults();
     const data = snap.data() ?? {};
+    // Backwards compat: docs written before the Quran/Hadith split only have
+    // a single `contentEnabled` field. Use it for both new fields on first
+    // load; the next save persists the split.
+    const legacyContent = data.contentEnabled;
+    const quranRaw = data.quranEnabled ?? legacyContent;
+    const hadithRaw = data.hadithEnabled ?? legacyContent;
     return {
       uiEnabled: sanitizeUi(data.uiEnabled),
-      contentEnabled: sanitizeContent(data.contentEnabled),
+      quranEnabled: sanitizeContent(quranRaw),
+      hadithEnabled: sanitizeContent(hadithRaw),
     };
   } catch (err) {
     console.warn("[admin/data/language-settings] read failed:", err);
@@ -67,7 +78,8 @@ export const getLanguageSettings = cache(async (): Promise<LanguageSettings> => 
 
 export type SetLanguageSettingsInput = {
   uiEnabled: readonly string[];
-  contentEnabled: readonly string[];
+  quranEnabled: readonly string[];
+  hadithEnabled: readonly string[];
 };
 
 export async function setLanguageSettings(
@@ -77,7 +89,8 @@ export async function setLanguageSettings(
   const db = requireDb();
   const next: LanguageSettings = {
     uiEnabled: sanitizeUi(input.uiEnabled),
-    contentEnabled: sanitizeContent(input.contentEnabled),
+    quranEnabled: sanitizeContent(input.quranEnabled),
+    hadithEnabled: sanitizeContent(input.hadithEnabled),
   };
   await db
     .collection(LANGUAGE_SETTINGS_COLLECTION)
@@ -85,7 +98,8 @@ export async function setLanguageSettings(
     .set(
       {
         uiEnabled: next.uiEnabled,
-        contentEnabled: next.contentEnabled,
+        quranEnabled: next.quranEnabled,
+        hadithEnabled: next.hadithEnabled,
         updatedAt: Timestamp.now(),
         updatedBy: adminEmail,
       },

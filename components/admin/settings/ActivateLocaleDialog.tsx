@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -86,6 +87,43 @@ export function ActivateLocaleDialog({
   const [parseError, setParseError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const { nativeName, englishName, flag, rtl, baseLocale, messagesText } = form;
+
+  // Lazily fetch the chosen base locale's bundled translations and trigger a
+  // browser download. Lazy so the JSON isn't shipped with the dialog's first
+  // paint — it's ~50KB per locale.
+  async function downloadBaseJson() {
+    try {
+      let messages: Record<string, unknown>;
+      switch (baseLocale) {
+        case "ar":
+          messages = (await import("@/messages/ar.json")).default;
+          break;
+        case "tr":
+          messages = (await import("@/messages/tr.json")).default;
+          break;
+        case "id":
+          messages = (await import("@/messages/id.json")).default;
+          break;
+        case "en":
+        default:
+          messages = (await import("@/messages/en.json")).default;
+          break;
+      }
+      const json = JSON.stringify(messages, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${baseLocale}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn("[ActivateLocaleDialog] download failed:", err);
+      toast.error(t("errorWriteFailed"));
+    }
+  }
 
   function tryParseMessages(): Record<string, unknown> | null {
     const trimmed = messagesText.trim();
@@ -204,7 +242,20 @@ export function ActivateLocaleDialog({
             </Field>
           </div>
 
-          <Field label={t("messages")} hint={t("messagesHint")}>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-sm">{t("messages")}</Label>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={downloadBaseJson}
+                disabled={pending}
+              >
+                <Download className="size-3.5" />
+                {t("downloadBase", { locale: baseLocale.toUpperCase() })}
+              </Button>
+            </div>
             <textarea
               value={messagesText}
               onChange={(e) => {
@@ -217,10 +268,13 @@ export function ActivateLocaleDialog({
               className="w-full rounded-md border border-input bg-background p-3 font-mono text-xs shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder='{ "common": { "save": "..." }, "header": { ... } }'
             />
+            <p className="text-xs text-muted-foreground">
+              {t("messagesHint")} — {t("downloadBaseHint", { locale: baseLocale.toUpperCase() })}
+            </p>
             {parseError && (
               <p className="mt-1 text-xs text-destructive">{parseError}</p>
             )}
-          </Field>
+          </div>
         </div>
 
         <DialogFooter>

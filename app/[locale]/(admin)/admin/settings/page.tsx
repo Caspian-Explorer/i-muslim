@@ -19,7 +19,8 @@ export default async function Page() {
       <LanguagesForm
         initial={{
           uiEnabled: settings.uiEnabled,
-          contentEnabled: settings.contentEnabled,
+          quranEnabled: settings.quranEnabled,
+          hadithEnabled: settings.hadithEnabled,
           reservedLocales: reservedDocs.map((d) => ({
             code: d.code,
             activated: d.activated,

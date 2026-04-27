@@ -88,7 +88,7 @@ export default async function HadithBookPage({
         </p>
         <div className="mt-4">
           <Suspense fallback={<div className="h-8" />}>
-            <LanguageSelector availableLangs={languageSettings.contentEnabled} />
+            <LanguageSelector availableLangs={languageSettings.hadithEnabled} />
           </Suspense>
         </div>
       </header>

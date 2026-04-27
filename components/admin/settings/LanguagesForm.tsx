@@ -5,19 +5,16 @@ import { useTranslations } from "next-intl";
 import { Plus, Pencil, Power } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LOCALES,
   LOCALE_META,
   DEFAULT_LOCALE,
   BUNDLED_LOCALES,
-  RESERVED_LOCALES,
   type Locale,
 } from "@/i18n/config";
 import { ALL_LANGS, type LangCode } from "@/lib/translations";
-import {
-  updateLanguageSettings,
-  deactivateUiLocaleAction,
-} from "@/app/[locale]/(admin)/admin/settings/_actions";
+import { updateLanguageSettings, deactivateUiLocaleAction } from "@/app/[locale]/(admin)/admin/settings/_actions";
 import { ActivateLocaleDialog } from "./ActivateLocaleDialog";
 
 const CONTENT_FLAGS: Record<string, string> = {
@@ -52,7 +49,8 @@ export type ReservedLocaleSummary = {
 export type LanguagesFormProps = {
   initial: {
     uiEnabled: Locale[];
-    contentEnabled: LangCode[];
+    quranEnabled: LangCode[];
+    hadithEnabled: LangCode[];
     reservedLocales: ReservedLocaleSummary[];
   };
 };
@@ -67,44 +65,53 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
   const t = useTranslations("adminSettings.languages");
   const tCommon = useTranslations("common");
 
-  const [uiEnabled, setUiEnabled] = useState<Set<Locale>>(
-    () => new Set(initial.uiEnabled),
-  );
-  const [contentEnabled, setContentEnabled] = useState<Set<LangCode>>(
-    () => new Set(initial.contentEnabled),
-  );
-  const [reserved, setReserved] = useState<ReservedLocaleSummary[]>(
-    initial.reservedLocales,
-  );
-  const [pending, startTransition] = useTransition();
+  // ── Per-tab working state + saved snapshot. Save buttons compare working ↔
+  //    snapshot to compute dirty per-tab.
+  const [uiEnabled, setUiEnabled] = useState<Set<Locale>>(() => new Set(initial.uiEnabled));
+  const [quranEnabled, setQuranEnabled] = useState<Set<LangCode>>(() => new Set(initial.quranEnabled));
+  const [hadithEnabled, setHadithEnabled] = useState<Set<LangCode>>(() => new Set(initial.hadithEnabled));
+  const [reserved, setReserved] = useState<ReservedLocaleSummary[]>(initial.reservedLocales);
+
   const [savedSnapshot, setSavedSnapshot] = useState({
     ui: initial.uiEnabled,
-    content: initial.contentEnabled,
+    quran: initial.quranEnabled,
+    hadith: initial.hadithEnabled,
   });
 
-  // Locales that have translations available (bundled or activated reserved).
-  // Only these appear in the Interface-languages toggle section because
-  // toggling on a non-activated reserved locale would just leak it into the
-  // public switcher with English content.
-  const usableLocales: Locale[] = useMemo(
-    () => [
-      ...BUNDLED_LOCALES,
-      ...reserved.filter((r) => r.activated).map((r) => r.code),
-    ],
-    [reserved],
-  );
+  const [pending, startTransition] = useTransition();
+  const [pendingTab, setPendingTab] = useState<"ui" | "quran" | "hadith" | null>(null);
 
-  const dirty = useMemo(() => {
-    const uiNow = LOCALES.filter((l) => uiEnabled.has(l));
-    const contentNow = ALL_LANGS.filter((l) => contentEnabled.has(l));
-    return (
-      !setEqual(uiNow, savedSnapshot.ui) ||
-      !setEqual(contentNow, savedSnapshot.content)
-    );
-  }, [uiEnabled, contentEnabled, savedSnapshot]);
+  // ── Dirty flags per tab.
+  const uiDirty = useMemo(() => {
+    const now = LOCALES.filter((l) => uiEnabled.has(l));
+    return !setEqual(now, savedSnapshot.ui);
+  }, [uiEnabled, savedSnapshot.ui]);
+
+  const quranDirty = useMemo(() => {
+    const now = ALL_LANGS.filter((l) => quranEnabled.has(l));
+    return !setEqual(now, savedSnapshot.quran);
+  }, [quranEnabled, savedSnapshot.quran]);
+
+  const hadithDirty = useMemo(() => {
+    const now = ALL_LANGS.filter((l) => hadithEnabled.has(l));
+    return !setEqual(now, savedSnapshot.hadith);
+  }, [hadithEnabled, savedSnapshot.hadith]);
+
+  // Activated subset — used to gate the Interface toggle (a reserved locale
+  // has to be activated before it can be toggled into the public switcher).
+  const activatedReserved: Set<Locale> = useMemo(() => {
+    const out = new Set<Locale>();
+    for (const r of reserved) if (r.activated) out.add(r.code);
+    return out;
+  }, [reserved]);
+
+  function isUsable(code: Locale): boolean {
+    return (BUNDLED_LOCALES as readonly string[]).includes(code) || activatedReserved.has(code);
+  }
 
   function toggleUi(code: Locale) {
     if (code === DEFAULT_LOCALE) return;
+    if (!isUsable(code)) return;
     setUiEnabled((prev) => {
       const next = new Set(prev);
       if (next.has(code)) next.delete(code);
@@ -113,9 +120,9 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
     });
   }
 
-  function toggleContent(code: LangCode) {
+  function toggleContent(setEn: typeof setQuranEnabled, code: LangCode) {
     if (code === CONTENT_DEFAULT) return;
-    setContentEnabled((prev) => {
+    setEn((prev) => {
       const next = new Set(prev);
       if (next.has(code)) next.delete(code);
       else next.add(code);
@@ -123,35 +130,43 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
     });
   }
 
-  function onSave() {
+  // ── Saves. Each tab's button only modifies its own slice on the server;
+  //    the action requires all three fields, so we send saved-snapshot values
+  //    for the other two and the current working set for the active tab.
+  function save(tab: "ui" | "quran" | "hadith") {
     const payload = {
-      uiEnabled: LOCALES.filter((l) => uiEnabled.has(l)),
-      contentEnabled: ALL_LANGS.filter((l) => contentEnabled.has(l)),
+      uiEnabled: tab === "ui" ? LOCALES.filter((l) => uiEnabled.has(l)) : savedSnapshot.ui,
+      quranEnabled: tab === "quran" ? ALL_LANGS.filter((l) => quranEnabled.has(l)) : savedSnapshot.quran,
+      hadithEnabled: tab === "hadith" ? ALL_LANGS.filter((l) => hadithEnabled.has(l)) : savedSnapshot.hadith,
     };
+    setPendingTab(tab);
     startTransition(async () => {
-      const res = await updateLanguageSettings(payload);
-      if (res.ok) {
-        setSavedSnapshot({
-          ui: res.settings.uiEnabled,
-          content: res.settings.contentEnabled,
-        });
-        setUiEnabled(new Set(res.settings.uiEnabled));
-        setContentEnabled(new Set(res.settings.contentEnabled));
-        toast.success(t("savedToast"));
-      } else {
-        toast.error(t("errorToast"));
+      try {
+        const res = await updateLanguageSettings(payload);
+        if (res.ok) {
+          setSavedSnapshot({
+            ui: res.settings.uiEnabled,
+            quran: res.settings.quranEnabled,
+            hadith: res.settings.hadithEnabled,
+          });
+          setUiEnabled(new Set(res.settings.uiEnabled));
+          setQuranEnabled(new Set(res.settings.quranEnabled));
+          setHadithEnabled(new Set(res.settings.hadithEnabled));
+          toast.success(t("savedToast"));
+        } else {
+          toast.error(t("errorToast"));
+        }
+      } finally {
+        setPendingTab(null);
       }
     });
   }
 
-  // ── Reserved-locale dialog state ──────────────────────────────────────
+  // ── Reserved-locale dialog.
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCode, setEditingCode] = useState<Locale | null>(null);
   const editingDoc = useMemo(
-    () =>
-      editingCode
-        ? reserved.find((r) => r.code === editingCode && r.activated)
-        : undefined,
+    () => (editingCode ? reserved.find((r) => r.code === editingCode && r.activated) : undefined),
     [editingCode, reserved],
   );
 
@@ -161,13 +176,9 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
   }
 
   function onDialogSaved() {
-    // The server action revalidates "/" layout, but we also keep local state
-    // in sync so the UI reflects the new activated/edited row immediately.
     if (!editingCode) return;
     setReserved((prev) =>
-      prev.map((r) =>
-        r.code === editingCode ? { ...r, activated: true } : r,
-      ),
+      prev.map((r) => (r.code === editingCode ? { ...r, activated: true } : r)),
     );
   }
 
@@ -175,13 +186,9 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
     startTransition(async () => {
       const res = await deactivateUiLocaleAction(code);
       if (res.ok) {
-        setReserved((prev) =>
-          prev.map((r) =>
-            r.code === code ? { ...r, activated: false } : r,
-          ),
-        );
-        // If the locale was enabled in uiEnabled, remove it — we don't want
-        // a deactivated locale leaking into the public switcher.
+        setReserved((prev) => prev.map((r) => (r.code === code ? { ...r, activated: false } : r)));
+        // If the locale was enabled in uiEnabled, drop it — a deactivated
+        // locale shouldn't leak into the public switcher.
         setUiEnabled((prev) => {
           if (!prev.has(code)) return prev;
           const next = new Set(prev);
@@ -195,89 +202,64 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
     });
   }
 
-  // ── Render ────────────────────────────────────────────────────────────
+  // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-8">
-      <Section
-        title={t("uiSection")}
-        description={t("uiDescription")}
-      >
+    <Tabs defaultValue="interface" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="interface">{t("tabs.interface")}</TabsTrigger>
+        <TabsTrigger value="quran">{t("tabs.quran")}</TabsTrigger>
+        <TabsTrigger value="hadith">{t("tabs.hadith")}</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="interface" className="space-y-4">
+        <div>
+          <h2 className="text-base font-semibold">{t("uiSection")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("uiDescription")}</p>
+        </div>
+
         <ul className="divide-y divide-border rounded-lg border border-border bg-card">
-          {usableLocales.map((code) => {
+          {LOCALES.map((code) => {
             const isDefault = code === DEFAULT_LOCALE;
+            const reservedDoc = reserved.find((r) => r.code === code);
+            const status: "bundled" | "activated" | "unactivated" =
+              (BUNDLED_LOCALES as readonly string[]).includes(code)
+                ? "bundled"
+                : reservedDoc?.activated
+                  ? "activated"
+                  : "unactivated";
+            const meta = LOCALE_META[code];
+            const usable = status !== "unactivated";
             const checked = uiEnabled.has(code) || isDefault;
-            const meta = LOCALE_META[code];
-            return (
-              <LanguageRow
-                key={code}
-                code={code}
-                flag={meta?.flag ?? "🌐"}
-                native={meta?.nativeName ?? code.toUpperCase()}
-                checked={checked}
-                isDefault={isDefault}
-                defaultHint={t("defaultLockedHint")}
-                onToggle={() => toggleUi(code)}
-              />
-            );
-          })}
-        </ul>
-      </Section>
 
-      <Section
-        title={t("contentSection")}
-        description={t("contentDescription")}
-      >
-        <ul className="divide-y divide-border rounded-lg border border-border bg-card">
-          {ALL_LANGS.map((code) => {
-            const isDefault = code === CONTENT_DEFAULT;
-            const checked = contentEnabled.has(code) || isDefault;
-            return (
-              <LanguageRow
-                key={code}
-                code={code}
-                flag={CONTENT_FLAGS[code] ?? "🌐"}
-                native={CONTENT_NATIVE[code] ?? code.toUpperCase()}
-                checked={checked}
-                isDefault={isDefault}
-                defaultHint={t("defaultLockedHint")}
-                onToggle={() => toggleContent(code)}
-              />
-            );
-          })}
-        </ul>
-      </Section>
-
-      <Section
-        title={t("reservedSection")}
-        description={t("reservedDescription")}
-      >
-        <ul className="divide-y divide-border rounded-lg border border-border bg-card">
-          {RESERVED_LOCALES.map((code) => {
-            const summary = reserved.find((r) => r.code === code);
-            const meta = LOCALE_META[code];
-            const activated = summary?.activated ?? false;
             return (
               <li
                 key={code}
-                className="flex items-center justify-between gap-3 px-4 py-3"
+                className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <span aria-hidden className="text-xl leading-none">
-                    {summary?.flag || meta?.flag || "🌐"}
+                    {reservedDoc?.flag || meta?.flag || "🌐"}
                   </span>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">
-                      {summary?.nativeName || meta?.nativeName || code.toUpperCase()}
+                      {reservedDoc?.nativeName || meta?.nativeName || code.toUpperCase()}
                     </p>
                     <p className="text-xs uppercase tracking-wide text-muted-foreground">
                       {code}
-                      {activated ? ` · ${t("activatedHint")}` : ` · ${t("notActivatedHint")}`}
+                      {isDefault
+                        ? ` · ${t("defaultLockedHint")}`
+                        : status === "activated"
+                          ? ` · ${t("activatedHint")}`
+                          : status === "unactivated"
+                            ? ` · ${t("notActivatedHint")}`
+                            : ""}
                     </p>
                   </div>
                 </div>
+
                 <div className="flex items-center gap-2">
-                  {activated ? (
+                  {status === "activated" && (
                     <>
                       <Button
                         type="button"
@@ -301,7 +283,8 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
                         <Power className="size-3.5" />
                       </Button>
                     </>
-                  ) : (
+                  )}
+                  {status === "unactivated" && (
                     <Button
                       type="button"
                       size="sm"
@@ -312,28 +295,68 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
                       {t("activate.activate")}
                     </Button>
                   )}
+                  <ToggleSwitch
+                    checked={checked}
+                    disabled={isDefault || !usable}
+                    onChange={() => toggleUi(code)}
+                    label={meta?.nativeName ?? code}
+                  />
                 </div>
               </li>
             );
           })}
         </ul>
-      </Section>
 
-      <div className="flex items-center justify-end gap-3">
-        {dirty && (
-          <span className="text-xs text-muted-foreground">
-            {t("unsavedChanges")}
-          </span>
-        )}
-        <Button
-          type="button"
-          onClick={onSave}
-          disabled={!dirty || pending}
-          aria-busy={pending}
-        >
-          {pending ? tCommon("loading") : t("save")}
-        </Button>
-      </div>
+        <SaveBar
+          dirty={uiDirty}
+          pending={pending && pendingTab === "ui"}
+          onSave={() => save("ui")}
+          tCommon={tCommon}
+          t={t}
+        />
+      </TabsContent>
+
+      <TabsContent value="quran" className="space-y-4">
+        <div>
+          <h2 className="text-base font-semibold">{t("quranSection")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("quranDescription")}</p>
+        </div>
+
+        <ContentLangList
+          enabled={quranEnabled}
+          onToggle={(c) => toggleContent(setQuranEnabled, c)}
+          defaultHint={t("defaultLockedHint")}
+        />
+
+        <SaveBar
+          dirty={quranDirty}
+          pending={pending && pendingTab === "quran"}
+          onSave={() => save("quran")}
+          tCommon={tCommon}
+          t={t}
+        />
+      </TabsContent>
+
+      <TabsContent value="hadith" className="space-y-4">
+        <div>
+          <h2 className="text-base font-semibold">{t("hadithSection")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("hadithDescription")}</p>
+        </div>
+
+        <ContentLangList
+          enabled={hadithEnabled}
+          onToggle={(c) => toggleContent(setHadithEnabled, c)}
+          defaultHint={t("defaultLockedHint")}
+        />
+
+        <SaveBar
+          dirty={hadithDirty}
+          pending={pending && pendingTab === "hadith"}
+          onSave={() => save("hadith")}
+          tCommon={tCommon}
+          t={t}
+        />
+      </TabsContent>
 
       <ActivateLocaleDialog
         // Remount the dialog whenever the target locale changes so its
@@ -356,27 +379,63 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
         }
         onSaved={onDialogSaved}
       />
-    </div>
+    </Tabs>
   );
 }
 
-function Section({
-  title,
-  description,
-  children,
+function ContentLangList({
+  enabled,
+  onToggle,
+  defaultHint,
 }: {
-  title: string;
-  description: string;
-  children: React.ReactNode;
+  enabled: Set<LangCode>;
+  onToggle: (code: LangCode) => void;
+  defaultHint: string;
 }) {
   return (
-    <section className="space-y-3">
-      <div>
-        <h2 className="text-base font-semibold">{title}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-      </div>
-      {children}
-    </section>
+    <ul className="divide-y divide-border rounded-lg border border-border bg-card">
+      {ALL_LANGS.map((code) => {
+        const isDefault = code === CONTENT_DEFAULT;
+        const checked = enabled.has(code) || isDefault;
+        return (
+          <LanguageRow
+            key={code}
+            code={code}
+            flag={CONTENT_FLAGS[code] ?? "🌐"}
+            native={CONTENT_NATIVE[code] ?? code.toUpperCase()}
+            checked={checked}
+            isDefault={isDefault}
+            defaultHint={defaultHint}
+            onToggle={() => onToggle(code)}
+          />
+        );
+      })}
+    </ul>
+  );
+}
+
+function SaveBar({
+  dirty,
+  pending,
+  onSave,
+  tCommon,
+  t,
+}: {
+  dirty: boolean;
+  pending: boolean;
+  onSave: () => void;
+  tCommon: ReturnType<typeof useTranslations>;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  return (
+    <div className="flex items-center justify-end gap-3">
+      {dirty && (
+        <span className="text-xs text-muted-foreground">{t("unsavedChanges")}</span>
+      )}
+      <Button type="button" onClick={onSave} disabled={!dirty || pending} aria-busy={pending}>
+        {pending ? tCommon("loading") : t("save")}
+      </Button>
+    </div>
   );
 }
 
@@ -411,12 +470,7 @@ function LanguageRow({
           </p>
         </div>
       </div>
-      <ToggleSwitch
-        checked={checked}
-        disabled={isDefault}
-        onChange={onToggle}
-        label={native}
-      />
+      <ToggleSwitch checked={checked} disabled={isDefault} onChange={onToggle} label={native} />
     </li>
   );
 }
@@ -443,9 +497,7 @@ function ToggleSwitch({
       className={[
         "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-transparent transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        checked
-          ? "bg-primary"
-          : "bg-muted",
+        checked ? "bg-primary" : "bg-muted",
         disabled ? "cursor-not-allowed opacity-60" : "",
       ].join(" ")}
     >
@@ -459,3 +511,4 @@ function ToggleSwitch({
     </button>
   );
 }
+

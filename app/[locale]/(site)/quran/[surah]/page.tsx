@@ -91,7 +91,7 @@ export default async function SurahPage({
         </div>
         <div className="mt-4">
           <Suspense fallback={<div className="h-8" />}>
-            <LanguageSelector availableLangs={languageSettings.contentEnabled} />
+            <LanguageSelector availableLangs={languageSettings.quranEnabled} />
           </Suspense>
         </div>
       </header>

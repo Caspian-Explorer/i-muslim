@@ -32,6 +32,14 @@ npm run lint      # eslint
 - Tailwind for styling; colocate component-specific CSS in `app/globals.css` or component files only when Tailwind is insufficient.
 - TBD — refine as the codebase grows.
 
+## Translations
+
+After modifying any `messages/<locale>.json` (especially [messages/en.json](messages/en.json)) in a way that **adds, renames, or removes keys**, run `npm run sync:locales` before committing.
+
+The script reads activated reserved UI locales from Firestore (`config/uiLocales/locales/*`) and patches each one to mirror the new English shape — adding missing keys with the English value as a placeholder, removing stale keys, and leaving previously-translated values alone. Without this step, activated locales render partial-English silently for any new key (the [i18n/request.ts](i18n/request.ts) deep-merge fallback masks the gap), so the admin can't see what still needs a real translation.
+
+Skip the script if no key set changed (pure value edits, typo fixes inside an existing string, etc.).
+
 ## Task completion
 
 When a task is functionally complete and verified (build/lint pass where relevant, feature manually tested where the change is user-facing), wrap it up without waiting for a separate "please commit" prompt:

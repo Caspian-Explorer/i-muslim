@@ -22,7 +22,10 @@ import {
 
 const inputSchema = z.object({
   uiEnabled: z.array(z.enum(LOCALES as unknown as [Locale, ...Locale[]])),
-  contentEnabled: z.array(
+  quranEnabled: z.array(
+    z.enum(ALL_LANGS as unknown as [LangCode, ...LangCode[]]),
+  ),
+  hadithEnabled: z.array(
     z.enum(ALL_LANGS as unknown as [LangCode, ...LangCode[]]),
   ),
 });
