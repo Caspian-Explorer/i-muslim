@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Removed
+- Hijri Calendar admin section (was a stub; user-facing `/hijri-calendar` page is unchanged).
+
 ### Fixed
 - Admin Events page falsely treated an empty `events` Firestore collection as "no Firestore" and fell back to mock mode, which disabled the "New event" button — making first-event creation impossible. `fetchEvents`, `fetchPublicEvents`, and `fetchPublicEvent` now only fall back to mock when Firebase Admin is unconfigured; an empty collection stays "live" so CRUD is always available.
 

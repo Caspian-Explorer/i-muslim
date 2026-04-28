@@ -5,7 +5,6 @@ import {
   BookMarked,
   BookOpen,
   BookOpenCheck,
-  Calendar,
   CalendarDays,
   Clock,
   FileBarChart,
@@ -47,7 +46,6 @@ export type NavItemKey =
   | "khutbahs"
   | "media"
   | "prayerTimes"
-  | "hijriCalendar"
   | "events"
   | "mosques"
   | "qa"
@@ -123,7 +121,6 @@ export const ADMIN_NAV: NavGroup[] = [
     id: "worship",
     items: [
       { labelKey: "prayerTimes", href: "/admin/prayer-times", icon: Clock },
-      { labelKey: "hijriCalendar", href: "/admin/hijri-calendar", icon: Calendar },
       { labelKey: "events", href: "/admin/events", icon: CalendarDays },
       { labelKey: "mosques", href: "/admin/mosques", icon: Landmark, badgeKey: "pendingMosques" },
     ],
