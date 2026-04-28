@@ -54,7 +54,6 @@ export function ActivateLocaleDialog({
     nativeName: string;
     englishName: string;
     flag: string;
-    rtl: boolean;
     baseLocale: Locale;
     messagesText: string;
   };
@@ -65,7 +64,6 @@ export function ActivateLocaleDialog({
         nativeName: initial.nativeName,
         englishName: initial.englishName,
         flag: initial.flag,
-        rtl: initial.rtl,
         baseLocale: initial.baseLocale,
         messagesText: JSON.stringify(initial.messages, null, 2),
       };
@@ -74,7 +72,6 @@ export function ActivateLocaleDialog({
       nativeName: meta?.nativeName ?? "",
       englishName: meta?.englishName ?? "",
       flag: meta?.flag ?? "",
-      rtl: code ? RTL_LOCALES.has(code) : false,
       baseLocale: "en",
       messagesText: "{}",
     };
@@ -86,7 +83,10 @@ export function ActivateLocaleDialog({
   const [form, setForm] = useState<FormState>(buildInitialForm);
   const [parseError, setParseError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const { nativeName, englishName, flag, rtl, baseLocale, messagesText } = form;
+  const { nativeName, englishName, flag, baseLocale, messagesText } = form;
+  // Derived from the locale code itself — RTL_LOCALES is the source of truth
+  // for which scripts read right-to-left, so the admin doesn't need to set it.
+  const rtl = code ? RTL_LOCALES.has(code) : false;
 
   // Lazily fetch the chosen base locale's bundled translations and trigger a
   // browser download. Lazy so the JSON isn't shipped with the dialog's first
@@ -174,7 +174,7 @@ export function ActivateLocaleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>
             {initial ? t("titleEdit") : t("title")}
@@ -183,12 +183,10 @@ export function ActivateLocaleDialog({
           <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field
-              label={t("nativeName")}
-              hint={t("nativeNameHint")}
-            >
+        <div className="grid gap-6 py-2 md:grid-cols-2">
+          {/* Left column: metadata fields, stacked. */}
+          <div className="space-y-4">
+            <Field label={t("nativeName")} hint={t("nativeNameHint")}>
               <Input
                 value={nativeName}
                 onChange={(e) => setForm((s) => ({ ...s, nativeName: e.target.value }))}
@@ -204,9 +202,6 @@ export function ActivateLocaleDialog({
                 disabled={pending}
               />
             </Field>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-3">
             <Field label={t("flag")} hint={t("flagHint")}>
               <Input
                 value={flag}
@@ -229,20 +224,11 @@ export function ActivateLocaleDialog({
                 ))}
               </select>
             </Field>
-            <Field label={t("direction")} hint={t("directionHint")}>
-              <label className="inline-flex h-9 items-center gap-2 rounded-md border border-input bg-background px-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={rtl}
-                  onChange={(e) => setForm((s) => ({ ...s, rtl: e.target.checked }))}
-                  disabled={pending}
-                />
-                <span>{rtl ? "RTL" : "LTR"}</span>
-              </label>
-            </Field>
           </div>
 
-          <div className="space-y-1">
+          {/* Right column: translations JSON. The textarea fills the column
+              vertically so it lines up with the field stack on the left. */}
+          <div className="flex min-h-0 flex-col space-y-1">
             <div className="flex items-center justify-between gap-2">
               <Label className="text-sm">{t("messages")}</Label>
               <Button
@@ -264,8 +250,8 @@ export function ActivateLocaleDialog({
               }}
               disabled={pending}
               spellCheck={false}
-              rows={14}
-              className="w-full rounded-md border border-input bg-background p-3 font-mono text-xs shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              dir={rtl ? "rtl" : "ltr"}
+              className="flex-1 min-h-[20rem] w-full resize-none rounded-md border border-input bg-background p-3 font-mono text-xs shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder='{ "common": { "save": "..." }, "header": { ... } }'
             />
             <p className="text-xs text-muted-foreground">
