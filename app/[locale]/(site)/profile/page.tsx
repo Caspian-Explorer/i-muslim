@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { CalendarDays, Heart, Mail, MapPin } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { redirect } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SignInButton } from "@/components/site/SignInButton";
 import { SignOutButton } from "@/components/site/SignOutButton";
 import { getSiteSession } from "@/lib/auth/session";
 import { isAdminEmail } from "@/lib/auth/allowlist";
@@ -20,24 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ProfilePage() {
   const t = await getTranslations("profile");
   const session = await getSiteSession();
-
-  if (!session) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
-        <header className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            {t("title")}
-          </h1>
-          <p className="mt-2 text-muted-foreground">{t("signInPrompt")}</p>
-        </header>
-        <div className="rounded-xl border border-border bg-card p-8 text-center">
-          <p className="mb-6 text-foreground/90">{t("signInBody")}</p>
-          <SignInButton />
-        </div>
-      </div>
-    );
-  }
-
+  if (!session) redirect("/login?callbackUrl=/profile");
   const isAdmin = isAdminEmail(session.email);
   const links = [
     {

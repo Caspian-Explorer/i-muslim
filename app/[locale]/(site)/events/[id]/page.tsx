@@ -18,6 +18,9 @@ import { describeRRule } from "@/lib/admin/recurrence";
 import { getHijriParts } from "@/lib/admin/hijri";
 import { RsvpButton } from "@/components/site/RsvpButton";
 import { ShareButtons } from "@/components/site/ShareButtons";
+import { FavoriteButton } from "@/components/site/FavoriteButton";
+import { getSiteSession } from "@/lib/auth/session";
+import { isFavorited } from "@/lib/profile/data";
 import type { EventCategory } from "@/types/admin";
 
 interface PageContext {
@@ -68,6 +71,10 @@ export default async function EventDetailPage({ params }: PageContext) {
   const tCategories = await getTranslations("events.categories");
   const tHijriMonths = await getTranslations("hijri.months");
   const locale = await getLocale();
+  const session = await getSiteSession();
+  const initialFavorited = session
+    ? await isFavorited(session.uid, "event", event.id)
+    : false;
 
   const occurrences = nextThreeOccurrences(event);
   const primaryStart = occurrences[0] ?? new Date(event.startsAt);
@@ -238,6 +245,18 @@ export default async function EventDetailPage({ params }: PageContext) {
           <ShareButtons
             url={`/events/${event.id}`}
             title={event.title}
+          />
+          <FavoriteButton
+            itemType="event"
+            itemId={event.id}
+            itemMeta={{
+              title: event.title,
+              subtitle: event.description ?? null,
+              href: `/events/${event.id}`,
+              locale,
+            }}
+            initialFavorited={initialFavorited}
+            size="sm"
           />
         </div>
       </section>

@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { ArrowLeft, BadgeCheck, Lock } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { FavoriteButton } from "@/components/site/FavoriteButton";
 import { ageFromDob } from "@/lib/matrimonial/age";
 import { getVisiblePhotos } from "@/lib/matrimonial/photos";
+import { getSiteSession } from "@/lib/auth/session";
+import { isFavorited } from "@/lib/profile/data";
 import { initials } from "@/lib/utils";
 import { InterestButton } from "./InterestButton";
 import { ReportDialog } from "./ReportDialog";
@@ -41,6 +44,11 @@ export async function ProfileDetail({
 
   const visiblePhotos = getVisiblePhotos(target, matched);
   const age = ageFromDob(target.dateOfBirth);
+  const locale = await getLocale();
+  const session = await getSiteSession();
+  const initialFavorited = session
+    ? await isFavorited(session.uid, "matrimonialProfile", target.id)
+    : false;
 
   return (
     <div className="space-y-6">
@@ -50,17 +58,37 @@ export async function ProfileDetail({
         </Link>
       </Button>
 
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <Avatar className="size-20">
           {visiblePhotos[0] && <AvatarImage src={visiblePhotos[0].url} alt="" />}
           <AvatarFallback>{initials(target.displayName)}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <div className="flex items-center gap-1 text-2xl font-semibold tracking-tight text-foreground">
-            {target.displayName}
-            {target.verification.emailVerified && (
-              <BadgeCheck className="size-5 text-primary" />
-            )}
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-1 text-2xl font-semibold tracking-tight text-foreground">
+              {target.displayName}
+              {target.verification.emailVerified && (
+                <BadgeCheck className="size-5 text-primary" />
+              )}
+            </div>
+            <FavoriteButton
+              variant="bookmark"
+              itemType="matrimonialProfile"
+              itemId={target.id}
+              itemMeta={{
+                title: target.displayName,
+                subtitle: t("ageCity", {
+                  age,
+                  city: target.city,
+                  country: target.country,
+                }),
+                href: `/matrimonial/${target.id}`,
+                thumbnail: visiblePhotos[0]?.url ?? null,
+                locale,
+              }}
+              initialFavorited={initialFavorited}
+              iconOnly
+            />
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("ageCity", { age, city: target.city, country: target.country })}

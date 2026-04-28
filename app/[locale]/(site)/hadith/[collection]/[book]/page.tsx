@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { getLocale } from "next-intl/server";
 import {
   getHadithCollection,
   getHadithsByBook,
@@ -10,7 +11,11 @@ import { parseLangsParam } from "@/lib/translations";
 import type { LangCode } from "@/lib/translations";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { HadithCard, type HadithTranslationSlice } from "@/components/HadithCard";
+import { FavoritesProvider } from "@/components/site/favorites/FavoritesContext";
+import { ReadingProgressTracker } from "@/components/site/reading/ReadingProgressTracker";
 import { getLanguageSettings } from "@/lib/admin/data/language-settings";
+import { getSiteSession } from "@/lib/auth/session";
+import { getFavoritedSet } from "@/lib/profile/data";
 import type { HadithEntry } from "@/types/hadith";
 
 export async function generateMetadata({
@@ -58,94 +63,111 @@ export default async function HadithBookPage({
   const bookMeta = meta.books.find((b) => b.number === bookNumber);
   if (!bookMeta) notFound();
 
-  const [hadiths, languageSettings] = await Promise.all([
+  const session = await getSiteSession();
+  const locale = await getLocale();
+  const [hadiths, languageSettings, hadithFavorites] = await Promise.all([
     getHadithsByBook(collection, bookNumber),
     getLanguageSettings(),
+    session ? getFavoritedSet(session.uid, "hadith") : Promise.resolve(new Set<string>()),
   ]);
 
   const prev = meta.books.find((b) => b.number === bookNumber - 1);
   const next = meta.books.find((b) => b.number === bookNumber + 1);
   const langQS = langParam ? `?lang=${encodeURIComponent(langParam)}` : "";
 
+  const collectionShortName = meta.short_name ?? meta.name_en;
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <Link
-        href={`/hadith/${collection}${langQS}`}
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        ← {meta.name_en}
-      </Link>
+    <FavoritesProvider
+      initialItems={[{ itemType: "hadith", itemIds: Array.from(hadithFavorites) }]}
+    >
+      <ReadingProgressTracker
+        variant={{ kind: "hadith", collection, book: bookNumber }}
+      />
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <Link
+          href={`/hadith/${collection}${langQS}`}
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          ← {meta.name_en}
+        </Link>
 
-      <header className="mt-4 border-b border-border pb-6">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">
-          {meta.name_en} · Book {bookNumber}
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-          {bookMeta.name}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {hadiths.length} hadith in this book.
-        </p>
-        <div className="mt-4">
-          <Suspense fallback={<div className="h-8" />}>
-            <LanguageSelector availableLangs={languageSettings.hadithEnabled} />
-          </Suspense>
+        <header className="mt-4 border-b border-border pb-6">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            {meta.name_en} · Book {bookNumber}
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+            {bookMeta.name}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {hadiths.length} hadith in this book.
+          </p>
+          <div className="mt-4">
+            <Suspense fallback={<div className="h-8" />}>
+              <LanguageSelector availableLangs={languageSettings.hadithEnabled} />
+            </Suspense>
+          </div>
+        </header>
+
+        <div className="mt-6 space-y-4">
+          {hadiths.map((h) => {
+            const arabic = showArabic ? docToHadithEntry(h, "ar") : null;
+            const translations: HadithTranslationSlice[] = nonArabic.map((lang) => {
+              // Prefer the doc's translation in the requested language. If it's
+              // missing or empty (e.g. seed hasn't been run for this lang yet),
+              // fall back to English so the reader sees something.
+              const native = docToHadithEntry(h, lang);
+              if (native) {
+                return { requested: lang, actual: lang, entry: native, fallback: false };
+              }
+              const enEntry = lang !== "en" ? docToHadithEntry(h, "en") : null;
+              return {
+                requested: lang,
+                actual: enEntry ? "en" : null,
+                entry: enEntry,
+                fallback: Boolean(enEntry),
+              };
+            });
+            return (
+              <HadithCard
+                key={h.number}
+                number={h.number}
+                arabic={arabic}
+                translations={translations}
+                collectionShortName={collectionShortName}
+                collectionId={collection}
+                collectionName={meta.name_en}
+                bookNumber={bookNumber}
+                bookName={bookMeta.name}
+                locale={locale}
+              />
+            );
+          })}
         </div>
-      </header>
 
-      <div className="mt-6 space-y-4">
-        {hadiths.map((h) => {
-          const arabic = showArabic ? docToHadithEntry(h, "ar") : null;
-          const translations: HadithTranslationSlice[] = nonArabic.map((lang) => {
-            // Prefer the doc's translation in the requested language. If it's
-            // missing or empty (e.g. seed hasn't been run for this lang yet),
-            // fall back to English so the reader sees something.
-            const native = docToHadithEntry(h, lang);
-            if (native) {
-              return { requested: lang, actual: lang, entry: native, fallback: false };
-            }
-            const enEntry = lang !== "en" ? docToHadithEntry(h, "en") : null;
-            return {
-              requested: lang,
-              actual: enEntry ? "en" : null,
-              entry: enEntry,
-              fallback: Boolean(enEntry),
-            };
-          });
-          return (
-            <HadithCard
-              key={h.number}
-              number={h.number}
-              arabic={arabic}
-              translations={translations}
-              collectionShortName={meta.short_name ?? meta.name_en}
-            />
-          );
-        })}
+        <nav className="mt-8 flex items-center justify-between gap-2 text-sm">
+          {prev ? (
+            <Link
+              href={`/hadith/${collection}/${prev.number}${langQS}`}
+              className="rounded-md border border-border bg-background px-3 py-2 hover:border-accent"
+            >
+              ← Book {prev.number}
+            </Link>
+          ) : (
+            <span />
+          )}
+          {next ? (
+            <Link
+              href={`/hadith/${collection}/${next.number}${langQS}`}
+              className="rounded-md border border-border bg-background px-3 py-2 hover:border-accent"
+            >
+              Book {next.number} →
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
       </div>
-
-      <nav className="mt-8 flex items-center justify-between gap-2 text-sm">
-        {prev ? (
-          <Link
-            href={`/hadith/${collection}/${prev.number}${langQS}`}
-            className="rounded-md border border-border bg-background px-3 py-2 hover:border-accent"
-          >
-            ← Book {prev.number}
-          </Link>
-        ) : (
-          <span />
-        )}
-        {next ? (
-          <Link
-            href={`/hadith/${collection}/${next.number}${langQS}`}
-            className="rounded-md border border-border bg-background px-3 py-2 hover:border-accent"
-          >
-            Book {next.number} →
-          </Link>
-        ) : (
-          <span />
-        )}
-      </nav>
-    </div>
+    </FavoritesProvider>
   );
 }

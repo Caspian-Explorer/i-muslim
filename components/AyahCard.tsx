@@ -5,21 +5,63 @@ import {
   LANG_LABELS,
 } from "@/lib/translations";
 import type { LangCode } from "@/lib/translations";
+import { FavoriteButton } from "@/components/site/FavoriteButton";
 
 function stripHtml(s: string): string {
   // Translations from quran.com may contain <sup foot_note="...">N</sup> footnote markers.
   return s.replace(/<[^>]+>/g, "").trim();
 }
 
-export function AyahCard({ verse, langs }: { verse: Verse; langs: LangCode[] }) {
+export function AyahCard({
+  verse,
+  langs,
+  surahId,
+  surahName,
+  locale,
+}: {
+  verse: Verse;
+  langs: LangCode[];
+  surahId: number;
+  surahName: string;
+  locale: string;
+}) {
   const nonArabic = langs.filter((l) => l !== "ar");
 
+  // First non-Arabic translation, used as a short subtitle in favorites.
+  let excerpt: string | null = null;
+  for (const lang of nonArabic) {
+    const id = QURAN_TRANSLATION_IDS[lang];
+    if (id == null) continue;
+    const t = verse.translations.find((tr) => tr.resource_id === id);
+    if (t) {
+      excerpt = stripHtml(t.text);
+      break;
+    }
+  }
+
   return (
-    <article className="rounded-xl border border-border bg-background p-5">
-      <header className="mb-3 flex items-center gap-2">
+    <article
+      className="rounded-xl border border-border bg-background p-5"
+      data-ayah-id={verse.verse_key}
+      data-surah={surahId}
+      data-ayah={verse.verse_number}
+    >
+      <header className="mb-3 flex items-center justify-between gap-2">
         <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-muted px-2 text-xs font-medium text-muted-foreground">
           {verse.verse_key}
         </span>
+        <FavoriteButton
+          itemType="ayah"
+          itemId={verse.verse_key}
+          itemMeta={{
+            title: `${surahName} ${verse.verse_key}`,
+            subtitle: excerpt ? excerpt.slice(0, 160) : null,
+            href: `/quran/${surahId}#${verse.verse_key}`,
+            arabic: verse.text_uthmani,
+            locale,
+          }}
+          iconOnly
+        />
       </header>
 
       {langs.includes("ar") && (

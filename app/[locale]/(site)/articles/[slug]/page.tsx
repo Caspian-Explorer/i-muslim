@@ -13,6 +13,9 @@ import { CategoryPill } from "@/components/articles/CategoryPill";
 import { Disclaimer } from "@/components/articles/Disclaimer";
 import { RelatedArticles } from "@/components/articles/RelatedArticles";
 import { ShareCopyButton } from "@/components/articles/ShareCopyButton";
+import { FavoriteButton } from "@/components/site/FavoriteButton";
+import { getSiteSession } from "@/lib/auth/session";
+import { isFavorited } from "@/lib/profile/data";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ?? "http://localhost:7777";
@@ -64,12 +67,11 @@ export default async function ArticleDetailPage({
   const t = await getTranslations("articles");
   const date = new Date(article.publishedAt);
   const url = `${SITE_URL}/articles/${slug}`;
-  const related = await getRelatedArticles(
-    article.id,
-    article.category,
-    locale,
-    3,
-  );
+  const session = await getSiteSession();
+  const [related, initialFavorited] = await Promise.all([
+    getRelatedArticles(article.id, article.category, locale, 3),
+    session ? isFavorited(session.uid, "article", article.id) : Promise.resolve(false),
+  ]);
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
@@ -106,7 +108,20 @@ export default async function ArticleDetailPage({
         <ArticleBody html={article.bodyHtml} />
       </div>
 
-      <div className="mt-8 flex items-center gap-2">
+      <div className="mt-8 flex flex-wrap items-center gap-2">
+        <FavoriteButton
+          itemType="article"
+          itemId={article.id}
+          itemMeta={{
+            title: article.title,
+            subtitle: article.excerpt,
+            href: `/articles/${article.slug}`,
+            thumbnail: article.heroImageUrl ?? null,
+            locale,
+          }}
+          initialFavorited={initialFavorited}
+          size="md"
+        />
         <ShareCopyButton url={url} />
       </div>
 

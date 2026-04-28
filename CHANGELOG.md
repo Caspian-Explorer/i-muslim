@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+- Profile area shell (sidebar + sub-routes): `/profile/reading` shows resume cards for the last viewed Surah, Ayah, and Hadith; `/profile/favorites` lists everything the user has saved with type tabs (Ayahs, Surahs, Hadith, Articles, Events, Profiles). Anonymous users hitting `/profile/*` redirect to `/login?callbackUrl=…`.
+- Heart/Bookmark "save" button on individual Ayah, Surah header, Hadith, Article (card + detail), Event detail, and Matrimonial profile detail (bookmark variant — distinct from the existing Express-Interest heart). Anonymous clicks show a sign-in toast; signed-in clicks toggle a Firestore favorite optimistically.
+- Reading progress auto-capture: an `IntersectionObserver` on Surah and Hadith book pages records the most-visible item (with a 2-second visibility threshold) and flushes it via `navigator.sendBeacon` to `/api/profile/reading-progress` on `visibilitychange === 'hidden'` or `pagehide`. Stored at `users/{uid}/state/readingProgress`.
+
 ### Changed
 - Footer restructured (mus-1190): added a **Tools** column with the Zakat Calculator (moved out of Worship), demoted the Company links (About / Privacy / Terms / Contact) to inline horizontal links on the copyright line beside the language switcher, and moved the Quran/hadith source attribution from every page to a single **Credits** section on the About page.
 

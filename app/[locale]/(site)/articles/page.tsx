@@ -5,6 +5,9 @@ import { listPublishedArticles } from "@/lib/blog/data";
 import { isCategorySlug } from "@/lib/blog/taxonomy";
 import { ArticleList } from "@/components/articles/ArticleList";
 import { LocaleNotAvailable } from "@/components/articles/LocaleNotAvailable";
+import { FavoritesProvider } from "@/components/site/favorites/FavoritesContext";
+import { getSiteSession } from "@/lib/auth/session";
+import { getFavoritedSet } from "@/lib/profile/data";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("articles");
@@ -23,28 +26,38 @@ export default async function ArticlesPage({
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("articles");
   const category = isCategorySlug(sp.category) ? sp.category : undefined;
-  const { items } = await listPublishedArticles(locale, { category });
+  const session = await getSiteSession();
+  const [{ items }, articleFavorites] = await Promise.all([
+    listPublishedArticles(locale, { category }),
+    session
+      ? getFavoritedSet(session.uid, "article")
+      : Promise.resolve(new Set<string>()),
+  ]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
-      <header className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-          {t("pageTitle")}
-        </h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">{t("subtitle")}</p>
-      </header>
+    <FavoritesProvider
+      initialItems={[{ itemType: "article", itemIds: Array.from(articleFavorites) }]}
+    >
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
+        <header className="mb-8">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            {t("pageTitle")}
+          </h1>
+          <p className="mt-2 max-w-2xl text-muted-foreground">{t("subtitle")}</p>
+        </header>
 
-      {items.length === 0 ? (
-        locale === "en" ? (
-          <div className="rounded-lg border border-border bg-card px-6 py-12 text-center text-muted-foreground">
-            {t("empty")}
-          </div>
+        {items.length === 0 ? (
+          locale === "en" ? (
+            <div className="rounded-lg border border-border bg-card px-6 py-12 text-center text-muted-foreground">
+              {t("empty")}
+            </div>
+          ) : (
+            <LocaleNotAvailable />
+          )
         ) : (
-          <LocaleNotAvailable />
-        )
-      ) : (
-        <ArticleList articles={items} />
-      )}
-    </div>
+          <ArticleList articles={items} />
+        )}
+      </div>
+    </FavoritesProvider>
   );
 }
