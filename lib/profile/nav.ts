@@ -1,22 +1,7 @@
 import type { LucideIcon } from "lucide-react";
-import {
-  BookOpenCheck,
-  CalendarDays,
-  Heart,
-  LayoutDashboard,
-  Mail,
-  MapPin,
-  Star,
-} from "lucide-react";
+import { BookOpenCheck, Heart, LayoutDashboard, Star } from "lucide-react";
 
-export type ProfileNavKey =
-  | "overview"
-  | "reading"
-  | "favorites"
-  | "matrimonial"
-  | "events"
-  | "submitMosque"
-  | "contact";
+export type ProfileNavKey = "overview" | "reading" | "favorites" | "matrimonial";
 
 export interface ProfileNavItem {
   labelKey: ProfileNavKey;
@@ -28,8 +13,5 @@ export const PROFILE_NAV: ProfileNavItem[] = [
   { labelKey: "overview", href: "/profile", icon: LayoutDashboard },
   { labelKey: "reading", href: "/profile/reading", icon: BookOpenCheck },
   { labelKey: "favorites", href: "/profile/favorites", icon: Star },
-  { labelKey: "matrimonial", href: "/matrimonial/settings", icon: Heart },
-  { labelKey: "events", href: "/events", icon: CalendarDays },
-  { labelKey: "submitMosque", href: "/mosques/submit", icon: MapPin },
-  { labelKey: "contact", href: "/contact", icon: Mail },
+  { labelKey: "matrimonial", href: "/profile/matrimonial", icon: Heart },
 ];

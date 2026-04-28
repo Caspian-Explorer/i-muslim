@@ -11,15 +11,15 @@ export default async function ProfileLayout({ children }: { children: ReactNode 
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
-      <div className="hidden md:block shrink-0 sticky top-0 self-start h-screen">
-        <ProfileSidebar variant="desktop" />
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+      <div className="flex items-center gap-2 pb-3 md:hidden">
+        <ProfileMobileDrawer />
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 border-b border-border px-4 py-3 md:hidden">
-          <ProfileMobileDrawer />
-        </div>
-        {children}
+      <div className="flex gap-6">
+        <aside className="hidden md:block sticky top-20 self-start">
+          <ProfileSidebar variant="desktop" />
+        </aside>
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
     </div>
   );

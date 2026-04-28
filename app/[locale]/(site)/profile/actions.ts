@@ -2,12 +2,70 @@
 
 import { revalidatePath } from "next/cache";
 import { FieldValue } from "firebase-admin/firestore";
-import { getAdminAuth, getDb } from "@/lib/firebase/admin";
+import { getAdminAuth, getDb, requireDb } from "@/lib/firebase/admin";
+import { requireSiteSession } from "@/lib/auth/session";
+import {
+  inputToRecord,
+  profileFieldsSchema,
+  type ProfileFieldsInput,
+} from "@/lib/profile/schema";
+import { ageFromDob } from "@/lib/matrimonial/age";
 import {
   type FavoriteItemMeta,
   type FavoriteItemType,
   isFavoriteItemType,
 } from "@/types/profile";
+
+export type SaveProfileFieldsResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+export async function saveProfileFieldsAction(
+  input: ProfileFieldsInput,
+): Promise<SaveProfileFieldsResult> {
+  const session = await requireSiteSession();
+  const parsed = profileFieldsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid profile" };
+  }
+  const v = parsed.data;
+  if (ageFromDob(v.dateOfBirth) < 18) {
+    return { ok: false, error: "Must be at least 18." };
+  }
+  const db = requireDb();
+  const record = inputToRecord(v);
+  await db
+    .collection("users")
+    .doc(session.uid)
+    .set(
+      {
+        profile: { ...record, updatedAt: FieldValue.serverTimestamp() },
+        // Mirror displayName at the top level so admin lists pick it up.
+        displayName: record.displayName,
+        lastActiveAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+
+  // If the user has an active matrimonial profile, mirror displayName there
+  // so /matrimonial/browse stays consistent.
+  try {
+    const matSnap = await db.collection("matrimonialProfiles").doc(session.uid).get();
+    if (matSnap.exists) {
+      await matSnap.ref.set(
+        { displayName: record.displayName, updatedAt: new Date().toISOString() },
+        { merge: true },
+      );
+    }
+  } catch (err) {
+    console.warn("[profile/actions] mirror displayName to matrimonial failed:", err);
+  }
+
+  revalidatePath("/profile");
+  revalidatePath("/profile/matrimonial");
+  revalidatePath("/matrimonial");
+  return { ok: true };
+}
 
 export type ToggleFavoriteResult =
   | { ok: true; favorited: boolean }

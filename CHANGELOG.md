@@ -6,8 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+- **Profile + Matrimonial merged.** Identity and deen fields (display name, gender, DOB, country/city, languages, madhhab, sect, prayer commitment, hijab/beard, education, profession, marital history, bio) now live on `/profile` as a single editable form and persist to `users/{uid}.profile`. Matrimonial-only fields (preferences, polygamy stance, photos) are gated behind an opt-in toggle on the new `/profile/matrimonial` page, which also hosts the inbox/matches view. `/matrimonial/onboarding`, `/matrimonial/settings`, and `/matrimonial/inbox` now redirect to the unified surface.
+- Profile sidebar restyled as a rounded card inside the centered content area (sticky just below the top nav) instead of a full-bleed left rail. Sidebar nav trimmed to Overview / Reading / Favorites / Matrimonial — the four "Your space" link cards are gone, replaced by the inline editable profile form.
+
 ### Added
-- Profile area shell (sidebar + sub-routes): `/profile/reading` shows resume cards for the last viewed Surah, Ayah, and Hadith; `/profile/favorites` lists everything the user has saved with type tabs (Ayahs, Surahs, Hadith, Articles, Events, Profiles). Anonymous users hitting `/profile/*` redirect to `/login?callbackUrl=…`.
 - Heart/Bookmark "save" button on individual Ayah, Surah header, Hadith, Article (card + detail), Event detail, and Matrimonial profile detail (bookmark variant — distinct from the existing Express-Interest heart). Anonymous clicks show a sign-in toast; signed-in clicks toggle a Firestore favorite optimistically.
 - Reading progress auto-capture: an `IntersectionObserver` on Surah and Hadith book pages records the most-visible item (with a 2-second visibility threshold) and flushes it via `navigator.sendBeacon` to `/api/profile/reading-progress` on `visibilitychange === 'hidden'` or `pagehide`. Stored at `users/{uid}/state/readingProgress`.
 

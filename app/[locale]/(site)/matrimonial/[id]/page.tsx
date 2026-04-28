@@ -29,11 +29,11 @@ export default async function ProfilePage({
   if (!session) redirect(`/login?callbackUrl=/matrimonial/${id}`);
 
   const me = await getProfile(session.uid);
-  if (!me) redirect("/matrimonial/onboarding");
+  if (!me) redirect("/profile/matrimonial");
 
   const target = await getProfile(id);
   if (!target) notFound();
-  if (target.id === me.id) redirect("/matrimonial/settings");
+  if (target.id === me.id) redirect("/profile/matrimonial");
 
   const t = await getTranslations("matrimonial.profile");
 

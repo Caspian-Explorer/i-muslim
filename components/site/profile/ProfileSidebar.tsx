@@ -67,18 +67,20 @@ export function ProfileSidebar({ variant = "desktop", onNavigate }: ProfileSideb
 
   return (
     <TooltipProvider delayDuration={200}>
-      <aside
+      <div
         className={cn(
-          "flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border",
+          "flex flex-col bg-card text-foreground rounded-lg border border-border overflow-hidden",
           variant === "desktop" && (collapsed ? "w-16" : "w-[240px]"),
-          variant === "drawer" && "w-full",
+          variant === "desktop" && "max-h-[calc(100vh-6rem)]",
+          variant === "drawer" && "w-full h-full rounded-none border-0",
           "transition-[width] duration-200",
         )}
         aria-label={t("title")}
+        role="navigation"
       >
         <div
           className={cn(
-            "flex h-14 items-center border-b border-sidebar-border px-3 shrink-0",
+            "flex h-12 items-center border-b border-border px-3 shrink-0",
             showLabels ? "justify-between" : "justify-center",
           )}
         >
@@ -144,8 +146,8 @@ export function ProfileSidebar({ variant = "desktop", onNavigate }: ProfileSideb
           </nav>
         </ScrollArea>
 
-        {!showLabels && (
-          <div className="border-t border-sidebar-border p-3">
+        {!showLabels && variant === "desktop" && (
+          <div className="border-t border-border p-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -161,7 +163,7 @@ export function ProfileSidebar({ variant = "desktop", onNavigate }: ProfileSideb
             </Tooltip>
           </div>
         )}
-      </aside>
+      </div>
     </TooltipProvider>
   );
 }

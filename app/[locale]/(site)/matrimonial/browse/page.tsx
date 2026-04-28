@@ -15,7 +15,7 @@ export default async function BrowsePage() {
   const session = await getSiteSession();
   if (!session) redirect("/login?callbackUrl=/matrimonial/browse");
   const me = await getProfile(session.uid);
-  if (!me) redirect("/matrimonial/onboarding");
+  if (!me) redirect("/profile/matrimonial");
 
   const { profiles } = await listProfiles();
   const candidates = profiles.filter((p) => mutualFilter(me, p));

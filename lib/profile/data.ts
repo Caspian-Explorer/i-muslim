@@ -8,6 +8,7 @@ import {
   type ReadingProgressRecord,
   isFavoriteItemType,
 } from "@/types/profile";
+import type { ProfileFieldsRecord } from "@/lib/profile/schema";
 
 function tsToIso(value: unknown): string {
   if (value instanceof Timestamp) return value.toDate().toISOString();
@@ -159,6 +160,65 @@ function normalizeReadingProgress(raw: Record<string, unknown> | undefined): Rea
   }
 
   return out;
+}
+
+function normalizeProfileFields(raw: Record<string, unknown> | undefined): ProfileFieldsRecord | null {
+  if (!raw) return null;
+  if (typeof raw.displayName !== "string" || !raw.displayName) return null;
+  return {
+    displayName: raw.displayName,
+    gender: (raw.gender as ProfileFieldsRecord["gender"]) ?? "male",
+    dateOfBirth: typeof raw.dateOfBirth === "string" ? raw.dateOfBirth : "",
+    country: typeof raw.country === "string" ? raw.country : "",
+    city: typeof raw.city === "string" ? raw.city : "",
+    ethnicity: typeof raw.ethnicity === "string" ? raw.ethnicity : null,
+    languages: Array.isArray(raw.languages) ? (raw.languages as string[]) : [],
+    madhhab: (raw.madhhab as ProfileFieldsRecord["madhhab"]) ?? "none",
+    sect: (raw.sect as ProfileFieldsRecord["sect"]) ?? "sunni",
+    prayerCommitment:
+      (raw.prayerCommitment as ProfileFieldsRecord["prayerCommitment"]) ?? "sometimes",
+    hijab: (raw.hijab as ProfileFieldsRecord["hijab"]) ?? "na",
+    beard: (raw.beard as ProfileFieldsRecord["beard"]) ?? "na",
+    revert: Boolean(raw.revert),
+    education: (raw.education as ProfileFieldsRecord["education"]) ?? "other",
+    profession: typeof raw.profession === "string" ? raw.profession : null,
+    maritalHistory:
+      (raw.maritalHistory as ProfileFieldsRecord["maritalHistory"]) ?? "never_married",
+    hasChildren: Boolean(raw.hasChildren),
+    wantsChildren: (raw.wantsChildren as ProfileFieldsRecord["wantsChildren"]) ?? "maybe",
+    bio: typeof raw.bio === "string" ? raw.bio : "",
+    updatedAt: tsToIso(raw.updatedAt),
+  };
+}
+
+export async function getProfileFields(uid: string): Promise<ProfileFieldsRecord | null> {
+  const db = getDb();
+  if (!db) return null;
+  try {
+    const doc = await db.collection("users").doc(uid).get();
+    if (!doc.exists) return null;
+    const data = doc.data();
+    const profile = data?.profile;
+    if (!profile || typeof profile !== "object") return null;
+    return normalizeProfileFields(profile as Record<string, unknown>);
+  } catch (err) {
+    console.warn("[profile/data] getProfileFields failed:", err);
+    return null;
+  }
+}
+
+export async function getMatrimonialEnabled(uid: string): Promise<boolean> {
+  const db = getDb();
+  if (!db) return false;
+  try {
+    const snap = await db.collection("matrimonialProfiles").doc(uid).get();
+    if (!snap.exists) return false;
+    const status = snap.get("status");
+    return status === "active" || status === "pending";
+  } catch (err) {
+    console.warn("[profile/data] getMatrimonialEnabled failed:", err);
+    return false;
+  }
 }
 
 export async function getReadingProgress(uid: string): Promise<ReadingProgressRecord> {

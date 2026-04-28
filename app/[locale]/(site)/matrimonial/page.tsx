@@ -21,7 +21,7 @@ export default async function MatrimonialLandingPage() {
 
   if (session && profile) {
     if (profile.status === "active") redirect("/matrimonial/browse");
-    redirect("/matrimonial/settings");
+    redirect("/profile/matrimonial");
   }
 
   return (
@@ -35,11 +35,11 @@ export default async function MatrimonialLandingPage() {
         <div className="mt-6 flex justify-center">
           {session ? (
             <Button asChild size="lg">
-              <Link href="/matrimonial/onboarding">{t("ctaContinue")}</Link>
+              <Link href="/profile/matrimonial">{t("ctaContinue")}</Link>
             </Button>
           ) : (
             <Button asChild size="lg" disabled={!status.configured}>
-              <Link href="/login?callbackUrl=/matrimonial/onboarding">{t("ctaSignIn")}</Link>
+              <Link href="/login?callbackUrl=/profile/matrimonial">{t("ctaSignIn")}</Link>
             </Button>
           )}
         </div>
