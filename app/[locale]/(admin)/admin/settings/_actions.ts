@@ -20,6 +20,10 @@ import {
   updateUiLocaleMessages,
   type UiLocaleDoc,
 } from "@/lib/admin/data/ui-locales";
+import {
+  getHadithPerCollectionStats,
+  type HadithCollectionStats,
+} from "@/lib/admin/data/content-translation-stats";
 
 const inputSchema = z.object({
   uiEnabled: z.array(z.enum(LOCALES as unknown as [Locale, ...Locale[]])),
@@ -128,6 +132,29 @@ export async function updateUiLocaleMessagesAction(
   } catch (err) {
     console.warn("[admin/settings/_actions] updateMessages failed:", err);
     return { ok: false, error: "write-failed" };
+  }
+}
+
+const langEnum = z.enum(ALL_LANGS as unknown as [LangCode, ...LangCode[]]);
+
+export type LoadHadithPerCollectionStatsResult =
+  | { ok: true; stats: HadithCollectionStats[] }
+  | { ok: false; error: string };
+
+export async function loadHadithPerCollectionStatsAction(
+  rawLang: unknown,
+): Promise<LoadHadithPerCollectionStatsResult> {
+  await requireAdminSession();
+  const parsed = langEnum.safeParse(rawLang);
+  if (!parsed.success) {
+    return { ok: false, error: "invalid-lang" };
+  }
+  try {
+    const stats = await getHadithPerCollectionStats(parsed.data);
+    return { ok: true, stats };
+  } catch (err) {
+    console.warn("[admin/settings/_actions] loadHadithPerCollection failed:", err);
+    return { ok: false, error: "read-failed" };
   }
 }
 

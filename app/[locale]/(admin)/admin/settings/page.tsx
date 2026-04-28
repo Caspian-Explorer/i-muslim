@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { LanguagesForm } from "@/components/admin/settings/LanguagesForm";
 import { getLanguageSettings } from "@/lib/admin/data/language-settings";
 import { listReservedLocaleDocs } from "@/lib/admin/data/ui-locales";
+import { getContentTranslationStats } from "@/lib/admin/data/content-translation-stats";
 import {
   computeTranslationStats,
   type MessageTree,
@@ -24,9 +25,10 @@ function isBundledLocale(code: string): code is BundledLocale {
 }
 
 export default async function Page() {
-  const [settings, reservedDocs, t] = await Promise.all([
+  const [settings, reservedDocs, contentStats, t] = await Promise.all([
     getLanguageSettings(),
     listReservedLocaleDocs(),
+    getContentTranslationStats(),
     getTranslations("adminSettings.languages"),
   ]);
 
@@ -41,6 +43,8 @@ export default async function Page() {
           uiEnabled: settings.uiEnabled,
           quranEnabled: settings.quranEnabled,
           hadithEnabled: settings.hadithEnabled,
+          quranStats: contentStats.quran,
+          hadithStats: contentStats.hadith,
           reservedLocales: reservedDocs.map((d) => {
             const baseCode: BundledLocale = isBundledLocale(d.baseLocale)
               ? d.baseLocale

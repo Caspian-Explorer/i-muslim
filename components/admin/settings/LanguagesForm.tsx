@@ -17,6 +17,7 @@ import { ALL_LANGS, type LangCode } from "@/lib/translations";
 import { updateLanguageSettings, deactivateUiLocaleAction } from "@/app/[locale]/(admin)/admin/settings/_actions";
 import { ActivateLocaleDialog } from "./ActivateLocaleDialog";
 import { EditTranslationsDialog } from "./EditTranslationsDialog";
+import { ContentLangDialog } from "./ContentLangDialog";
 import type { MessageTree } from "@/lib/i18n/translation-stats";
 
 type BundledCode = "en" | "ar" | "tr" | "id";
@@ -73,11 +74,18 @@ export type ReservedLocaleSummary = {
   stats: { total: number; translated: number; percent: number };
 };
 
+export type ContentStats = {
+  total: number;
+  perLang: Partial<Record<LangCode, number>>;
+};
+
 export type LanguagesFormProps = {
   initial: {
     uiEnabled: Locale[];
     quranEnabled: LangCode[];
     hadithEnabled: LangCode[];
+    quranStats: ContentStats;
+    hadithStats: ContentStats;
     reservedLocales: ReservedLocaleSummary[];
   };
 };
@@ -251,6 +259,19 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
     );
   }
 
+  // ── Content (Qur'an / Hadith) language popup. Shows real translation
+  //    completion stats from Firestore + a per-collection breakdown for
+  //    Hadith. Click any row's name area to open.
+  const [contentDialogOpen, setContentDialogOpen] = useState(false);
+  const [contentDialogKind, setContentDialogKind] = useState<"quran" | "hadith">("quran");
+  const [contentDialogCode, setContentDialogCode] = useState<LangCode | null>(null);
+
+  function openContentDialog(kind: "quran" | "hadith", code: LangCode) {
+    setContentDialogKind(kind);
+    setContentDialogCode(code);
+    setContentDialogOpen(true);
+  }
+
   function onDeactivate(code: Locale) {
     startTransition(async () => {
       const res = await deactivateUiLocaleAction(code);
@@ -391,8 +412,11 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
       <TabsContent value="quran" className="space-y-4">
         <ContentLangList
           enabled={quranEnabled}
+          stats={initial.quranStats}
           onToggle={(c) => toggleContent(setQuranEnabled, c)}
+          onRowClick={(c) => openContentDialog("quran", c)}
           defaultHint={t("defaultLockedHint")}
+          chipLabel={(percent) => t("progressChipLabel", { percent })}
         />
 
         <SaveBar
@@ -407,8 +431,11 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
       <TabsContent value="hadith" className="space-y-4">
         <ContentLangList
           enabled={hadithEnabled}
+          stats={initial.hadithStats}
           onToggle={(c) => toggleContent(setHadithEnabled, c)}
+          onRowClick={(c) => openContentDialog("hadith", c)}
           defaultHint={t("defaultLockedHint")}
+          chipLabel={(percent) => t("progressChipLabel", { percent })}
         />
 
         <SaveBar
@@ -419,6 +446,29 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
           t={t}
         />
       </TabsContent>
+
+      <ContentLangDialog
+        key={`content:${contentDialogKind}:${contentDialogCode ?? "none"}`}
+        open={contentDialogOpen}
+        onOpenChange={setContentDialogOpen}
+        kind={contentDialogKind}
+        code={contentDialogCode}
+        stats={
+          contentDialogKind === "quran" ? initial.quranStats : initial.hadithStats
+        }
+        enabled={
+          contentDialogCode != null &&
+          (contentDialogKind === "quran"
+            ? quranEnabled.has(contentDialogCode)
+            : hadithEnabled.has(contentDialogCode))
+        }
+        onToggleEnabled={(code) =>
+          toggleContent(
+            contentDialogKind === "quran" ? setQuranEnabled : setHadithEnabled,
+            code,
+          )
+        }
+      />
 
       <ActivateLocaleDialog
         // Remount the dialog whenever the target locale changes so its
@@ -490,29 +540,67 @@ function ProgressChip({
 
 function ContentLangList({
   enabled,
+  stats,
   onToggle,
+  onRowClick,
   defaultHint,
+  chipLabel,
 }: {
   enabled: Set<LangCode>;
+  stats: ContentStats;
   onToggle: (code: LangCode) => void;
+  onRowClick: (code: LangCode) => void;
   defaultHint: string;
+  chipLabel: (percent: number) => string;
 }) {
   return (
     <ul className="divide-y divide-border rounded-lg border border-border bg-card">
       {ALL_LANGS.map((code) => {
         const isDefault = code === CONTENT_DEFAULT;
         const checked = enabled.has(code) || isDefault;
+        // Arabic is the source — every doc has text_ar, so it's always 100%
+        // by definition. The non-Arabic langs use the per-lang count over the
+        // collection's total docs.
+        const translated = isDefault ? stats.total : (stats.perLang[code] ?? 0);
+        const percent =
+          stats.total === 0 ? 0 : Math.round((translated / stats.total) * 100);
         return (
-          <LanguageRow
+          <li
             key={code}
-            code={code}
-            flag={CONTENT_FLAGS[code] ?? "🌐"}
-            native={CONTENT_NATIVE[code] ?? code.toUpperCase()}
-            checked={checked}
-            isDefault={isDefault}
-            defaultHint={defaultHint}
-            onToggle={() => onToggle(code)}
-          />
+            className="flex items-center justify-between gap-3 px-4 py-3"
+          >
+            <button
+              type="button"
+              onClick={() => onRowClick(code)}
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span aria-hidden className="text-xl leading-none">
+                {CONTENT_FLAGS[code] ?? "🌐"}
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">
+                  {CONTENT_NATIVE[code] ?? code.toUpperCase()}
+                </p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {code}
+                  {isDefault ? ` · ${defaultHint}` : ""}
+                </p>
+              </div>
+            </button>
+            <ProgressChip
+              percent={percent}
+              translated={translated}
+              total={stats.total}
+              label={chipLabel(percent)}
+              onClick={() => onRowClick(code)}
+            />
+            <ToggleSwitch
+              checked={checked}
+              disabled={isDefault}
+              onChange={() => onToggle(code)}
+              label={CONTENT_NATIVE[code] ?? code}
+            />
+          </li>
         );
       })}
     </ul>

@@ -16,7 +16,8 @@
     "search": "Ara",
     "actions": "İşlemler",
     "all": "Tümü",
-    "of": "/"
+    "of": "/",
+    "copy": "Kopyala"
   },
   "countryCombobox": {
     "selectCountry": "Ülke seç",
@@ -294,6 +295,33 @@
       "10": "Şevval",
       "11": "Zilkâde",
       "12": "Zilhicce"
+    }
+  },
+  "hijriConverter": {
+    "title": "Hicri Tarih Çevirici",
+    "subtitle": "Miladi ve Hicri takvimler arasında dönüşüm yapın.",
+    "today": {
+      "label": "Bugün",
+      "ahSuffix": "H",
+      "ceSuffix": "M"
+    },
+    "gregorianToHijri": {
+      "title": "Miladi → Hicri",
+      "dateLabel": "Miladi tarih",
+      "resultLabel": "Hicri tarih",
+      "useToday": "Bugün"
+    },
+    "hijriToGregorian": {
+      "title": "Hicri → Miladi",
+      "yearLabel": "Yıl (H)",
+      "monthLabel": "Ay",
+      "dayLabel": "Gün",
+      "resultLabel": "Miladi tarih",
+      "useToday": "Bugün"
+    },
+    "errors": {
+      "invalidDate": "Seçilen Hicri ayda bu gün bulunmamaktadır.",
+      "outOfRange": "Tarih, desteklenen Hicri aralığın dışında."
     }
   },
   "users": {
@@ -587,6 +615,7 @@
     "quran": "Kur'an",
     "hadith": "Hadis",
     "zakat": "Zekât Hesaplayıcı",
+    "hijriConverter": "Hicri Tarih Çevirici",
     "mosques": "Camiler",
     "events": "Etkinlikler",
     "matrimonial": "Evlilik",
@@ -1755,6 +1784,25 @@
         "errorParse": "Çeviri JSON'u geçerli değil",
         "errorNotObject": "Çeviriler en üst düzeyde bir JSON nesnesi olmalıdır.",
         "errorWriteFailed": "Dil kaydedilemedi."
+      },
+      "content": {
+        "titleQuran": "Kur'an çevirileri",
+        "titleHadith": "Hadis çevirileri",
+        "statsTranslated": "Çevrildi",
+        "statsTotal": "Toplam",
+        "statsPercent": "Kapsama",
+        "toggleLabel": "Bu dili okuyuculara göster",
+        "toggleHint": "Kapalıyken bazı kayıtlar çevrilmiş olsa bile dil herkese açık çeviri seçicisinden gizlenir.",
+        "perCollectionTitle": "Koleksiyon başına kapsama",
+        "perCollectionLoading": "Koleksiyon kapsaması yükleniyor…",
+        "perCollectionEmpty": "Koleksiyon bulunamadı.",
+        "seedCommandTitle": "Çevirileri doldur",
+        "seedCommandHint": "Eksik çevirileri kaynak servisinden çekmek için bu komutu terminalde çalıştırın. Tekrar çalıştırmak güvenlidir.",
+        "seedCommandCopied": "Komut kopyalandı.",
+        "seedCommandCopyFailed": "Kopyalanamadı.",
+        "openQuranEditor": "Kur'an düzenleyiciyi aç",
+        "openHadithEditor": "Hadis düzenleyiciyi aç",
+        "errorLoadCollections": "Koleksiyon kapsaması yüklenemedi."
       },
       "editor": {
         "title": "Çevirileri düzenle",

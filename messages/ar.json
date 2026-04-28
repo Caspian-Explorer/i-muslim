@@ -16,7 +16,8 @@
     "search": "بحث",
     "actions": "إجراءات",
     "all": "الكل",
-    "of": "من"
+    "of": "من",
+    "copy": "نسخ"
   },
   "countryCombobox": {
     "selectCountry": "اختر الدولة",
@@ -296,6 +297,33 @@
       "12": "ذو الحجة"
     }
   },
+  "hijriConverter": {
+    "title": "محوّل التاريخ الهجري",
+    "subtitle": "حوّل بين التقويمين الميلادي والهجري.",
+    "today": {
+      "label": "اليوم",
+      "ahSuffix": "هـ",
+      "ceSuffix": "م"
+    },
+    "gregorianToHijri": {
+      "title": "ميلادي ← هجري",
+      "dateLabel": "التاريخ الميلادي",
+      "resultLabel": "التاريخ الهجري",
+      "useToday": "اليوم"
+    },
+    "hijriToGregorian": {
+      "title": "هجري ← ميلادي",
+      "yearLabel": "السنة (هـ)",
+      "monthLabel": "الشهر",
+      "dayLabel": "اليوم",
+      "resultLabel": "التاريخ الميلادي",
+      "useToday": "اليوم"
+    },
+    "errors": {
+      "invalidDate": "هذا اليوم غير موجود في الشهر الهجري المحدد.",
+      "outOfRange": "التاريخ خارج النطاق الهجري المدعوم."
+    }
+  },
   "users": {
     "pageTitle": "المستخدمون",
     "subtitleLive": "بيانات حيّة من Firestore.",
@@ -412,6 +440,7 @@
     "quran": "القرآن",
     "hadith": "الحديث",
     "zakat": "حاسبة الزكاة",
+    "hijriConverter": "محوّل التاريخ الهجري",
     "mosques": "المساجد",
     "events": "الفعاليات",
     "matrimonial": "الزواج",
@@ -1755,6 +1784,25 @@
         "errorParse": "ترجمات JSON غير صالحة",
         "errorNotObject": "يجب أن تكون الترجمات كائن JSON على المستوى الأعلى.",
         "errorWriteFailed": "تعذّر حفظ اللغة."
+      },
+      "content": {
+        "titleQuran": "ترجمات القرآن",
+        "titleHadith": "ترجمات الحديث",
+        "statsTranslated": "مترجم",
+        "statsTotal": "الإجمالي",
+        "statsPercent": "التغطية",
+        "toggleLabel": "إظهار هذه اللغة للقراء",
+        "toggleHint": "عند الإطفاء تختفي اللغة من قائمة تبديل الترجمات العامة حتى لو كانت بعض الإدخالات مترجمة.",
+        "perCollectionTitle": "التغطية لكل مجموعة",
+        "perCollectionLoading": "جاري تحميل التغطية لكل مجموعة…",
+        "perCollectionEmpty": "لا توجد مجموعات.",
+        "seedCommandTitle": "تعبئة الترجمات",
+        "seedCommandHint": "نفّذ هذا الأمر في الطرفية لجلب الترجمات المفقودة من المصدر. يمكن إعادة التشغيل بأمان.",
+        "seedCommandCopied": "تم نسخ الأمر.",
+        "seedCommandCopyFailed": "تعذّر النسخ.",
+        "openQuranEditor": "فتح محرر القرآن",
+        "openHadithEditor": "فتح محرر الحديث",
+        "errorLoadCollections": "تعذّر تحميل التغطية لكل مجموعة."
       },
       "editor": {
         "title": "تحرير الترجمات",

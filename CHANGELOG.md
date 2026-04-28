@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- Real per-language **completion percentage** on every Qur'an and Hadith translation row in /admin/settings (chip applies whether the row is enabled or disabled). Computed server-side via Firestore `.count()` aggregations against `quran_ayahs.translations.<lang>` and `hadith_entries.translations.<lang>`. Click any row's name area to open a stats dialog showing translated / total / coverage, a per-collection breakdown for Hadith (loaded lazily), an in-place enable/disable toggle, and a copy-to-clipboard `npm run seed:*:lang -- --lang=<code>` snippet for filling gaps. New composite indexes on `(collection, translations.<lang>)` for `hadith_entries` are pre-declared in `firestore.indexes.json` — deploy them via `firebase deploy --only firestore:indexes` after pulling.
+
+### Added
 - **Shared `<CountryCombobox>`** (mus-1193) — searchable, alphabetically sorted dropdown of all ~250 countries, localized into en/ar/tr/id via `i18n-iso-countries`. Replaces hand-rolled country `<Input>` fields across the profile, matrimonial preferences, mosque admin form, public mosque submission, business editor, certification-bodies admin, and the matrimonial admin filter. Stores ISO-3166 alpha-2 codes; supports single-select and multi-select (chips) modes.
 - `npm run migrate:country-iso2` — one-shot Firestore migration that converts legacy free-text `profile.country` and `matrimonialProfiles.*.country` values to ISO-2 codes. Idempotent; supports `--dry-run`.
 

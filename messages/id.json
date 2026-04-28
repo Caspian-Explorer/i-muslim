@@ -16,7 +16,8 @@
     "search": "Cari",
     "actions": "Tindakan",
     "all": "Semua",
-    "of": "dari"
+    "of": "dari",
+    "copy": "Salin"
   },
   "countryCombobox": {
     "selectCountry": "Pilih negara",
@@ -294,6 +295,33 @@
       "10": "Syawal",
       "11": "Zulkaidah",
       "12": "Zulhijah"
+    }
+  },
+  "hijriConverter": {
+    "title": "Konverter Tanggal Hijriah",
+    "subtitle": "Konversi antara kalender Masehi dan Hijriah.",
+    "today": {
+      "label": "Hari ini",
+      "ahSuffix": "H",
+      "ceSuffix": "M"
+    },
+    "gregorianToHijri": {
+      "title": "Masehi → Hijriah",
+      "dateLabel": "Tanggal Masehi",
+      "resultLabel": "Tanggal Hijriah",
+      "useToday": "Hari ini"
+    },
+    "hijriToGregorian": {
+      "title": "Hijriah → Masehi",
+      "yearLabel": "Tahun (H)",
+      "monthLabel": "Bulan",
+      "dayLabel": "Tanggal",
+      "resultLabel": "Tanggal Masehi",
+      "useToday": "Hari ini"
+    },
+    "errors": {
+      "invalidDate": "Tanggal tersebut tidak ada pada bulan Hijriah yang dipilih.",
+      "outOfRange": "Tanggal di luar rentang Hijriah yang didukung."
     }
   },
   "users": {
@@ -587,6 +615,7 @@
     "quran": "Al-Qur'an",
     "hadith": "Hadis",
     "zakat": "Kalkulator Zakat",
+    "hijriConverter": "Konverter Tanggal Hijriah",
     "mosques": "Masjid",
     "events": "Acara",
     "matrimonial": "Pernikahan",
@@ -1755,6 +1784,25 @@
         "errorParse": "JSON terjemahan tidak valid",
         "errorNotObject": "Terjemahan harus berupa objek JSON di tingkat atas.",
         "errorWriteFailed": "Tidak dapat menyimpan bahasa."
+      },
+      "content": {
+        "titleQuran": "Terjemahan Al-Qur'an",
+        "titleHadith": "Terjemahan Hadis",
+        "statsTranslated": "Diterjemahkan",
+        "statsTotal": "Total",
+        "statsPercent": "Cakupan",
+        "toggleLabel": "Tampilkan bahasa ini ke pembaca",
+        "toggleHint": "Saat dimatikan, bahasa disembunyikan dari pemilih terjemahan publik meskipun beberapa entri sudah diterjemahkan.",
+        "perCollectionTitle": "Cakupan per koleksi",
+        "perCollectionLoading": "Memuat cakupan per koleksi…",
+        "perCollectionEmpty": "Tidak ada koleksi.",
+        "seedCommandTitle": "Isi terjemahan",
+        "seedCommandHint": "Jalankan ini di terminal untuk mengambil terjemahan yang hilang dari sumber. Aman dijalankan ulang.",
+        "seedCommandCopied": "Perintah disalin.",
+        "seedCommandCopyFailed": "Tidak dapat menyalin.",
+        "openQuranEditor": "Buka editor Al-Qur'an",
+        "openHadithEditor": "Buka editor Hadis",
+        "errorLoadCollections": "Tidak dapat memuat cakupan per koleksi."
       },
       "editor": {
         "title": "Edit terjemahan",

@@ -13,7 +13,8 @@
     "search": "Search",
     "actions": "Actions",
     "all": "All",
-    "of": "of"
+    "of": "of",
+    "copy": "Copy"
   },
   "countryCombobox": {
     "selectCountry": "Select country",
@@ -1779,6 +1780,25 @@
         "errorParse": "Translations JSON is not valid JSON",
         "errorNotObject": "Translations must be a JSON object at the top level.",
         "errorWriteFailed": "Could not save the locale."
+      },
+      "content": {
+        "titleQuran": "Qur'an translations",
+        "titleHadith": "Hadith translations",
+        "statsTranslated": "Translated",
+        "statsTotal": "Total",
+        "statsPercent": "Coverage",
+        "toggleLabel": "Show this language to readers",
+        "toggleHint": "When off, the language is hidden from the public translation switcher even if some entries are translated.",
+        "perCollectionTitle": "Per-collection coverage",
+        "perCollectionLoading": "Loading per-collection coverage…",
+        "perCollectionEmpty": "No collections found.",
+        "seedCommandTitle": "Populate translations",
+        "seedCommandHint": "Run this in your terminal to fetch and store the missing translations from the upstream source. Re-running is idempotent.",
+        "seedCommandCopied": "Command copied.",
+        "seedCommandCopyFailed": "Could not copy.",
+        "openQuranEditor": "Open Qur'an editor",
+        "openHadithEditor": "Open Hadith editor",
+        "errorLoadCollections": "Could not load per-collection coverage."
       },
       "editor": {
         "title": "Edit translations",
