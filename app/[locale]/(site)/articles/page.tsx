@@ -55,7 +55,7 @@ export default async function ArticlesPage({
             <LocaleNotAvailable />
           )
         ) : (
-          <ArticleList articles={items} />
+          <ArticleList articles={items} signedIn={Boolean(session)} />
         )}
       </div>
     </FavoritesProvider>

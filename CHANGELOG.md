@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+- **Favorites Save button no longer falsely prompts signed-in users to sign in** (mus-1196). `FavoriteButton` was reading auth state via Firebase's `onAuthStateChanged` from inside a `useEffect`, so for the first ~hundreds of ms after page load the local `user` was `null` and clicks were treated as anonymous — the toast then sent the user to `/login`, which the proxy correctly bounces to `/admin` for already-signed-in visitors. Server pages now pass `signedIn={Boolean(session)}` to every `FavoriteButton`; the button awaits `auth.authStateReady()` before deciding instead of guessing from un-hydrated state. Threaded through `AyahCard`, `HadithCard`, `ArticleCard`, `ArticleList`, and the matrimonial `ProfileDetail`.
+
 ### Added
 - **Quran reading sidebar** (mus-1195) — surah pages now have a left sidebar (collapsible on desktop, slide-out drawer on mobile) modeled on the profile sidebar. First filter is a **searchable multi-select language combobox** with options sorted A–Z; replaces the inline language pill row in the surah header. URL (`?lang=`) and `i-muslim.langs` localStorage semantics are preserved, so deep links and saved preferences keep working. Introduces a reusable `<SearchableMultiCombobox>` primitive in `components/common/`.
 

@@ -140,6 +140,7 @@ export default async function HadithBookPage({
                 bookNumber={bookNumber}
                 bookName={bookMeta.name}
                 locale={locale}
+                signedIn={Boolean(session)}
               />
             );
           })}

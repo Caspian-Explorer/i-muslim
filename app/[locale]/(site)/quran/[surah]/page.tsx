@@ -129,6 +129,7 @@ export default async function SurahPage({
                     arabic: chapter.name_arabic,
                     locale,
                   }}
+                  signedIn={Boolean(session)}
                   size="md"
                 />
               </div>
@@ -153,6 +154,7 @@ export default async function SurahPage({
                   surahId={id}
                   surahName={chapter.name_simple}
                   locale={locale}
+                  signedIn={Boolean(session)}
                 />
               ))}
             </div>

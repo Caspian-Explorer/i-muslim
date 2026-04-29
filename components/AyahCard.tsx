@@ -18,12 +18,14 @@ export function AyahCard({
   surahId,
   surahName,
   locale,
+  signedIn,
 }: {
   verse: Verse;
   langs: LangCode[];
   surahId: number;
   surahName: string;
   locale: string;
+  signedIn: boolean;
 }) {
   const nonArabic = langs.filter((l) => l !== "ar");
 
@@ -60,6 +62,7 @@ export function AyahCard({
             arabic: verse.text_uthmani,
             locale,
           }}
+          signedIn={signedIn}
           iconOnly
         />
       </header>

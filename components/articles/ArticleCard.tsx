@@ -5,7 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from "@/components/site/FavoriteButton";
 import type { ArticleListItem } from "@/types/blog";
 
-export async function ArticleCard({ article }: { article: ArticleListItem }) {
+export async function ArticleCard({
+  article,
+  signedIn,
+}: {
+  article: ArticleListItem;
+  signedIn: boolean;
+}) {
   const t = await getTranslations("articles");
   const tCat = await getTranslations("articles.categories");
   const locale = await getLocale();
@@ -25,6 +31,7 @@ export async function ArticleCard({ article }: { article: ArticleListItem }) {
             thumbnail: article.heroImageUrl ?? null,
             locale,
           }}
+          signedIn={signedIn}
           iconOnly
         />
       </div>

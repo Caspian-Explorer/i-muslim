@@ -256,6 +256,7 @@ export default async function EventDetailPage({ params }: PageContext) {
               locale,
             }}
             initialFavorited={initialFavorited}
+            signedIn={Boolean(session)}
             size="sm"
           />
         </div>

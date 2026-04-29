@@ -23,6 +23,12 @@ interface Props {
    * Hide the label and only show the icon. Defaults to false.
    */
   iconOnly?: boolean;
+  /**
+   * Server-known auth state. When true, the button waits for the Firebase
+   * client SDK to finish hydrating instead of falsely prompting an already
+   * signed-in user to sign in.
+   */
+  signedIn?: boolean;
 }
 
 export function FavoriteButton({
@@ -34,12 +40,14 @@ export function FavoriteButton({
   size = "sm",
   className,
   iconOnly = false,
+  signedIn = false,
 }: Props) {
   const ctx = useFavoritesContext();
   const ctxFavorited = ctx?.has(itemType, itemId);
   const [localFavorited, setLocalFavorited] = useState<boolean>(initialFavorited);
   const favorited = ctxFavorited ?? localFavorited;
   const [pending, startTransition] = useTransition();
+  const [gating, setGating] = useState(false);
   const status = getFirebaseClientStatus();
   const auth = status.configured ? getClientAuth() : null;
   const [user, setUser] = useState<User | null>(null);
@@ -64,15 +72,31 @@ export function FavoriteButton({
     });
   }
 
-  function handleClick(e: MouseEvent) {
+  async function handleClick(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!user) {
+    let activeUser: User | null = user;
+
+    // Server says we're signed in but the Firebase client SDK hasn't
+    // restored its session yet — wait for it before deciding instead of
+    // showing the sign-in toast.
+    if (!activeUser && signedIn && auth) {
+      setGating(true);
+      try {
+        await auth.authStateReady();
+        activeUser = auth.currentUser;
+      } finally {
+        setGating(false);
+      }
+    }
+
+    if (!activeUser) {
       handleAnonClick();
       return;
     }
 
+    const u = activeUser;
     const previous = favorited;
     const next = !favorited;
     setLocalFavorited(next);
@@ -80,7 +104,7 @@ export function FavoriteButton({
 
     startTransition(async () => {
       try {
-        const token = await user.getIdToken();
+        const token = await u.getIdToken();
         const result = await toggleFavoriteAction(token, { itemType, itemId, itemMeta });
         if (!result.ok) {
           setLocalFavorited(previous);
@@ -114,7 +138,7 @@ export function FavoriteButton({
     <button
       type="button"
       onClick={handleClick}
-      disabled={pending}
+      disabled={pending || gating}
       aria-pressed={favorited}
       aria-label={label}
       title={label}

@@ -20,6 +20,7 @@ export function HadithCard({
   bookNumber,
   bookName,
   locale,
+  signedIn,
 }: {
   number: number;
   arabic: HadithEntry | null;
@@ -30,6 +31,7 @@ export function HadithCard({
   bookNumber: number;
   bookName: string;
   locale: string;
+  signedIn: boolean;
 }) {
   // First non-empty translation, used as a short subtitle in favorites.
   const excerptEntry = translations.find((t) => t.entry?.text)?.entry?.text ?? null;
@@ -65,6 +67,7 @@ export function HadithCard({
               arabic: arabic?.text ?? null,
               locale,
             }}
+            signedIn={signedIn}
             iconOnly
           />
         </div>

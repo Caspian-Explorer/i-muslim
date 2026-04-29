@@ -120,6 +120,7 @@ export default async function ArticleDetailPage({
             locale,
           }}
           initialFavorited={initialFavorited}
+          signedIn={Boolean(session)}
           size="md"
         />
         <ShareCopyButton url={url} />

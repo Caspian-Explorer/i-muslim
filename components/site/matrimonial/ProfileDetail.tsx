@@ -87,6 +87,7 @@ export async function ProfileDetail({
                 locale,
               }}
               initialFavorited={initialFavorited}
+              signedIn={Boolean(session)}
               iconOnly
             />
           </div>
