@@ -79,13 +79,20 @@ export type ContentStats = {
   perLang: Partial<Record<LangCode, number>>;
 };
 
+export type HadithStats = ContentStats & {
+  perCollection: Record<
+    string,
+    { total: number; perLang: Partial<Record<LangCode, number>> }
+  >;
+};
+
 export type LanguagesFormProps = {
   initial: {
     uiEnabled: Locale[];
     quranEnabled: LangCode[];
     hadithEnabled: LangCode[];
     quranStats: ContentStats;
-    hadithStats: ContentStats;
+    hadithStats: HadithStats;
     reservedLocales: ReservedLocaleSummary[];
   };
 };
@@ -455,6 +462,17 @@ export function LanguagesForm({ initial }: LanguagesFormProps) {
         code={contentDialogCode}
         stats={
           contentDialogKind === "quran" ? initial.quranStats : initial.hadithStats
+        }
+        perCollection={
+          contentDialogKind === "hadith" && contentDialogCode
+            ? Object.entries(initial.hadithStats.perCollection)
+                .map(([slug, { total, perLang }]) => ({
+                  slug,
+                  total,
+                  translated: perLang[contentDialogCode] ?? 0,
+                }))
+                .sort((a, b) => a.slug.localeCompare(b.slug))
+            : []
         }
         enabled={
           contentDialogCode != null &&

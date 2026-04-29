@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Copy, ExternalLink } from "lucide-react";
 import {
@@ -13,14 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import {
-  loadHadithPerCollectionStatsAction,
-  type LoadHadithPerCollectionStatsResult,
-} from "@/app/[locale]/(admin)/admin/settings/_actions";
 import type { LangCode } from "@/lib/translations";
+import type { HadithCollectionStats } from "@/lib/admin/data/content-translation-stats";
 
 type Stats = { total: number; perLang: Partial<Record<LangCode, number>> };
-type CollectionStats = { slug: string; total: number; translated: number };
 
 const NATIVE_NAMES: Record<string, string> = {
   ar: "العربية",
@@ -44,6 +39,9 @@ export type ContentLangDialogProps = {
   kind: "quran" | "hadith";
   code: LangCode | null;
   stats: Stats;
+  // Per-collection breakdown for Hadith (already in props — no lazy load).
+  // Empty array for Qur'an or when no Hadith data is seeded yet.
+  perCollection: HadithCollectionStats[];
   enabled: boolean;
   onToggleEnabled: (code: LangCode) => void;
 };
@@ -54,50 +52,17 @@ export function ContentLangDialog({
   kind,
   code,
   stats,
+  perCollection,
   enabled,
   onToggleEnabled,
 }: ContentLangDialogProps) {
   const t = useTranslations("adminSettings.languages.content");
   const tCommon = useTranslations("common");
 
-  // Per-collection stats are only meaningful for Hadith and only useful while
-  // the dialog is open, so we lazy-load them on first open per code. Use a
-  // single state-machine setter so the effect body has exactly one setState
-  // call (avoids the react-hooks/set-state-in-effect cascade-renders rule).
-  type CollectionsState =
-    | { status: "idle" }
-    | { status: "loading" }
-    | { status: "loaded"; stats: CollectionStats[] }
-    | { status: "error" };
-  const [collectionsState, setCollectionsState] = useState<CollectionsState>({
-    status: "idle",
-  });
-  const [, startTransition] = useTransition();
-
-  useEffect(() => {
-    if (!open || kind !== "hadith" || !code) return;
-    // Genuinely async data load on dialog open — the React-compiler rule
-    // about setState-in-effect doesn't have a workaround that fits here
-    // (we can't compute the loading state at render time before the action
-    // resolves).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCollectionsState({ status: "loading" });
-    startTransition(async () => {
-      const res: LoadHadithPerCollectionStatsResult =
-        await loadHadithPerCollectionStatsAction(code);
-      if (res.ok) {
-        setCollectionsState({ status: "loaded", stats: res.stats });
-      } else {
-        toast.error(t("errorLoadCollections"));
-        setCollectionsState({ status: "error" });
-      }
-    });
-  }, [open, kind, code, t]);
-
   if (!code) return null;
 
   const isArabic = code === "ar";
-  const translated = isArabic ? stats.total : (stats.perLang[code] ?? 0);
+  const translated = stats.perLang[code] ?? (isArabic ? stats.total : 0);
   const percent =
     stats.total === 0 ? 0 : Math.round((translated / stats.total) * 100);
   const native = NATIVE_NAMES[code] ?? code.toUpperCase();
@@ -160,46 +125,41 @@ export function ContentLangDialog({
           {kind === "hadith" && (
             <div className="space-y-2">
               <p className="text-sm font-medium">{t("perCollectionTitle")}</p>
-              {collectionsState.status === "loading" && (
+              {perCollection.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
-                  {t("perCollectionLoading")}
+                  {t("perCollectionEmpty")}
                 </p>
-              )}
-              {collectionsState.status === "loaded" && (
+              ) : (
                 <ul className="divide-y divide-border rounded-md border border-border bg-card text-sm">
-                  {collectionsState.stats.length === 0 ? (
-                    <li className="px-3 py-2 text-xs text-muted-foreground">
-                      {t("perCollectionEmpty")}
-                    </li>
-                  ) : (
-                    collectionsState.stats.map(({ slug, total, translated }) => {
-                      const collectionPercent =
-                        total === 0 ? 0 : Math.round((translated / total) * 100);
-                      const tone =
-                        collectionPercent >= 95
-                          ? "text-emerald-700 dark:text-emerald-300"
-                          : collectionPercent >= 50
-                            ? "text-amber-700 dark:text-amber-300"
-                            : "text-rose-700 dark:text-rose-300";
-                      return (
-                        <li
-                          key={slug}
-                          className="flex items-center justify-between gap-3 px-3 py-2"
-                        >
-                          <span className="truncate font-medium">{slug}</span>
-                          <span className="flex shrink-0 items-center gap-3 tabular-nums">
-                            <span className="text-xs text-muted-foreground">
-                              {translated.toLocaleString()} /{" "}
-                              {total.toLocaleString()}
-                            </span>
-                            <span className={`text-xs font-medium ${tone}`}>
-                              {collectionPercent}%
-                            </span>
+                  {perCollection.map(({ slug, total, translated }) => {
+                    const collectionPercent =
+                      total === 0
+                        ? 0
+                        : Math.round((translated / total) * 100);
+                    const tone =
+                      collectionPercent >= 95
+                        ? "text-emerald-700 dark:text-emerald-300"
+                        : collectionPercent >= 50
+                          ? "text-amber-700 dark:text-amber-300"
+                          : "text-rose-700 dark:text-rose-300";
+                    return (
+                      <li
+                        key={slug}
+                        className="flex items-center justify-between gap-3 px-3 py-2"
+                      >
+                        <span className="truncate font-medium">{slug}</span>
+                        <span className="flex shrink-0 items-center gap-3 tabular-nums">
+                          <span className="text-xs text-muted-foreground">
+                            {translated.toLocaleString()} /{" "}
+                            {total.toLocaleString()}
                           </span>
-                        </li>
-                      );
-                    })
-                  )}
+                          <span className={`text-xs font-medium ${tone}`}>
+                            {collectionPercent}%
+                          </span>
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

@@ -22,6 +22,7 @@ import {
   getFirestore,
   type Firestore,
 } from "firebase-admin/firestore";
+import { recomputeTranslationStats } from "./recompute-translation-stats";
 import {
   ALL_LANGS,
   HADITH_LANG_COVERAGE,
@@ -131,10 +132,13 @@ async function seedCollectionForLang(
   for (const [number, text] of idx) {
     const id = `${slug}:${number}`;
     if (preserveSet.has(id)) continue;
+    // Nested-object form (NOT a dotted-key) so Firestore deep-merges into
+    // the existing `translations` map rather than creating a literal field
+    // named "translations.<lang>" that the renderer can't see.
     pending.set(
       col.doc(id),
       {
-        [`translations.${lang}`]: text,
+        translations: { [lang]: text },
         updatedAt: FieldValue.serverTimestamp(),
         updatedBy: `seed:${lang}`,
       },
@@ -205,6 +209,8 @@ async function main() {
   console.log(
     `Done. Wrote ${totalWritten} hadith translations, preserved ${totalPreserved} admin-edited.`,
   );
+  // Refresh the per-language summary doc so /admin/settings reflects the seed.
+  await recomputeTranslationStats(firestore);
   process.exit(0);
 }
 

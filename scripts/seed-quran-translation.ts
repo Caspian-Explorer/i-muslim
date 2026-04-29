@@ -26,6 +26,7 @@ import {
   QURAN_TRANSLATION_IDS,
   QURAN_TRANSLATION_NAMES,
 } from "../lib/translations";
+import { recomputeTranslationStats } from "./recompute-translation-stats";
 
 loadEnv({ path: resolve(process.cwd(), ".env.local") });
 
@@ -145,10 +146,16 @@ async function seedSurahForLang(
     const text = stripHtml(t.text);
     if (!text) continue;
 
+    // Use nested-object form (NOT a dotted-key like "translations.tr") so
+    // Firestore deep-merges into the existing `translations` map. The
+    // dotted-key form via set(merge:true) was creating literal top-level
+    // fields with dots in the key, leaving the actual `translations` map
+    // untouched — which is why translation counts read as 0 despite a
+    // successful write.
     pending.set(
       col.doc(id),
       {
-        [`translations.${lang}`]: text,
+        translations: { [lang]: text },
         updatedAt: FieldValue.serverTimestamp(),
         updatedBy: `seed:${lang}`,
       },
@@ -214,6 +221,9 @@ async function main() {
     }
   }
   console.log(`Done. Wrote ${totalWritten} translations, preserved ${totalPreserved} admin-edited.`);
+  // Refresh the per-language summary doc so /admin/settings shows the new
+  // counts immediately on the next page load (no Firestore index dance).
+  await recomputeTranslationStats(firestore);
   process.exit(0);
 }
 

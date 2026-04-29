@@ -20,6 +20,7 @@ import {
   getFirestore,
   type Firestore,
 } from "firebase-admin/firestore";
+import { recomputeTranslationStats } from "./recompute-translation-stats";
 
 loadEnv({ path: resolve(process.cwd(), ".env.local") });
 
@@ -209,6 +210,8 @@ async function main() {
   }
 
   console.log("Done.");
+  // Refresh the translationStats doc so /admin/settings reflects the seed.
+  await recomputeTranslationStats(firestore);
   process.exit(0);
 }
 
