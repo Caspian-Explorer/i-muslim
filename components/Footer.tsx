@@ -111,6 +111,11 @@ export async function Footer() {
                 {t("zakat")}
               </Link>
             </li>
+            <li>
+              <Link href="/hijri-converter" className={linkClass}>
+                {t("hijriConverter")}
+              </Link>
+            </li>
           </ul>
         </nav>
       </div>
