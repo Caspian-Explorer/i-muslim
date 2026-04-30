@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchCollectionWithHadiths } from "@/lib/admin/data/hadith";
 import { HadithList } from "@/components/admin/hadith/HadithList";
+import { getGeminiConfigStatus } from "@/lib/admin/data/secrets";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +20,10 @@ export default async function AdminCollectionPage({
   const page = Math.max(1, Number(sp.page) || 1);
   const book = sp.book ? Number(sp.book) : undefined;
 
-  const { collection: meta, entries, total } = await fetchCollectionWithHadiths(
-    collection,
-    { page, pageSize: PAGE_SIZE, book },
-  );
+  const [{ collection: meta, entries, total }, geminiStatus] = await Promise.all([
+    fetchCollectionWithHadiths(collection, { page, pageSize: PAGE_SIZE, book }),
+    getGeminiConfigStatus(),
+  ]);
   if (!meta) notFound();
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -50,7 +51,11 @@ export default async function AdminCollectionPage({
         </div>
       </div>
 
-      <HadithList entries={entries} collection={collection} />
+      <HadithList
+        entries={entries}
+        collection={collection}
+        aiConfigured={geminiStatus.configured}
+      />
 
       <nav className="flex items-center justify-between gap-2 text-sm">
         {page > 1 ? (

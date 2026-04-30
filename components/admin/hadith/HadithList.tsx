@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useMemo, useState, useTransition } from "react";
+import { useForm, type UseFormRegister } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Pencil, Save, X } from "lucide-react";
+import { Pencil, Save, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,10 +20,16 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/sonner";
 import type { AdminHadith } from "@/types/admin-content";
+import { LANG_LABELS } from "@/lib/translations";
+import { translateHadithFieldAction } from "@/app/[locale]/(admin)/admin/hadith/_actions";
 
+// Hardcoded so zod's TS inference picks up each lang field. Keep aligned with
+// the non-Arabic subset of ALL_LANGS — the assertion below guards against drift.
 const Schema = z.object({
   en: z.string().max(20000),
   ru: z.string().max(20000),
+  az: z.string().max(20000),
+  tr: z.string().max(20000),
   narrator: z.string().max(500),
   grade: z.string().max(200),
   notes: z.string().max(4000),
@@ -31,13 +37,18 @@ const Schema = z.object({
   published: z.boolean(),
 });
 type Values = z.infer<typeof Schema>;
+type FormLang = "en" | "ru" | "az" | "tr";
+
+const NON_ARABIC_LANGS: FormLang[] = ["en", "ru", "az", "tr"];
 
 export function HadithList({
   entries,
   collection,
+  aiConfigured,
 }: {
   entries: AdminHadith[];
   collection: string;
+  aiConfigured: boolean;
 }) {
   const [items, setItems] = useState(entries);
   const [editing, setEditing] = useState<AdminHadith | null>(null);
@@ -49,8 +60,7 @@ export function HadithList({
     return items.filter(
       (h) =>
         String(h.number).includes(q) ||
-        h.translations.en.toLowerCase().includes(q) ||
-        h.translations.ru.toLowerCase().includes(q) ||
+        Object.values(h.translations).some((v) => v?.toLowerCase().includes(q)) ||
         (h.narrator ?? "").toLowerCase().includes(q),
     );
   }, [items, filter]);
@@ -119,18 +129,23 @@ export function HadithList({
               {h.text_ar}
             </p>
             <div className="mt-3 space-y-2 text-sm">
-              {h.translations.en && (
-                <div>
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">EN</span>
-                  <p className="text-foreground">{h.translations.en}</p>
-                </div>
-              )}
-              {h.translations.ru && (
-                <div>
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">RU</span>
-                  <p className="text-foreground">{h.translations.ru}</p>
-                </div>
-              )}
+              {NON_ARABIC_LANGS.map((lang) => {
+                const text = h.translations[lang];
+                if (!text) return null;
+                return (
+                  <div key={lang}>
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                      {lang.toUpperCase()}
+                      {h.editedTranslations?.[lang] && (
+                        <span className="ml-1 text-primary" title="Admin-edited; preserved on re-seed">
+                          ✓
+                        </span>
+                      )}
+                    </span>
+                    <p className="text-foreground">{text}</p>
+                  </div>
+                );
+              })}
             </div>
             {h.notes && (
               <p className="mt-2 rounded-md bg-muted/40 px-2 py-1 text-xs text-muted-foreground">
@@ -144,6 +159,7 @@ export function HadithList({
       <EditHadithDrawer
         collection={collection}
         hadith={editing}
+        aiConfigured={aiConfigured}
         onClose={() => setEditing(null)}
         onSaved={(updated) => {
           setItems((prev) => prev.map((h) => (h.id === updated.id ? updated : h)));
@@ -154,14 +170,30 @@ export function HadithList({
   );
 }
 
+function buildInitialValues(hadith: AdminHadith | null): Values {
+  return {
+    en: hadith?.translations.en ?? "",
+    ru: hadith?.translations.ru ?? "",
+    az: hadith?.translations.az ?? "",
+    tr: hadith?.translations.tr ?? "",
+    narrator: hadith?.narrator ?? "",
+    grade: hadith?.grade ?? "",
+    notes: hadith?.notes ?? "",
+    tags: hadith ? hadith.tags.join(", ") : "",
+    published: hadith ? hadith.published : true,
+  };
+}
+
 function EditHadithDrawer({
   collection,
   hadith,
+  aiConfigured,
   onClose,
   onSaved,
 }: {
   collection: string;
   hadith: AdminHadith | null;
+  aiConfigured: boolean;
   onClose: () => void;
   onSaved: (h: AdminHadith) => void;
 }) {
@@ -169,36 +201,22 @@ function EditHadithDrawer({
 
   const form = useForm<Values>({
     resolver: zodResolver(Schema),
-    values: hadith
-      ? {
-          en: hadith.translations.en,
-          ru: hadith.translations.ru,
-          narrator: hadith.narrator ?? "",
-          grade: hadith.grade ?? "",
-          notes: hadith.notes ?? "",
-          tags: hadith.tags.join(", "),
-          published: hadith.published,
-        }
-      : {
-          en: "",
-          ru: "",
-          narrator: "",
-          grade: "",
-          notes: "",
-          tags: "",
-          published: true,
-        },
+    values: buildInitialValues(hadith),
   });
 
   async function onSubmit(values: Values) {
     if (!hadith) return;
     setSubmitting(true);
     try {
+      const translationsPayload: Record<string, string> = {};
+      for (const lang of NON_ARABIC_LANGS) {
+        translationsPayload[lang] = values[lang];
+      }
       const res = await fetch(`/api/admin/hadith/${collection}/${hadith.number}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          translations: { en: values.en, ru: values.ru },
+          translations: translationsPayload,
           narrator: values.narrator || null,
           grade: values.grade || null,
           notes: values.notes || null,
@@ -212,9 +230,16 @@ function EditHadithDrawer({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save");
 
+      const editedNext: Record<string, boolean> = { ...hadith.editedTranslations };
+      for (const lang of NON_ARABIC_LANGS) {
+        if (values[lang] !== (hadith.translations[lang] ?? "")) {
+          editedNext[lang] = true;
+        }
+      }
       const updated: AdminHadith = {
         ...hadith,
-        translations: { en: values.en, ru: values.ru },
+        translations: translationsPayload,
+        editedTranslations: editedNext,
         narrator: values.narrator || null,
         grade: values.grade || null,
         notes: values.notes || null,
@@ -247,7 +272,8 @@ function EditHadithDrawer({
                 Edit hadith {collection} #{hadith.number}
               </EditorDialogTitle>
               <EditorDialogDescription>
-                Arabic text is read-only. Translations and metadata can be edited.
+                Arabic text is read-only. Translations and metadata can be edited;
+                use the AI button to draft a translation, then review before saving.
               </EditorDialogDescription>
             </EditorDialogHeader>
             <EditorDialogBody className="overflow-hidden p-0">
@@ -288,8 +314,11 @@ function EditHadithDrawer({
                   <div className="-mx-5 overflow-x-auto px-5 pb-1">
                     <TabsList>
                       <TabsTrigger value="ar">Arabic</TabsTrigger>
-                      <TabsTrigger value="en">English</TabsTrigger>
-                      <TabsTrigger value="ru">Russian</TabsTrigger>
+                      {NON_ARABIC_LANGS.map((lang) => (
+                        <TabsTrigger key={lang} value={lang}>
+                          {LANG_LABELS[lang] ?? lang.toUpperCase()}
+                        </TabsTrigger>
+                      ))}
                     </TabsList>
                   </div>
                   <TabsContent value="ar" className="mt-3 flex-1 overflow-y-auto">
@@ -306,22 +335,24 @@ function EditHadithDrawer({
                       </p>
                     </div>
                   </TabsContent>
-                  <TabsContent value="en" className="mt-3 flex flex-1 flex-col">
-                    <Label htmlFor="hadith-en" className="sr-only">English</Label>
-                    <textarea
-                      id="hadith-en"
-                      className="flex h-full min-h-[240px] w-full flex-1 resize-none rounded-md border border-input bg-background p-3 text-sm"
-                      {...form.register("en")}
-                    />
-                  </TabsContent>
-                  <TabsContent value="ru" className="mt-3 flex flex-1 flex-col">
-                    <Label htmlFor="hadith-ru" className="sr-only">Russian</Label>
-                    <textarea
-                      id="hadith-ru"
-                      className="flex h-full min-h-[240px] w-full flex-1 resize-none rounded-md border border-input bg-background p-3 text-sm"
-                      {...form.register("ru")}
-                    />
-                  </TabsContent>
+                  {NON_ARABIC_LANGS.map((lang) => (
+                    <TabsContent
+                      key={lang}
+                      value={lang}
+                      className="mt-3 flex flex-1 flex-col gap-2"
+                    >
+                      <TranslationField
+                        lang={lang}
+                        register={form.register}
+                        setValue={(text) =>
+                          form.setValue(lang, text, { shouldDirty: true, shouldValidate: true })
+                        }
+                        collection={collection}
+                        number={hadith.number}
+                        aiConfigured={aiConfigured}
+                      />
+                    </TabsContent>
+                  ))}
                 </Tabs>
               </div>
             </EditorDialogBody>
@@ -343,5 +374,73 @@ function EditHadithDrawer({
         )}
       </EditorDialogContent>
     </EditorDialog>
+  );
+}
+
+function TranslationField({
+  lang,
+  register,
+  setValue,
+  collection,
+  number,
+  aiConfigured,
+}: {
+  lang: FormLang;
+  register: UseFormRegister<Values>;
+  setValue: (text: string) => void;
+  collection: string;
+  number: number;
+  aiConfigured: boolean;
+}) {
+  const [translating, startTranslate] = useTransition();
+  const label = LANG_LABELS[lang] ?? lang;
+
+  function onAiTranslate() {
+    if (!aiConfigured) {
+      toast.error(
+        "Configure a Gemini API key in /admin/settings → AI translation first.",
+      );
+      return;
+    }
+    startTranslate(async () => {
+      const res = await translateHadithFieldAction({
+        collection,
+        number,
+        targetLang: lang,
+      });
+      if (res.ok) {
+        setValue(res.text);
+        toast.success(`${label} translation drafted — review before saving.`);
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between gap-2">
+        <Label htmlFor={`hadith-${lang}`} className="text-xs uppercase tracking-wide text-muted-foreground">
+          {label}
+        </Label>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={onAiTranslate}
+          disabled={translating}
+          aria-busy={translating}
+          title={aiConfigured ? `Translate to ${label} with Gemini` : "Configure a Gemini key in /admin/settings first"}
+        >
+          <Sparkles />
+          {translating ? "Translating…" : "Translate with AI"}
+        </Button>
+      </div>
+      <textarea
+        id={`hadith-${lang}`}
+        className="flex h-full min-h-[240px] w-full flex-1 resize-none rounded-md border border-input bg-background p-3 text-sm"
+        {...register(lang)}
+      />
+    </>
   );
 }

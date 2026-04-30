@@ -49,7 +49,12 @@ export type AdminHadith = {
   book: number;
   hadith_in_book: number | null;
   text_ar: string;
-  translations: { en: string; ru: string };
+  // Keyed by LangCode (en/ru/az/tr/...). Missing keys mean "no translation
+  // yet" — render fallbacks decide what to do.
+  translations: Record<string, string>;
+  // editedTranslations.<lang> === true marks an admin override that the
+  // per-language seeders preserve on re-runs.
+  editedTranslations: Record<string, boolean>;
   narrator: string | null;
   grade: string | null;
   tags: string[];

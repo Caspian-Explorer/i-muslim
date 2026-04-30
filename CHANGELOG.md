@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+- **AI-assisted hadith translation in admin** — the per-hadith editor at `/admin/hadith/<collection>` now exposes a tab per non-Arabic language (English, Russian, Azerbaijani, Turkish) with an "✨ Translate with AI" button that drafts the translation via Google Gemini. Drafts populate the textarea but never auto-save — the admin reviews and clicks Save. Configure the Gemini API key and model on `/admin/settings → AI translation`; the key is stored server-side in `config/secrets` (Firestore) and never returned to the client. Prompt is tuned for sacred-text fidelity (no paraphrasing, low temperature, faithful rendering of ﷺ).
+
+### Changed
+- Per-hadith admin saves now set `editedTranslations.<lang> = true` per language touched (previously only the global `editedByAdmin` flag), so the per-language seeders preserve admin overrides exactly per language. Re-running e.g. `seed:hadith:lang --lang=ru` no longer overwrites a language-specific admin edit, even on hadiths where another language was AI-translated and saved.
+
 ### Fixed
 - `npm run seed:hadith:lang -- --lang=az` no longer errors with a misleading "add the 3-letter fawazahmed0 edition prefix" message. Empty `HADITH_LANG_COVERAGE` is now treated as the deliberate "admin-edited only" marker (no upstream editions exist on the CDN for this language) — the seeder logs a clear no-op message and exits 0. Same will apply to any future language added to `ALL_LANGS` whose hadith translations have no free upstream source.
 - **Per-type tabs on `/profile/favorites` no longer show "Nothing saved yet" when items exist** (mus-1196). `listFavorites` was issuing `where("itemType", "==", X) + orderBy("createdAt", "desc")`, which requires a composite Firestore index that wasn't configured. The query threw `FAILED_PRECONDITION`, the try/catch returned `[]`, and the typed tabs (Ayahs / Surahs / Hadith / …) all rendered empty even when the "All" tab listed the same items. Switched the typed branch to filter-only (single-field auto-index) and sort in memory — the per-user favorites collection is small.

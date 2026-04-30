@@ -19,9 +19,11 @@ Arabic alongside English, Russian, and Azerbaijani translations.
   - Arabic and English for 9 collections (Bukhari, Muslim, Abu Dawud, Tirmidhi,
     Nasa'i, Ibn Majah, Malik, Nawawi 40, Qudsi 40)
   - Russian for Bukhari, Muslim, Abu Dawud
-  - Azerbaijani hadith is not available in any free source; the UI falls back
-    to English with a "translation unavailable" badge when Azerbaijani is
-    selected.
+  - Azerbaijani hadith is not available in any free source. The public reader
+    falls back to English with a "translation unavailable" badge; admins can
+    fill individual hadiths via the per-hadith editor at
+    `/admin/hadith/<collection>`, which has an AI-translate button (Gemini)
+    once a key is configured at `/admin/settings`.
 
 ## Getting started
 

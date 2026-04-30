@@ -31,7 +31,16 @@ function tsToIso(v: unknown): string | null {
 }
 
 function normalize(id: string, r: Record<string, unknown>): AdminHadith {
-  const t = (r.translations as { en?: string; ru?: string }) ?? {};
+  const rawTranslations = (r.translations as Record<string, unknown> | undefined) ?? {};
+  const translations: Record<string, string> = {};
+  for (const [k, v] of Object.entries(rawTranslations)) {
+    translations[k] = typeof v === "string" ? v : "";
+  }
+  const rawEdited = (r.editedTranslations as Record<string, unknown> | undefined) ?? {};
+  const editedTranslations: Record<string, boolean> = {};
+  for (const [k, v] of Object.entries(rawEdited)) {
+    if (v === true) editedTranslations[k] = true;
+  }
   return {
     id,
     collection: r.collection as string,
@@ -40,7 +49,8 @@ function normalize(id: string, r: Record<string, unknown>): AdminHadith {
     book: (r.book as number) ?? 0,
     hadith_in_book: (r.hadith_in_book as number) ?? null,
     text_ar: (r.text_ar as string) ?? "",
-    translations: { en: t.en ?? "", ru: t.ru ?? "" },
+    translations,
+    editedTranslations,
     narrator: (r.narrator as string) ?? null,
     grade: (r.grade as string) ?? null,
     tags: ((r.tags as string[]) ?? []),
