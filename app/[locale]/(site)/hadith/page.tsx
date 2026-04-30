@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { getHadithCollections } from "@/lib/hadith/db";
+import { getLanguageSettings } from "@/lib/admin/data/language-settings";
+import { HadithSidebar } from "@/components/site/hadith/HadithSidebar";
+import { HadithMobileDrawer } from "@/components/site/hadith/HadithMobileDrawer";
 
 export const metadata = {
   title: "Hadith — Major Collections",
@@ -7,8 +10,18 @@ export const metadata = {
     "Browse major Sunni hadith collections: Bukhari, Muslim, Abu Dawud, Tirmidhi, Nasa'i, Ibn Majah, Malik, Nawawi 40, Qudsi 40.",
 };
 
-export default async function HadithIndexPage() {
-  const collections = await getHadithCollections();
+export default async function HadithIndexPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}) {
+  const { lang: langParam } = await searchParams;
+  const [collections, languageSettings] = await Promise.all([
+    getHadithCollections(),
+    getLanguageSettings(),
+  ]);
+
+  const langQS = langParam ? `?lang=${encodeURIComponent(langParam)}` : "";
 
   if (collections.length === 0) {
     return (
@@ -25,36 +38,46 @@ export default async function HadithIndexPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-          Hadith Collections
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Nine major collections. Select one to browse by book.
-        </p>
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+      <div className="flex items-center gap-2 pb-3 md:hidden">
+        <HadithMobileDrawer availableLangs={languageSettings.hadithEnabled} />
       </div>
+      <div className="flex gap-6">
+        <aside className="hidden md:block sticky top-20 self-start">
+          <HadithSidebar variant="desktop" availableLangs={languageSettings.hadithEnabled} />
+        </aside>
+        <div className="min-w-0 flex-1">
+          <div className="mb-6">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Hadith Collections
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Nine major collections. Select one to browse by book.
+            </p>
+          </div>
 
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {collections.map((c) => (
-          <li key={c.slug}>
-            <Link
-              href={`/hadith/${c.slug}`}
-              className="group block rounded-lg border border-border bg-background p-4 transition-colors hover:border-accent"
-            >
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="font-medium">{c.name_en}</span>
-                <span dir="rtl" lang="ar" className="font-arabic text-lg text-foreground">
-                  {c.name_ar}
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {c.total} hadith · {c.books.length} books
-              </p>
-            </Link>
-          </li>
-        ))}
-      </ul>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {collections.map((c) => (
+              <li key={c.slug}>
+                <Link
+                  href={`/hadith/${c.slug}${langQS}`}
+                  className="group block rounded-lg border border-border bg-background p-4 transition-colors hover:border-accent"
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-medium">{c.name_en}</span>
+                    <span dir="rtl" lang="ar" className="font-arabic text-lg text-foreground">
+                      {c.name_ar}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {c.total} hadith · {c.books.length} books
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }

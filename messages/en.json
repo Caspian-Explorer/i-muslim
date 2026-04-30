@@ -1840,6 +1840,23 @@
     "moreItems": "+{count} more",
     "removeChip": "Remove {name}"
   },
+  "hadithSidebar": {
+    "title": "Filters",
+    "menu": "Filters",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "sections": {
+      "translations": "Translations"
+    }
+  },
+  "hadithLanguageFilter": {
+    "label": "Translations",
+    "placeholder": "Select languages",
+    "searchPlaceholder": "Search language…",
+    "noResults": "No language found.",
+    "moreItems": "+{count} more",
+    "removeChip": "Remove {name}"
+  },
   "profileNav": {
     "title": "Profile",
     "items": {

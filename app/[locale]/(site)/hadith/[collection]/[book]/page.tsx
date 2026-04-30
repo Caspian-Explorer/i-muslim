@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 import { getLocale } from "next-intl/server";
 import {
   getHadithCollection,
@@ -9,10 +8,11 @@ import {
 } from "@/lib/hadith/db";
 import { parseLangsParam } from "@/lib/translations";
 import type { LangCode } from "@/lib/translations";
-import { LanguageSelector } from "@/components/LanguageSelector";
 import { HadithCard, type HadithTranslationSlice } from "@/components/HadithCard";
 import { FavoritesProvider } from "@/components/site/favorites/FavoritesContext";
 import { ReadingProgressTracker } from "@/components/site/reading/ReadingProgressTracker";
+import { HadithSidebar } from "@/components/site/hadith/HadithSidebar";
+import { HadithMobileDrawer } from "@/components/site/hadith/HadithMobileDrawer";
 import { getLanguageSettings } from "@/lib/admin/data/language-settings";
 import { getSiteSession } from "@/lib/auth/session";
 import { getFavoritedSet } from "@/lib/profile/data";
@@ -84,90 +84,97 @@ export default async function HadithBookPage({
       <ReadingProgressTracker
         variant={{ kind: "hadith", collection, book: bookNumber }}
       />
-      <div className="mx-auto max-w-3xl px-4 py-8">
-        <Link
-          href={`/hadith/${collection}${langQS}`}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          ← {meta.name_en}
-        </Link>
-
-        <header className="mt-4 border-b border-border pb-6">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            {meta.name_en} · Book {bookNumber}
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-            {bookMeta.name}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {hadiths.length} hadith in this book.
-          </p>
-          <div className="mt-4">
-            <Suspense fallback={<div className="h-8" />}>
-              <LanguageSelector availableLangs={languageSettings.hadithEnabled} />
-            </Suspense>
-          </div>
-        </header>
-
-        <div className="mt-6 space-y-4">
-          {hadiths.map((h) => {
-            const arabic = showArabic ? docToHadithEntry(h, "ar") : null;
-            const translations: HadithTranslationSlice[] = nonArabic.map((lang) => {
-              // Prefer the doc's translation in the requested language. If it's
-              // missing or empty (e.g. seed hasn't been run for this lang yet),
-              // fall back to English so the reader sees something.
-              const native = docToHadithEntry(h, lang);
-              if (native) {
-                return { requested: lang, actual: lang, entry: native, fallback: false };
-              }
-              const enEntry = lang !== "en" ? docToHadithEntry(h, "en") : null;
-              return {
-                requested: lang,
-                actual: enEntry ? "en" : null,
-                entry: enEntry,
-                fallback: Boolean(enEntry),
-              };
-            });
-            return (
-              <HadithCard
-                key={h.number}
-                number={h.number}
-                arabic={arabic}
-                translations={translations}
-                collectionShortName={collectionShortName}
-                collectionId={collection}
-                collectionName={meta.name_en}
-                bookNumber={bookNumber}
-                bookName={bookMeta.name}
-                locale={locale}
-                signedIn={Boolean(session)}
-              />
-            );
-          })}
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+        <div className="flex items-center gap-2 pb-3 md:hidden">
+          <HadithMobileDrawer availableLangs={languageSettings.hadithEnabled} />
         </div>
+        <div className="flex gap-6">
+          <aside className="hidden md:block sticky top-20 self-start">
+            <HadithSidebar variant="desktop" availableLangs={languageSettings.hadithEnabled} />
+          </aside>
+          <div className="min-w-0 flex-1">
+            <div className="mx-auto max-w-3xl">
+              <Link
+                href={`/hadith/${collection}${langQS}`}
+                className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+              >
+                ← {meta.name_en}
+              </Link>
 
-        <nav className="mt-8 flex items-center justify-between gap-2 text-sm">
-          {prev ? (
-            <Link
-              href={`/hadith/${collection}/${prev.number}${langQS}`}
-              className="rounded-md border border-border bg-background px-3 py-2 hover:border-accent"
-            >
-              ← Book {prev.number}
-            </Link>
-          ) : (
-            <span />
-          )}
-          {next ? (
-            <Link
-              href={`/hadith/${collection}/${next.number}${langQS}`}
-              className="rounded-md border border-border bg-background px-3 py-2 hover:border-accent"
-            >
-              Book {next.number} →
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
+              <header className="mt-4 border-b border-border pb-6">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {meta.name_en} · Book {bookNumber}
+                </p>
+                <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {bookMeta.name}
+                </h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {hadiths.length} hadith in this book.
+                </p>
+              </header>
+
+              <div className="mt-6 space-y-4">
+                {hadiths.map((h) => {
+                  const arabic = showArabic ? docToHadithEntry(h, "ar") : null;
+                  const translations: HadithTranslationSlice[] = nonArabic.map((lang) => {
+                    // Prefer the doc's translation in the requested language. If it's
+                    // missing or empty (e.g. seed hasn't been run for this lang yet),
+                    // fall back to English so the reader sees something.
+                    const native = docToHadithEntry(h, lang);
+                    if (native) {
+                      return { requested: lang, actual: lang, entry: native, fallback: false };
+                    }
+                    const enEntry = lang !== "en" ? docToHadithEntry(h, "en") : null;
+                    return {
+                      requested: lang,
+                      actual: enEntry ? "en" : null,
+                      entry: enEntry,
+                      fallback: Boolean(enEntry),
+                    };
+                  });
+                  return (
+                    <HadithCard
+                      key={h.number}
+                      number={h.number}
+                      arabic={arabic}
+                      translations={translations}
+                      collectionShortName={collectionShortName}
+                      collectionId={collection}
+                      collectionName={meta.name_en}
+                      bookNumber={bookNumber}
+                      bookName={bookMeta.name}
+                      locale={locale}
+                      signedIn={Boolean(session)}
+                    />
+                  );
+                })}
+              </div>
+
+              <nav className="mt-8 flex items-center justify-between gap-2 text-sm">
+                {prev ? (
+                  <Link
+                    href={`/hadith/${collection}/${prev.number}${langQS}`}
+                    className="rounded-md border border-border bg-background px-3 py-2 hover:border-accent"
+                  >
+                    ← Book {prev.number}
+                  </Link>
+                ) : (
+                  <span />
+                )}
+                {next ? (
+                  <Link
+                    href={`/hadith/${collection}/${next.number}${langQS}`}
+                    className="rounded-md border border-border bg-background px-3 py-2 hover:border-accent"
+                  >
+                    Book {next.number} →
+                  </Link>
+                ) : (
+                  <span />
+                )}
+              </nav>
+            </div>
+          </div>
+        </div>
       </div>
     </FavoritesProvider>
   );
