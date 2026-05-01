@@ -106,7 +106,7 @@ export function BusinessReportsClient({ initialReports, canPersist }: Props) {
                           <Link
                             href={`/businesses/${r.businessSlug}`}
                             target="_blank"
-                            rel="noopener"
+                            rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:underline"
                           >
                             <ExternalLink className="size-3" /> {t("reportsViewListing")}

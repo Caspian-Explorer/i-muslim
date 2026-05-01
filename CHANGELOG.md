@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Security
+- **Article preview error path no longer interpolates raw `Error.message` into HTML.** The admin Markdown preview pane (`ArticleEditorClient`) now keeps `dangerouslySetInnerHTML` only for the server-rendered HTML success path; failures are tracked in a separate `previewError` state and rendered as plain React text, eliminating the (admin-only, low-risk) XSS vector flagged by the security scan.
+- **`rel="noopener noreferrer"` on admin business links.** `/admin/businesses` action menu and `/admin/businesses/reports` row links open in new tabs and now include `noreferrer` alongside `noopener` for defense-in-depth (matches the existing pattern on event location links).
+
+### Changed
+- Bumped patch/minor dependencies: `react`/`react-dom` 19.2.4 → 19.2.5, `next-intl` 4.9.1 → 4.11.0, `lucide-react` 1.11.0 → 1.14.0, `react-hook-form` 7.73.1 → 7.74.0, `zod` 4.3.6 → 4.4.1. Major bumps (TypeScript 6, ESLint 10, `@types/node` 25, `dotenv` 17) deferred. Outstanding `npm audit` advisories (12, all transitive under `firebase-admin`'s google-cloud chain plus `postcss` via `next`) are upstream issues — `npm audit fix --force` would downgrade `firebase-admin` to 10.1.0 and `next` to 9.3.3, which is not acceptable.
+
 ### Added
 - **"View site" link in the admin profile dropdown** — the avatar menu in the admin header now has a globe-icon entry that links to the public homepage (in the current locale), giving admins a one-click jump from the back-office back into the live site. Translated in en/ar/id/tr.
 - **Admin hadith reader: per-translation show/hide filter** — the `/admin/hadith/<collection>` page now has a searchable multi-select language combobox next to the text filter (same `<SearchableMultiCombobox>` primitive the public Quran sidebar uses). Toggling a language hides its translation block on every hadith card; Arabic always renders. Selection persists per browser via `localStorage` (`i-muslim.admin-hadith-visible-langs`). The editor drawer is unaffected — admins can still open and edit any language.

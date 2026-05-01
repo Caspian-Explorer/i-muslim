@@ -79,6 +79,7 @@ export function ArticleEditorClient({ article, source }: Props) {
   const [activeLocale, setActiveLocale] = useState<BundledLocale>("en");
   const [pending, startTransition] = useTransition();
   const [previewHtml, setPreviewHtml] = useState<string>("");
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [view, setView] = useState<"write" | "preview">("write");
   const isMock = source === "mock";
@@ -101,6 +102,7 @@ export function ArticleEditorClient({ article, source }: Props) {
     const id = setTimeout(async () => {
       if (cancelled) return;
       setPreviewLoading(true);
+      setPreviewError(null);
       try {
         const res = await fetch("/api/admin/articles/preview", {
           method: "POST",
@@ -113,13 +115,15 @@ export function ArticleEditorClient({ article, source }: Props) {
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = (await res.json()) as { html: string };
-        if (!cancelled) setPreviewHtml(data.html);
+        if (!cancelled) {
+          setPreviewHtml(data.html);
+          setPreviewError(null);
+        }
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
         if (!cancelled) {
-          setPreviewHtml(
-            `<div class="text-sm text-danger">Preview failed: ${(err as Error).message}</div>`,
-          );
+          setPreviewHtml("");
+          setPreviewError((err as Error).message);
         }
       } finally {
         if (!cancelled) setPreviewLoading(false);
@@ -420,6 +424,8 @@ export function ArticleEditorClient({ article, source }: Props) {
         <div className="min-h-[420px] rounded-md border border-border bg-card p-4">
           {previewLoading ? (
             <div className="text-sm text-muted-foreground">Rendering…</div>
+          ) : previewError ? (
+            <div className="text-sm text-danger">Preview failed: {previewError}</div>
           ) : (
             <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
           )}

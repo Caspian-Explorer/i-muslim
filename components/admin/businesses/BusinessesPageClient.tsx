@@ -302,7 +302,7 @@ export function BusinessesPageClient({
                           </DropdownMenuItem>
                           {b.status === "published" && (
                             <DropdownMenuItem asChild>
-                              <Link href={`/businesses/${b.slug}`} target="_blank" rel="noopener">
+                              <Link href={`/businesses/${b.slug}`} target="_blank" rel="noopener noreferrer">
                                 <ExternalLink className="size-4" /> {t("viewOnSite")}
                               </Link>
                             </DropdownMenuItem>
