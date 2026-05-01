@@ -3,7 +3,7 @@
 import { Link, usePathname } from "@/i18n/navigation";
 import { useCallback, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, Plus } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { ADMIN_NAV, type NavItem } from "@/lib/admin/nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -112,25 +112,8 @@ export function Sidebar({ badges = {}, variant = "desktop", onNavigate }: Sideba
           )}
         </div>
 
-        <div className={cn("p-3", !showLabels && "px-2")}>
-          {showLabels ? (
-            <Button className="w-full justify-start">
-              <Plus className="size-4" /> {t("newButton")}
-            </Button>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button size="icon" className="w-full" aria-label={t("newButton")}>
-                  <Plus className="size-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">{t("newButton")}</TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-
         <ScrollArea className="flex-1">
-          <nav className={cn("space-y-5 pb-6", showLabels ? "px-3" : "px-2")}>
+          <nav className={cn("space-y-5 pt-3 pb-6", showLabels ? "px-3" : "px-2")}>
             {ADMIN_NAV.map((group) => (
               <div key={group.id}>
                 {showLabels && (
