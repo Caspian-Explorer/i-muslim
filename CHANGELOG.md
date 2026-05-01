@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- **Admin hadith reader: per-translation show/hide filter** — the `/admin/hadith/<collection>` page now has a searchable multi-select language combobox next to the text filter (same `<SearchableMultiCombobox>` primitive the public Quran sidebar uses). Toggling a language hides its translation block on every hadith card; Arabic always renders. Selection persists per browser via `localStorage` (`i-muslim.admin-hadith-visible-langs`). The editor drawer is unaffected — admins can still open and edit any language.
 - **AI-assisted hadith translation in admin** — the per-hadith editor at `/admin/hadith/<collection>` now exposes a tab per non-Arabic language (English, Russian, Azerbaijani, Turkish) with an "✨ Translate with AI" button that drafts the translation via Google Gemini. Drafts populate the textarea but never auto-save — the admin reviews and clicks Save. Configure the Gemini API key and model on the new `/admin/integrations` page (sidebar → Integrations); the key is stored server-side in `config/secrets` (Firestore) and never returned to the client. Prompt is tuned for sacred-text fidelity (no paraphrasing, low temperature, faithful rendering of ﷺ).
 
 ### Changed

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore, useTransition } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { useForm, type UseFormRegister } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,9 +20,44 @@ import {
 } from "@/components/ui/editor-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/sonner";
+import {
+  SearchableMultiCombobox,
+  type SearchableMultiComboboxOption,
+} from "@/components/common/SearchableMultiCombobox";
 import type { AdminHadith } from "@/types/admin-content";
 import { LANG_LABELS } from "@/lib/translations";
 import { translateHadithFieldAction } from "@/app/[locale]/(admin)/admin/hadith/_actions";
+
+const VISIBLE_LANGS_STORAGE_KEY = "i-muslim.admin-hadith-visible-langs";
+const VISIBLE_LANGS_EVENT = "i-muslim.admin-hadith-visible-langs-change";
+
+function subscribeVisibleLangs(cb: () => void) {
+  window.addEventListener("storage", cb);
+  window.addEventListener(VISIBLE_LANGS_EVENT, cb);
+  return () => {
+    window.removeEventListener("storage", cb);
+    window.removeEventListener(VISIBLE_LANGS_EVENT, cb);
+  };
+}
+
+// Stable serialized snapshot — useSyncExternalStore compares snapshots by
+// reference identity, so we return the persisted string and parse downstream.
+function readVisibleLangsRaw(): string {
+  try {
+    return window.localStorage.getItem(VISIBLE_LANGS_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function parseVisibleLangs(raw: string): FormLang[] {
+  if (!raw) return NON_ARABIC_LANGS;
+  const parts = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s): s is FormLang => (NON_ARABIC_LANGS as string[]).includes(s));
+  return parts;
+}
 
 // Hardcoded so zod's TS inference picks up each lang field. Keep aligned with
 // the non-Arabic subset of ALL_LANGS — the assertion below guards against drift.
@@ -53,6 +89,39 @@ export function HadithList({
   const [items, setItems] = useState(entries);
   const [editing, setEditing] = useState<AdminHadith | null>(null);
   const [filter, setFilter] = useState("");
+  const locale = useLocale();
+  const tFilter = useTranslations("quranLanguageFilter");
+
+  // Persist the per-admin "which translations to display" selection in
+  // localStorage so it survives reloads. useSyncExternalStore is the
+  // codebase's canonical pattern for client-only persisted state (see
+  // components/site/hadith/HadithSidebar.tsx) — it sidesteps the
+  // setState-in-useEffect issue the React Compiler lint rule flags.
+  const visibleLangsRaw = useSyncExternalStore(
+    subscribeVisibleLangs,
+    readVisibleLangsRaw,
+    () => "",
+  );
+  const visibleLangs = useMemo(() => parseVisibleLangs(visibleLangsRaw), [visibleLangsRaw]);
+
+  const setAndPersistVisibleLangs = useCallback((next: FormLang[]) => {
+    try {
+      window.localStorage.setItem(VISIBLE_LANGS_STORAGE_KEY, next.join(","));
+      window.dispatchEvent(new Event(VISIBLE_LANGS_EVENT));
+    } catch {
+      // localStorage may be unavailable (private mode, quota); ignore.
+    }
+  }, []);
+
+  const langOptions: SearchableMultiComboboxOption[] = useMemo(() => {
+    const collator = new Intl.Collator(locale, { sensitivity: "base" });
+    return NON_ARABIC_LANGS
+      .map((code) => ({
+        value: code,
+        label: LANG_LABELS[code] ?? code.toUpperCase(),
+      }))
+      .sort((a, b) => collator.compare(a.label, b.label));
+  }, [locale]);
 
   const filtered = useMemo(() => {
     if (!filter.trim()) return items;
@@ -67,13 +136,26 @@ export function HadithList({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           placeholder="Filter by number, narrator, or text…"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="max-w-md"
         />
+        <div className="min-w-[14rem] flex-1">
+          <SearchableMultiCombobox
+            options={langOptions}
+            value={visibleLangs}
+            onChange={(next) => setAndPersistVisibleLangs(next as FormLang[])}
+            placeholder={tFilter("placeholder")}
+            searchPlaceholder={tFilter("searchPlaceholder")}
+            emptyText={tFilter("noResults")}
+            removeChipLabel={(name) => tFilter("removeChip", { name })}
+            moreText={(count) => tFilter("moreItems", { count })}
+            ariaLabel={tFilter("label")}
+          />
+        </div>
         <span className="text-xs text-muted-foreground">
           {filtered.length} / {items.length}
         </span>
@@ -130,6 +212,7 @@ export function HadithList({
             </p>
             <div className="mt-3 space-y-2 text-sm">
               {NON_ARABIC_LANGS.map((lang) => {
+                if (!visibleLangs.includes(lang)) return null;
                 const text = h.translations[lang];
                 if (!text) return null;
                 return (
