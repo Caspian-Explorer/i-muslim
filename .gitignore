@@ -23,6 +23,13 @@
 # misc
 .DS_Store
 *.pem
+*.key
+*.p12
+*.pfx
+service-account*.json
+firebase-admin*.json
+google-credentials*.json
+gcp-credentials*.json
 
 # debug
 npm-debug.log*
