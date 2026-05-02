@@ -41,6 +41,12 @@ function normalize(id: string, r: Record<string, unknown>): AdminHadith {
   for (const [k, v] of Object.entries(rawEdited)) {
     if (v === true) editedTranslations[k] = true;
   }
+  const rawPublishedTranslations =
+    (r.publishedTranslations as Record<string, unknown> | undefined) ?? {};
+  const publishedTranslations: Record<string, boolean> = {};
+  for (const [k, v] of Object.entries(rawPublishedTranslations)) {
+    if (v === true) publishedTranslations[k] = true;
+  }
   return {
     id,
     collection: r.collection as string,
@@ -51,6 +57,7 @@ function normalize(id: string, r: Record<string, unknown>): AdminHadith {
     text_ar: (r.text_ar as string) ?? "",
     translations,
     editedTranslations,
+    publishedTranslations,
     narrator: (r.narrator as string) ?? null,
     grade: (r.grade as string) ?? null,
     tags: ((r.tags as string[]) ?? []),

@@ -180,6 +180,13 @@ async function seedCollection(firestore: Firestore, c: (typeof COLLECTIONS)[numb
         en: enEntry?.text ?? "",
         ru: ruEntry?.text ?? "",
       },
+      // Canonical upstream (fawazahmed0) is the trusted reference text — land
+      // as Published. Admin edits bump editedByAdmin and are skipped by this
+      // seeder, so manual unpublish choices are preserved across re-runs.
+      publishedTranslations: {
+        ...(enEntry?.text ? { en: true } : {}),
+        ...(ruEntry?.text ? { ru: true } : {}),
+      },
       narrator,
       grade,
       grades: h.grades,

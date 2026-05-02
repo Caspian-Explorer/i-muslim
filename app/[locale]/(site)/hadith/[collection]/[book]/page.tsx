@@ -116,20 +116,45 @@ export default async function HadithBookPage({
               <div className="mt-6 space-y-4">
                 {hadiths.map((h) => {
                   const arabic = showArabic ? docToHadithEntry(h, "ar") : null;
+                  const isPublished = (lang: LangCode) =>
+                    h.publishedTranslations?.[lang] === true;
                   const translations: HadithTranslationSlice[] = nonArabic.map((lang) => {
-                    // Prefer the doc's translation in the requested language. If it's
-                    // missing or empty (e.g. seed hasn't been run for this lang yet),
-                    // fall back to English so the reader sees something.
-                    const native = docToHadithEntry(h, lang);
-                    if (native) {
-                      return { requested: lang, actual: lang, entry: native, fallback: false };
+                    // Per-language gate: a translation is only shown to the
+                    // public reader once the admin has flipped it to Published.
+                    // For Draft we explicitly mark the slice "in_process" so
+                    // HadithCard renders an "under review" placeholder rather
+                    // than silently substituting English (the user requirement).
+                    const rawText = h.translations?.[lang];
+                    if (rawText && isPublished(lang)) {
+                      const native = docToHadithEntry(h, lang);
+                      if (native) {
+                        return { requested: lang, actual: lang, entry: native, fallback: false };
+                      }
                     }
-                    const enEntry = lang !== "en" ? docToHadithEntry(h, "en") : null;
+                    if (rawText) {
+                      // Translation exists but is still Draft — never render the
+                      // unreviewed text and never fall back to English.
+                      return {
+                        requested: lang,
+                        actual: null,
+                        entry: null,
+                        fallback: false,
+                        status: "in_process",
+                      };
+                    }
+                    // No translation in this language yet. Fall back to English
+                    // only if English itself is Published.
+                    const enEntry =
+                      lang !== "en" && isPublished("en") ? docToHadithEntry(h, "en") : null;
+                    if (enEntry) {
+                      return { requested: lang, actual: "en", entry: enEntry, fallback: true };
+                    }
                     return {
                       requested: lang,
-                      actual: enEntry ? "en" : null,
-                      entry: enEntry,
-                      fallback: Boolean(enEntry),
+                      actual: null,
+                      entry: null,
+                      fallback: false,
+                      status: "in_process",
                     };
                   });
                   return (

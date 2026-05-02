@@ -61,6 +61,10 @@ export type AdminHadith = {
   // editedTranslations.<lang> === true marks an admin override that the
   // per-language seeders preserve on re-runs.
   editedTranslations: Record<string, boolean>;
+  // publishedTranslations.<lang> === true ⇒ visible to public reader.
+  // Missing/false ⇒ Draft (public sees an "in process" placeholder for that
+  // language). Arabic is the original sacred text and is never keyed here.
+  publishedTranslations: Record<string, boolean>;
   narrator: string | null;
   grade: string | null;
   tags: string[];

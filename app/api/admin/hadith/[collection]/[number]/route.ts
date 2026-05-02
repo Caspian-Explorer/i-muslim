@@ -17,9 +17,15 @@ for (const lang of NON_ARABIC_LANGS) {
   translationsShape[lang] = z.string().max(20000).optional();
 }
 
+const publishedTranslationsShape: Record<string, z.ZodOptional<z.ZodBoolean>> = {};
+for (const lang of NON_ARABIC_LANGS) {
+  publishedTranslationsShape[lang] = z.boolean().optional();
+}
+
 const PatchSchema = z
   .object({
     translations: z.object(translationsShape).partial().optional(),
+    publishedTranslations: z.object(publishedTranslationsShape).partial().optional(),
     narrator: z.string().max(500).nullable().optional(),
     grade: z.string().max(200).nullable().optional(),
     tags: z.array(z.string().max(64)).max(50).optional(),
@@ -91,6 +97,16 @@ export async function PATCH(
       }
       updates.translations = mergedTranslations;
       updates.editedTranslations = mergedEdited;
+    }
+    if (p.publishedTranslations) {
+      const existing =
+        (snap.data()?.publishedTranslations as Record<string, boolean> | undefined) ?? {};
+      const merged: Record<string, boolean> = { ...existing };
+      for (const lang of NON_ARABIC_LANGS) {
+        const incoming = p.publishedTranslations[lang as keyof typeof p.publishedTranslations];
+        if (typeof incoming === "boolean") merged[lang] = incoming;
+      }
+      updates.publishedTranslations = merged;
     }
     if (p.narrator !== undefined) updates.narrator = p.narrator;
     if (p.grade !== undefined) updates.grade = p.grade;

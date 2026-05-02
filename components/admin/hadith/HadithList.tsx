@@ -66,6 +66,12 @@ const Schema = z.object({
   ru: z.string().max(20000),
   az: z.string().max(20000),
   tr: z.string().max(20000),
+  // Per-language publish flag. Reviewers must explicitly check this for the
+  // text to become public — AI drafts and seed loads default to false (Draft).
+  publishedEn: z.boolean(),
+  publishedRu: z.boolean(),
+  publishedAz: z.boolean(),
+  publishedTr: z.boolean(),
   narrator: z.string().max(500),
   grade: z.string().max(200),
   notes: z.string().max(4000),
@@ -76,6 +82,13 @@ type Values = z.infer<typeof Schema>;
 type FormLang = "en" | "ru" | "az" | "tr";
 
 const NON_ARABIC_LANGS: FormLang[] = ["en", "ru", "az", "tr"];
+
+const PUBLISHED_KEY: Record<FormLang, "publishedEn" | "publishedRu" | "publishedAz" | "publishedTr"> = {
+  en: "publishedEn",
+  ru: "publishedRu",
+  az: "publishedAz",
+  tr: "publishedTr",
+};
 
 export function HadithList({
   entries,
@@ -162,7 +175,11 @@ export function HadithList({
       </div>
 
       <div className="space-y-2">
-        {filtered.map((h) => (
+        {filtered.map((h) => {
+          const draftLangs = NON_ARABIC_LANGS.filter(
+            (l) => (h.translations[l] ?? "").trim() && h.publishedTranslations?.[l] !== true,
+          );
+          return (
           <article
             key={h.id}
             className="rounded-lg border border-border bg-background p-4"
@@ -186,6 +203,14 @@ export function HadithList({
                 {!h.published && (
                   <span className="rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
                     unpublished
+                  </span>
+                )}
+                {draftLangs.length > 0 && (
+                  <span
+                    className="rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning"
+                    title={`Draft translations: ${draftLangs.map((l) => l.toUpperCase()).join(", ")}`}
+                  >
+                    needs review ({draftLangs.length})
                   </span>
                 )}
               </div>
@@ -215,6 +240,7 @@ export function HadithList({
                 if (!visibleLangs.includes(lang)) return null;
                 const text = h.translations[lang];
                 if (!text) return null;
+                const isDraft = h.publishedTranslations?.[lang] !== true;
                 return (
                   <div key={lang}>
                     <span className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -222,6 +248,21 @@ export function HadithList({
                       {h.editedTranslations?.[lang] && (
                         <span className="ml-1 text-primary" title="Admin-edited; preserved on re-seed">
                           ✓
+                        </span>
+                      )}
+                      {isDraft ? (
+                        <span
+                          className="ml-2 rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning"
+                          title="Draft — not visible to public reader"
+                        >
+                          Draft
+                        </span>
+                      ) : (
+                        <span
+                          className="ml-2 rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success"
+                          title="Published — visible to public reader"
+                        >
+                          Published
                         </span>
                       )}
                     </span>
@@ -236,7 +277,8 @@ export function HadithList({
               </p>
             )}
           </article>
-        ))}
+          );
+        })}
       </div>
 
       <EditHadithDrawer
@@ -259,6 +301,10 @@ function buildInitialValues(hadith: AdminHadith | null): Values {
     ru: hadith?.translations.ru ?? "",
     az: hadith?.translations.az ?? "",
     tr: hadith?.translations.tr ?? "",
+    publishedEn: hadith?.publishedTranslations?.en === true,
+    publishedRu: hadith?.publishedTranslations?.ru === true,
+    publishedAz: hadith?.publishedTranslations?.az === true,
+    publishedTr: hadith?.publishedTranslations?.tr === true,
     narrator: hadith?.narrator ?? "",
     grade: hadith?.grade ?? "",
     notes: hadith?.notes ?? "",
@@ -292,14 +338,17 @@ function EditHadithDrawer({
     setSubmitting(true);
     try {
       const translationsPayload: Record<string, string> = {};
+      const publishedTranslationsPayload: Record<string, boolean> = {};
       for (const lang of NON_ARABIC_LANGS) {
         translationsPayload[lang] = values[lang];
+        publishedTranslationsPayload[lang] = values[PUBLISHED_KEY[lang]];
       }
       const res = await fetch(`/api/admin/hadith/${collection}/${hadith.number}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           translations: translationsPayload,
+          publishedTranslations: publishedTranslationsPayload,
           narrator: values.narrator || null,
           grade: values.grade || null,
           notes: values.notes || null,
@@ -323,6 +372,7 @@ function EditHadithDrawer({
         ...hadith,
         translations: translationsPayload,
         editedTranslations: editedNext,
+        publishedTranslations: publishedTranslationsPayload,
         narrator: values.narrator || null,
         grade: values.grade || null,
         notes: values.notes || null,
@@ -433,6 +483,7 @@ function EditHadithDrawer({
                         collection={collection}
                         number={hadith.number}
                         aiConfigured={aiConfigured}
+                        publishedFieldName={PUBLISHED_KEY[lang]}
                       />
                     </TabsContent>
                   ))}
@@ -467,6 +518,7 @@ function TranslationField({
   collection,
   number,
   aiConfigured,
+  publishedFieldName,
 }: {
   lang: FormLang;
   register: UseFormRegister<Values>;
@@ -474,6 +526,7 @@ function TranslationField({
   collection: string;
   number: number;
   aiConfigured: boolean;
+  publishedFieldName: "publishedEn" | "publishedRu" | "publishedAz" | "publishedTr";
 }) {
   const [translating, startTranslate] = useTransition();
   const label = LANG_LABELS[lang] ?? lang;
@@ -519,6 +572,14 @@ function TranslationField({
           {translating ? "Translating…" : "Translate with AI"}
         </Button>
       </div>
+      <label className="flex items-center gap-2 text-xs text-muted-foreground">
+        <input
+          type="checkbox"
+          {...register(publishedFieldName)}
+          className="size-4"
+        />
+        Publish {label} translation (visible to public reader)
+      </label>
       <textarea
         id={`hadith-${lang}`}
         className="flex h-full min-h-[240px] w-full flex-1 resize-none rounded-md border border-input bg-background p-3 text-sm"

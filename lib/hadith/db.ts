@@ -26,6 +26,10 @@ export type HadithDoc = {
   // Open map keyed by LangCode. Missing or empty entries trigger the renderer's
   // English-fallback path; per-language seed scripts populate new keys.
   translations: Record<string, string | undefined>;
+  // publishedTranslations.<lang> === true ⇒ that translation has been
+  // reviewed and is visible to the public reader. Missing/false ⇒ Draft;
+  // the reader renders an "in process" placeholder for that language only.
+  publishedTranslations?: Record<string, boolean>;
   narrator: string | null;
   grade: string | null;
   grades?: Array<{ name: string; grade: string }>;

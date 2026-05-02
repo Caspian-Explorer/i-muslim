@@ -113,7 +113,11 @@ async function seedCollectionForLang(
   const ids = Array.from(idx.keys()).map((n) => col.doc(`${slug}:${n}`));
 
   // Per-language preservation: docs flagged editedTranslations.<lang> stay.
+  // We also track docs that already have a publishedTranslations.<lang>
+  // entry — re-seeds must never downgrade an already-Published translation
+  // back to Draft. New first-time seeds default to Draft (false).
   const preserveSet = new Set<string>();
+  const hasPublishedFlagSet = new Set<string>();
   for (let i = 0; i < ids.length; i += 500) {
     const chunk = ids.slice(i, i + 500);
     const snaps = await firestore.getAll(...chunk);
@@ -122,6 +126,8 @@ async function seedCollectionForLang(
       const data = s.data() ?? {};
       const perLang = (data.editedTranslations as Record<string, boolean> | undefined)?.[lang];
       if (perLang === true) preserveSet.add(s.id);
+      const pubFlag = (data.publishedTranslations as Record<string, boolean> | undefined)?.[lang];
+      if (typeof pubFlag === "boolean") hasPublishedFlagSet.add(s.id);
     }
   }
 
@@ -132,18 +138,21 @@ async function seedCollectionForLang(
   for (const [number, text] of idx) {
     const id = `${slug}:${number}`;
     if (preserveSet.has(id)) continue;
-    // Nested-object form (NOT a dotted-key) so Firestore deep-merges into
-    // the existing `translations` map rather than creating a literal field
-    // named "translations.<lang>" that the renderer can't see.
-    pending.set(
-      col.doc(id),
-      {
-        translations: { [lang]: text },
-        updatedAt: FieldValue.serverTimestamp(),
-        updatedBy: `seed:${lang}`,
-      },
-      { merge: true },
-    );
+    const payload: Record<string, unknown> = {
+      // Nested-object form (NOT a dotted-key) so Firestore deep-merges into
+      // the existing `translations` map rather than creating a literal field
+      // named "translations.<lang>" that the renderer can't see.
+      translations: { [lang]: text },
+      updatedAt: FieldValue.serverTimestamp(),
+      updatedBy: `seed:${lang}`,
+    };
+    if (!hasPublishedFlagSet.has(id)) {
+      // First-time seed for this lang on this doc — land as Draft. Reviewer
+      // flips it to Published in /admin/hadith. Existing flags (set by the
+      // backfill or by an earlier admin save) are left untouched.
+      payload.publishedTranslations = { [lang]: false };
+    }
+    pending.set(col.doc(id), payload, { merge: true });
     pendingCount++;
     written++;
     if (pendingCount >= WRITE_BATCH) {

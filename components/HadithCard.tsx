@@ -8,6 +8,9 @@ export type HadithTranslationSlice = {
   actual: LangCode | null;
   entry: HadithEntry | null;
   fallback: boolean;
+  // "in_process" means a translation exists in the requested language but is
+  // still in Draft — render a placeholder, never the unreviewed text.
+  status?: "in_process";
 };
 
 export function HadithCard({
@@ -85,26 +88,31 @@ export function HadithCard({
 
       {translations.length > 0 && (
         <div className="mt-4 space-y-4">
-          {translations.map(({ requested, actual, entry, fallback }) => (
+          {translations.map(({ requested, actual, entry, fallback, status }) => (
             <div
               key={requested}
               className="border-l-2 border-border pl-4"
             >
               <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
                 <span>{LANG_LABELS[requested] ?? requested.toUpperCase()}</span>
-                {fallback && actual && (
+                {status === "in_process" && (
+                  <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] normal-case tracking-normal">
+                    Translation under review
+                  </span>
+                )}
+                {status !== "in_process" && fallback && actual && (
                   <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] normal-case tracking-normal">
                     {LANG_LABELS[requested] ?? requested.toUpperCase()} unavailable — showing{" "}
                     {LANG_LABELS[actual] ?? actual.toUpperCase()}
                   </span>
                 )}
-                {!entry && !fallback && (
+                {status !== "in_process" && !entry && !fallback && (
                   <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] normal-case tracking-normal">
                     translation unavailable
                   </span>
                 )}
               </div>
-              {entry ? (
+              {status === "in_process" ? null : entry ? (
                 <p className="text-base leading-relaxed">{entry.text}</p>
               ) : null}
             </div>
