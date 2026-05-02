@@ -878,6 +878,49 @@
     "featuredHeading": "Upcoming events",
     "featuredSubheading": "What's happening in the next two weeks.",
     "viewAll": "View all events",
+    "submitCta": "Submit an event",
+    "submit": {
+      "title": "Submit an event",
+      "subtitle": "Propose a community event for review.",
+      "guideline": "Submissions are reviewed by an admin before appearing on the public calendar.",
+      "fields": {
+        "title": "Event title",
+        "description": "Description",
+        "category": "Category",
+        "startsAt": "Starts at",
+        "endsAt": "Ends at (optional)",
+        "timezone": "Timezone",
+        "locationMode": "Location",
+        "venue": "Venue name",
+        "address": "Address",
+        "url": "Online URL",
+        "organizerName": "Organizer name",
+        "organizerContact": "Organizer contact (optional)",
+        "submitterEmail": "Your email"
+      },
+      "locationModes": {
+        "in-person": "In person",
+        "online": "Online",
+        "hybrid": "Hybrid"
+      },
+      "actions": {
+        "submit": "Submit for review",
+        "submitting": "Submitting…"
+      },
+      "validation": {
+        "titleRequired": "Please enter a title.",
+        "startRequired": "Please choose a start date and time.",
+        "endsBeforeStart": "End time must be after start time.",
+        "organizerRequired": "Please provide an organizer name.",
+        "submitterEmailRequired": "Please provide a valid email.",
+        "venueRequired": "Venue or address is required for in-person events.",
+        "urlRequired": "Meeting URL is required for online events."
+      },
+      "success": "Thank you — your event was submitted for review.",
+      "errorGeneric": "Could not submit event. Please try again.",
+      "errorRate": "You've submitted several events recently. Please try again later.",
+      "errorAuth": "Please sign in to submit an event."
+    },
     "rsvp": {
       "rsvp": "RSVP",
       "rsvped": "You're going",

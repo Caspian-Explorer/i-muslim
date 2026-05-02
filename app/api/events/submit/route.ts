@@ -1,0 +1,84 @@
+import { NextResponse } from "next/server";
+import { Timestamp } from "firebase-admin/firestore";
+import { getDb } from "@/lib/firebase/admin";
+import { getSiteSession } from "@/lib/auth/session";
+import { EVENT_SUBMISSIONS_COLLECTION, eventSubmitSchema } from "@/lib/events/submit-schema";
+
+export const runtime = "nodejs";
+
+const RATE_LIMIT_PER_DAY = 5;
+
+export async function POST(req: Request) {
+  const session = await getSiteSession();
+  if (!session) {
+    return NextResponse.json({ ok: false, error: "auth" }, { status: 401 });
+  }
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
+  }
+
+  const parsed = eventSubmitSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { ok: false, error: parsed.error.issues[0]?.message ?? "invalid_input" },
+      { status: 400 },
+    );
+  }
+  const data = parsed.data;
+
+  if (data.website_url_secondary && data.website_url_secondary.length > 0) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({ ok: false, error: "firestore_not_configured" }, { status: 503 });
+  }
+
+  const since = Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
+  try {
+    const recent = await db
+      .collection(EVENT_SUBMISSIONS_COLLECTION)
+      .where("submittedBy.uid", "==", session.uid)
+      .where("createdAt", ">", since)
+      .count()
+      .get();
+    if (recent.data().count >= RATE_LIMIT_PER_DAY) {
+      return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
+    }
+  } catch {
+    // count() requires a composite index; if missing, skip rate limit rather than block submission.
+  }
+
+  const payload = {
+    title: data.title,
+    description: data.description,
+    category: data.category,
+    startsAt: new Date(data.startsAt),
+    endsAt: data.endsAt ? new Date(data.endsAt) : undefined,
+    timezone: data.timezone,
+    location: {
+      mode: data.location.mode,
+      venue: data.location.venue,
+      address: data.location.address,
+      url: data.location.url,
+    },
+    organizer: {
+      name: data.organizer.name,
+      contact: data.organizer.contact,
+    },
+  };
+
+  const docRef = await db.collection(EVENT_SUBMISSIONS_COLLECTION).add({
+    status: "pending_review",
+    payload,
+    submittedBy: { uid: session.uid, email: data.submitterEmail },
+    createdAt: Timestamp.now(),
+  });
+
+  return NextResponse.json({ ok: true, id: docRef.id });
+}
