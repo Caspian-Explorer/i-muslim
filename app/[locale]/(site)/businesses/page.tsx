@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { Store } from "lucide-react";
+import { Plus, Store } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
 import { listPublishedByCity } from "@/lib/businesses/public";
 import {
   fetchAmenities,
@@ -63,14 +64,21 @@ export default async function BusinessesPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <header className="mb-6">
-        <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-          <Store className="size-3.5" /> {t("pageTitle")}
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+            <Store className="size-3.5" /> {t("pageTitle")}
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            {t("publicTitle", { city: ANCHOR_CITY })}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("publicSubtitle")}</p>
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-          {t("publicTitle", { city: ANCHOR_CITY })}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("publicSubtitle")}</p>
+        <Button size="sm" asChild>
+          <Link href="/businesses/submit">
+            <Plus /> {t("submitCta")}
+          </Link>
+        </Button>
       </header>
 
       <div className="mb-6">
@@ -95,13 +103,6 @@ export default async function BusinessesPage({
           ))}
         </ul>
       )}
-
-      <p className="mt-10 rounded-md border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-        {t("claimSuggestNote", { city: ANCHOR_CITY })}{" "}
-        <Link className="underline hover:text-foreground" href="/businesses/submit">
-          {t("submitCta")}
-        </Link>
-      </p>
     </div>
   );
 }

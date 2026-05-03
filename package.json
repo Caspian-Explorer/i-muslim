@@ -12,6 +12,7 @@
     "seed:quran:lang": "tsx scripts/seed-quran-translation.ts",
     "seed:hadith": "tsx scripts/seed-hadith.ts",
     "seed:hadith:lang": "tsx scripts/seed-hadith-translation.ts",
+    "seed:business-categories": "tsx scripts/seed-business-categories.ts",
     "sync:locales": "tsx scripts/sync-locale-translations.ts",
     "recompute:translation-stats": "tsx scripts/recompute-translation-stats.ts",
     "migrate:country-iso2": "tsx scripts/migrate-profile-country-to-iso2.ts",

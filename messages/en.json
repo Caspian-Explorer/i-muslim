@@ -1538,6 +1538,7 @@
     "publicAllCategories": "All categories",
     "publicSearchPlaceholder": "Search by name…",
     "claimSuggestNote": "Run a halal business in {city}? Get listed.",
+    "submitCta": "Suggest a business",
     "createCta": "Create listing",
     "editCta": "Edit",
     "archiveCta": "Archive",
@@ -1787,16 +1788,33 @@
       }
     },
     "submit": {
-      "title": "Suggest a halal business",
+      "title": "Submit a halal business",
       "subtitle": "Help grow the directory. Our team reviews every submission before it goes live.",
-      "guideline": "Submit places that are openly halal-friendly — restaurants with halal menus, butchers, grocers, cafés, and Muslim-owned services. We'll review the details and may contact you to confirm.",
-      "submitCta": "Suggest a business",
       "noCategoriesYet": "Categories haven't been set up yet. Please check back soon.",
+      "draftRestored": "Draft restored.",
+      "draftCleared": "Draft cleared.",
+      "discardDraft": "Discard draft",
+      "steps": {
+        "basics": "Basics",
+        "halal": "Halal",
+        "location": "Location",
+        "review": "Review"
+      },
+      "review": {
+        "heading": "Review your submission",
+        "subheading": "Make sure these details are correct before submitting. We'll verify before publishing.",
+        "editStep": "Edit"
+      },
       "fields": {
         "name": "Business name",
         "description": "What does this business do?",
         "category": "Category",
         "categoryHint": "Pick up to 3.",
+        "categoryPlaceholder": "Select categories…",
+        "categorySearchPlaceholder": "Search categories…",
+        "categoryNoResults": "No category found.",
+        "categoryMoreItems": "+{count} more",
+        "categoryRemoveChip": "Remove {name}",
         "halalStatus": "Halal status",
         "certBody": "Certification body name",
         "certBodyPlaceholder": "e.g. HFA, HMC",
@@ -1821,9 +1839,12 @@
         "addressRequired": "Street address is required.",
         "cityRequired": "City is required.",
         "countryRequired": "Country is required.",
-        "submitterEmailRequired": "Enter a valid email so we can follow up."
+        "submitterEmailRequired": "Enter a valid email so we can follow up.",
+        "fixStep": "Fix the highlighted fields before continuing."
       },
       "actions": {
+        "back": "Back",
+        "next": "Next",
         "submit": "Submit for review",
         "submitting": "Submitting…"
       },

@@ -1,19 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Loader2, Send } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Pencil, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CountryCombobox } from "@/components/common/CountryCombobox";
+import { SearchableMultiCombobox } from "@/components/common/SearchableMultiCombobox";
 import { pickLocalized } from "@/lib/utils";
 import type { BusinessCategory, HalalStatus } from "@/types/business";
 import type { Locale } from "@/i18n/config";
 
 const HALAL_STATUSES = ["certified", "self_declared", "muslim_owned", "unverified"] as const;
+const STEPS = ["basics", "halal", "location", "review"] as const;
+type Step = (typeof STEPS)[number];
+
+const DRAFT_STORAGE_KEY = "i-muslim.business-submission-draft";
 
 interface FormState {
   name: string;
@@ -69,36 +74,121 @@ export function SubmitBusinessForm({ categories }: Props) {
   const tHalal = useTranslations("businesses.halalStatuses");
   const locale = useLocale() as Locale;
   const [state, setState] = useState<FormState>(empty);
+  const [stepIdx, setStepIdx] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
+  const hydrated = useRef(false);
 
-  function toggleCategory(id: string) {
-    setState((s) => {
-      if (s.categoryIds.includes(id)) {
-        return { ...s, categoryIds: s.categoryIds.filter((c) => c !== id) };
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as Partial<FormState> & { __step?: number };
+        const { __step, ...savedFields } = saved;
+        const hasContent = Object.entries(savedFields).some(([k, v]) => {
+          if (k === "halalStatus") return v !== "self_declared";
+          if (Array.isArray(v)) return v.length > 0;
+          if (typeof v === "boolean") return v;
+          return typeof v === "string" && v.length > 0;
+        });
+        if (hasContent) {
+          setState((prev) => ({ ...prev, ...savedFields }));
+          if (typeof __step === "number" && __step >= 0 && __step < STEPS.length) {
+            setStepIdx(__step);
+          }
+          toast.message(t("draftRestored"));
+        }
       }
-      if (s.categoryIds.length >= 3) return s;
-      return { ...s, categoryIds: [...s.categoryIds, id] };
-    });
+    } catch {
+      // ignore corrupt draft
+    }
+    hydrated.current = true;
+  }, [t]);
+
+  useEffect(() => {
+    if (!hydrated.current || typeof window === "undefined" || done) return;
+    try {
+      sessionStorage.setItem(
+        DRAFT_STORAGE_KEY,
+        JSON.stringify({ ...state, __step: stepIdx }),
+      );
+    } catch {
+      // quota exceeded — ignore
+    }
+  }, [state, stepIdx, done]);
+
+  function clearDraft() {
+    try {
+      sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
   }
 
-  function validate(): boolean {
+  function discardDraft() {
+    clearDraft();
+    setState(empty);
+    setStepIdx(0);
+    setErrors({});
+    toast.success(t("draftCleared"));
+  }
+
+  function validateStep(step: Step): Record<string, string> {
     const next: Record<string, string> = {};
-    if (state.name.trim().length < 2) next.name = t("validation.nameRequired");
-    if (state.descriptionEn.trim().length < 10) next.descriptionEn = t("validation.descriptionRequired");
-    if (state.categoryIds.length === 0) next.categoryIds = t("validation.categoryRequired");
-    if (state.addressLine1.trim().length < 2) next.addressLine1 = t("validation.addressRequired");
-    if (!state.city.trim()) next.city = t("validation.cityRequired");
-    if (!/^[A-Za-z]{2}$/.test(state.countryCode.trim())) next.countryCode = t("validation.countryRequired");
-    if (!/^.+@.+\..+$/.test(state.submitterEmail.trim())) next.submitterEmail = t("validation.submitterEmailRequired");
-    setErrors(next);
-    return Object.keys(next).length === 0;
+    if (step === "basics") {
+      if (state.name.trim().length < 2) next.name = t("validation.nameRequired");
+      if (state.descriptionEn.trim().length < 10) next.descriptionEn = t("validation.descriptionRequired");
+      if (state.categoryIds.length === 0) next.categoryIds = t("validation.categoryRequired");
+    }
+    if (step === "location") {
+      if (state.addressLine1.trim().length < 2) next.addressLine1 = t("validation.addressRequired");
+      if (!state.city.trim()) next.city = t("validation.cityRequired");
+      if (!/^[A-Za-z]{2}$/.test(state.countryCode.trim())) next.countryCode = t("validation.countryRequired");
+    }
+    if (step === "review") {
+      if (!/^.+@.+\..+$/.test(state.submitterEmail.trim())) {
+        next.submitterEmail = t("validation.submitterEmailRequired");
+      }
+    }
+    return next;
+  }
+
+  function handleNext() {
+    const step = STEPS[stepIdx];
+    if (!step) return;
+    const stepErrors = validateStep(step);
+    setErrors(stepErrors);
+    if (Object.keys(stepErrors).length > 0) {
+      toast.error(t("validation.fixStep"));
+      return;
+    }
+    if (stepIdx < STEPS.length - 1) setStepIdx(stepIdx + 1);
+  }
+
+  function handleBack() {
+    setErrors({});
+    if (stepIdx > 0) setStepIdx(stepIdx - 1);
+  }
+
+  function jumpToStep(target: number) {
+    setErrors({});
+    setStepIdx(target);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!validate()) return;
+    for (let i = 0; i < STEPS.length; i += 1) {
+      const step = STEPS[i]!;
+      const stepErrors = validateStep(step);
+      if (Object.keys(stepErrors).length > 0) {
+        setErrors(stepErrors);
+        setStepIdx(i);
+        toast.error(t("validation.fixStep"));
+        return;
+      }
+    }
     setSubmitting(true);
     try {
       const res = await fetch("/api/businesses/submit", {
@@ -120,6 +210,7 @@ export function SubmitBusinessForm({ categories }: Props) {
         return;
       }
       toast.success(t("success"));
+      clearDraft();
       setState(empty);
       setDone(true);
     } finally {
@@ -135,9 +226,11 @@ export function SubmitBusinessForm({ categories }: Props) {
     );
   }
 
+  const step = STEPS[stepIdx]!;
+  const isLast = stepIdx === STEPS.length - 1;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* honeypot */}
+    <form onSubmit={handleSubmit} className="space-y-6">
       <input
         type="text"
         name="website_url_secondary"
@@ -148,241 +241,399 @@ export function SubmitBusinessForm({ categories }: Props) {
         onChange={(e) => setState((s) => ({ ...s, website_url_secondary: e.target.value }))}
       />
 
-      <div className="space-y-1.5">
-        <Label htmlFor="biz-name">{t("fields.name")}</Label>
-        <Input
-          id="biz-name"
-          value={state.name}
-          onChange={(e) => setState((s) => ({ ...s, name: e.target.value }))}
-        />
-        {errors.name && <p className="text-xs text-danger">{errors.name}</p>}
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="biz-description">{t("fields.description")}</Label>
-        <textarea
-          id="biz-description"
-          className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          value={state.descriptionEn}
-          onChange={(e) => setState((s) => ({ ...s, descriptionEn: e.target.value }))}
-          maxLength={2000}
-        />
-        {errors.descriptionEn && <p className="text-xs text-danger">{errors.descriptionEn}</p>}
-      </div>
-
-      <div className="space-y-1.5">
-        <Label>
-          {t("fields.category")}{" "}
-          <span className="text-xs font-normal text-muted-foreground">{t("fields.categoryHint")}</span>
-        </Label>
-        {categories.length === 0 ? (
-          <p className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
-            {t("noCategoriesYet")}
-          </p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {categories.map((c) => {
-              const selected = state.categoryIds.includes(c.id);
-              const disabled = !selected && state.categoryIds.length >= 3;
-              const label = pickLocalized(c.name, locale, "en") ?? c.name.en;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => toggleCategory(c.id)}
-                  disabled={disabled}
-                  className={`rounded-full border px-3 py-1 text-xs transition ${
-                    selected
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-input bg-background hover:bg-muted"
-                  } ${disabled ? "opacity-40" : ""}`}
+      <ol className="flex items-center gap-2 text-xs">
+        {STEPS.map((s, i) => {
+          const active = i === stepIdx;
+          const completed = i < stepIdx;
+          return (
+            <li key={s} className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => jumpToStep(i)}
+                className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 transition ${
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : completed
+                      ? "border border-primary text-primary hover:bg-primary/10"
+                      : "border border-input text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                <span
+                  className={`flex size-5 items-center justify-center rounded-full text-[10px] font-semibold ${
+                    active
+                      ? "bg-primary-foreground text-primary"
+                      : completed
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                  }`}
                 >
-                  {label}
-                </button>
-              );
-            })}
+                  {i + 1}
+                </span>
+                {t(`steps.${s}`)}
+              </button>
+              {i < STEPS.length - 1 && (
+                <span aria-hidden className="text-muted-foreground">›</span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+
+      {step === "basics" && (
+        <div className="space-y-5">
+          <div className="space-y-1.5">
+            <Label htmlFor="biz-name">{t("fields.name")}</Label>
+            <Input
+              id="biz-name"
+              value={state.name}
+              onChange={(e) => setState((s) => ({ ...s, name: e.target.value }))}
+            />
+            {errors.name && <p className="text-xs text-danger">{errors.name}</p>}
           </div>
-        )}
-        {errors.categoryIds && <p className="text-xs text-danger">{errors.categoryIds}</p>}
-      </div>
 
-      <div className="space-y-1.5">
-        <Label>{t("fields.halalStatus")}</Label>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {HALAL_STATUSES.map((s) => (
-            <label
-              key={s}
-              className={`flex cursor-pointer items-start gap-2 rounded-md border p-2.5 text-sm ${
-                state.halalStatus === s ? "border-primary bg-primary/5" : "border-input hover:bg-muted/50"
-              }`}
-            >
-              <input
-                type="radio"
-                name="halalStatus"
-                value={s}
-                checked={state.halalStatus === s}
-                onChange={() => setState((st) => ({ ...st, halalStatus: s }))}
-                className="mt-0.5"
+          <div className="space-y-1.5">
+            <Label htmlFor="biz-description">{t("fields.description")}</Label>
+            <textarea
+              id="biz-description"
+              className="min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={state.descriptionEn}
+              onChange={(e) => setState((s) => ({ ...s, descriptionEn: e.target.value }))}
+              maxLength={2000}
+            />
+            {errors.descriptionEn && <p className="text-xs text-danger">{errors.descriptionEn}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>
+              {t("fields.category")}{" "}
+              <span className="text-xs font-normal text-muted-foreground">{t("fields.categoryHint")}</span>
+            </Label>
+            {categories.length === 0 ? (
+              <p className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
+                {t("noCategoriesYet")}
+              </p>
+            ) : (
+              <SearchableMultiCombobox
+                id="biz-category"
+                options={categories.map((c) => ({
+                  value: c.id,
+                  label: pickLocalized(c.name, locale, "en") ?? c.name.en,
+                }))}
+                value={state.categoryIds}
+                onChange={(next) =>
+                  setState((s) => ({ ...s, categoryIds: next.slice(0, 3) }))
+                }
+                placeholder={t("fields.categoryPlaceholder")}
+                searchPlaceholder={t("fields.categorySearchPlaceholder")}
+                emptyText={t("fields.categoryNoResults")}
+                removeChipLabel={(name) => t("fields.categoryRemoveChip", { name })}
+                moreText={(count) => t("fields.categoryMoreItems", { count })}
+                ariaLabel={t("fields.category")}
               />
-              <span>{tHalal(s)}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {state.halalStatus === "certified" && (
-        <div className="space-y-1.5">
-          <Label htmlFor="biz-cert-body">{t("fields.certBody")}</Label>
-          <Input
-            id="biz-cert-body"
-            value={state.certificationBodyName}
-            onChange={(e) => setState((s) => ({ ...s, certificationBodyName: e.target.value }))}
-            placeholder={t("fields.certBodyPlaceholder")}
-          />
+            )}
+            {errors.categoryIds && <p className="text-xs text-danger">{errors.categoryIds}</p>}
+          </div>
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id="biz-muslim-owned"
-          checked={state.muslimOwned}
-          onCheckedChange={(v) => setState((s) => ({ ...s, muslimOwned: v === true }))}
-        />
-        <Label htmlFor="biz-muslim-owned" className="font-normal">
-          {t("fields.muslimOwned")}
-        </Label>
-      </div>
+      {step === "halal" && (
+        <div className="space-y-5">
+          <div className="space-y-1.5">
+            <Label>{t("fields.halalStatus")}</Label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {HALAL_STATUSES.map((s) => (
+                <label
+                  key={s}
+                  className={`flex cursor-pointer items-start gap-2 rounded-md border p-2.5 text-sm ${
+                    state.halalStatus === s ? "border-primary bg-primary/5" : "border-input hover:bg-muted/50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="halalStatus"
+                    value={s}
+                    checked={state.halalStatus === s}
+                    onChange={() => setState((st) => ({ ...st, halalStatus: s }))}
+                    className="mt-0.5"
+                  />
+                  <span>{tHalal(s)}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id="biz-is-owner"
-          checked={state.isOwner}
-          onCheckedChange={(v) => setState((s) => ({ ...s, isOwner: v === true }))}
-        />
-        <Label htmlFor="biz-is-owner" className="font-normal">
-          {t("fields.isOwner")}
-        </Label>
-      </div>
+          {state.halalStatus === "certified" && (
+            <div className="space-y-1.5">
+              <Label htmlFor="biz-cert-body">{t("fields.certBody")}</Label>
+              <Input
+                id="biz-cert-body"
+                value={state.certificationBodyName}
+                onChange={(e) => setState((s) => ({ ...s, certificationBodyName: e.target.value }))}
+                placeholder={t("fields.certBodyPlaceholder")}
+              />
+            </div>
+          )}
 
-      <div className="space-y-1.5">
-        <Label htmlFor="biz-address">{t("fields.addressLine1")}</Label>
-        <Input
-          id="biz-address"
-          value={state.addressLine1}
-          onChange={(e) => setState((s) => ({ ...s, addressLine1: e.target.value }))}
-        />
-        {errors.addressLine1 && <p className="text-xs text-danger">{errors.addressLine1}</p>}
-      </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="biz-muslim-owned"
+              checked={state.muslimOwned}
+              onCheckedChange={(v) => setState((s) => ({ ...s, muslimOwned: v === true }))}
+            />
+            <Label htmlFor="biz-muslim-owned" className="font-normal">
+              {t("fields.muslimOwned")}
+            </Label>
+          </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="biz-city">{t("fields.city")}</Label>
-          <Input
-            id="biz-city"
-            value={state.city}
-            onChange={(e) => setState((s) => ({ ...s, city: e.target.value }))}
-          />
-          {errors.city && <p className="text-xs text-danger">{errors.city}</p>}
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="biz-is-owner"
+              checked={state.isOwner}
+              onCheckedChange={(v) => setState((s) => ({ ...s, isOwner: v === true }))}
+            />
+            <Label htmlFor="biz-is-owner" className="font-normal">
+              {t("fields.isOwner")}
+            </Label>
+          </div>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="biz-region">{t("fields.region")}</Label>
-          <Input
-            id="biz-region"
-            value={state.region}
-            onChange={(e) => setState((s) => ({ ...s, region: e.target.value }))}
-          />
-        </div>
-      </div>
+      )}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="biz-country">{t("fields.country")}</Label>
-          <CountryCombobox
-            id="biz-country"
-            value={state.countryCode}
-            onChange={(code) => setState((s) => ({ ...s, countryCode: code }))}
-          />
-          {errors.countryCode && <p className="text-xs text-danger">{errors.countryCode}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="biz-postal">{t("fields.postalCode")}</Label>
-          <Input
-            id="biz-postal"
-            value={state.postalCode}
-            onChange={(e) => setState((s) => ({ ...s, postalCode: e.target.value }))}
-          />
-        </div>
-      </div>
+      {step === "location" && (
+        <div className="space-y-5">
+          <div className="space-y-1.5">
+            <Label htmlFor="biz-address">{t("fields.addressLine1")}</Label>
+            <Input
+              id="biz-address"
+              value={state.addressLine1}
+              onChange={(e) => setState((s) => ({ ...s, addressLine1: e.target.value }))}
+            />
+            {errors.addressLine1 && <p className="text-xs text-danger">{errors.addressLine1}</p>}
+          </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="biz-phone">{t("fields.phone")}</Label>
-          <Input
-            id="biz-phone"
-            value={state.phone}
-            onChange={(e) => setState((s) => ({ ...s, phone: e.target.value }))}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="biz-email">{t("fields.email")}</Label>
-          <Input
-            id="biz-email"
-            type="email"
-            value={state.email}
-            onChange={(e) => setState((s) => ({ ...s, email: e.target.value }))}
-          />
-        </div>
-      </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="biz-city">{t("fields.city")}</Label>
+              <Input
+                id="biz-city"
+                value={state.city}
+                onChange={(e) => setState((s) => ({ ...s, city: e.target.value }))}
+              />
+              {errors.city && <p className="text-xs text-danger">{errors.city}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="biz-region">{t("fields.region")}</Label>
+              <Input
+                id="biz-region"
+                value={state.region}
+                onChange={(e) => setState((s) => ({ ...s, region: e.target.value }))}
+              />
+            </div>
+          </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="biz-website">{t("fields.website")}</Label>
-        <Input
-          id="biz-website"
-          type="url"
-          placeholder="https://"
-          value={state.website}
-          onChange={(e) => setState((s) => ({ ...s, website: e.target.value }))}
-        />
-      </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="biz-country">{t("fields.country")}</Label>
+              <CountryCombobox
+                id="biz-country"
+                value={state.countryCode}
+                onChange={(code) => setState((s) => ({ ...s, countryCode: code }))}
+              />
+              {errors.countryCode && <p className="text-xs text-danger">{errors.countryCode}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="biz-postal">{t("fields.postalCode")}</Label>
+              <Input
+                id="biz-postal"
+                value={state.postalCode}
+                onChange={(e) => setState((s) => ({ ...s, postalCode: e.target.value }))}
+              />
+            </div>
+          </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="biz-instagram">{t("fields.instagram")}</Label>
-          <Input
-            id="biz-instagram"
-            placeholder="@handle"
-            value={state.instagram}
-            onChange={(e) => setState((s) => ({ ...s, instagram: e.target.value }))}
-          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="biz-phone">{t("fields.phone")}</Label>
+              <Input
+                id="biz-phone"
+                value={state.phone}
+                onChange={(e) => setState((s) => ({ ...s, phone: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="biz-email">{t("fields.email")}</Label>
+              <Input
+                id="biz-email"
+                type="email"
+                value={state.email}
+                onChange={(e) => setState((s) => ({ ...s, email: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="biz-website">{t("fields.website")}</Label>
+            <Input
+              id="biz-website"
+              type="url"
+              placeholder="https://"
+              value={state.website}
+              onChange={(e) => setState((s) => ({ ...s, website: e.target.value }))}
+            />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="biz-instagram">{t("fields.instagram")}</Label>
+              <Input
+                id="biz-instagram"
+                placeholder="@handle"
+                value={state.instagram}
+                onChange={(e) => setState((s) => ({ ...s, instagram: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="biz-whatsapp">{t("fields.whatsapp")}</Label>
+              <Input
+                id="biz-whatsapp"
+                placeholder="+44…"
+                value={state.whatsapp}
+                onChange={(e) => setState((s) => ({ ...s, whatsapp: e.target.value }))}
+              />
+            </div>
+          </div>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="biz-whatsapp">{t("fields.whatsapp")}</Label>
-          <Input
-            id="biz-whatsapp"
-            placeholder="+44…"
-            value={state.whatsapp}
-            onChange={(e) => setState((s) => ({ ...s, whatsapp: e.target.value }))}
+      )}
+
+      {step === "review" && (
+        <div className="space-y-5">
+          <div>
+            <h2 className="text-base font-semibold">{t("review.heading")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("review.subheading")}</p>
+          </div>
+
+          <ReviewSection
+            title={t("steps.basics")}
+            onEdit={() => jumpToStep(0)}
+            editLabel={t("review.editStep")}
+            rows={[
+              { label: t("fields.name"), value: state.name },
+              { label: t("fields.description"), value: state.descriptionEn },
+              {
+                label: t("fields.category"),
+                value:
+                  state.categoryIds
+                    .map((id) => {
+                      const c = categories.find((x) => x.id === id);
+                      return c ? pickLocalized(c.name, locale, "en") ?? c.name.en : id;
+                    })
+                    .join(", ") || "—",
+              },
+            ]}
           />
+
+          <ReviewSection
+            title={t("steps.halal")}
+            onEdit={() => jumpToStep(1)}
+            editLabel={t("review.editStep")}
+            rows={[
+              { label: t("fields.halalStatus"), value: tHalal(state.halalStatus) },
+              ...(state.halalStatus === "certified" && state.certificationBodyName
+                ? [{ label: t("fields.certBody"), value: state.certificationBodyName }]
+                : []),
+              { label: t("fields.muslimOwned"), value: state.muslimOwned ? "Yes" : "No" },
+              { label: t("fields.isOwner"), value: state.isOwner ? "Yes" : "No" },
+            ]}
+          />
+
+          <ReviewSection
+            title={t("steps.location")}
+            onEdit={() => jumpToStep(2)}
+            editLabel={t("review.editStep")}
+            rows={[
+              {
+                label: t("fields.addressLine1"),
+                value: [state.addressLine1, state.city, state.region, state.postalCode, state.countryCode]
+                  .filter(Boolean)
+                  .join(", "),
+              },
+              ...(state.phone ? [{ label: t("fields.phone"), value: state.phone }] : []),
+              ...(state.email ? [{ label: t("fields.email"), value: state.email }] : []),
+              ...(state.website ? [{ label: t("fields.website"), value: state.website }] : []),
+              ...(state.instagram ? [{ label: t("fields.instagram"), value: state.instagram }] : []),
+              ...(state.whatsapp ? [{ label: t("fields.whatsapp"), value: state.whatsapp }] : []),
+            ]}
+          />
+
+          <div className="space-y-1.5 rounded-md border border-border bg-card p-4">
+            <Label htmlFor="biz-submitter">{t("fields.submitterEmail")}</Label>
+            <Input
+              id="biz-submitter"
+              type="email"
+              value={state.submitterEmail}
+              onChange={(e) => setState((s) => ({ ...s, submitterEmail: e.target.value }))}
+            />
+            {errors.submitterEmail && <p className="text-xs text-danger">{errors.submitterEmail}</p>}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="space-y-1.5">
-        <Label htmlFor="biz-submitter">{t("fields.submitterEmail")}</Label>
-        <Input
-          id="biz-submitter"
-          type="email"
-          value={state.submitterEmail}
-          onChange={(e) => setState((s) => ({ ...s, submitterEmail: e.target.value }))}
-        />
-        {errors.submitterEmail && <p className="text-xs text-danger">{errors.submitterEmail}</p>}
-      </div>
-
-      <div className="flex items-center justify-end gap-2">
-        <Button type="submit" disabled={submitting} aria-busy={submitting}>
-          {submitting ? <Loader2 className="animate-spin" /> : <Send />}
-          {submitting ? t("actions.submitting") : t("actions.submit")}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={discardDraft}
+          className="text-muted-foreground"
+        >
+          <Trash2 /> {t("discardDraft")}
         </Button>
+        <div className="flex items-center gap-2">
+          {stepIdx > 0 && (
+            <Button type="button" variant="secondary" onClick={handleBack} disabled={submitting}>
+              <ArrowLeft /> {t("actions.back")}
+            </Button>
+          )}
+          {!isLast && (
+            <Button type="button" onClick={handleNext}>
+              {t("actions.next")} <ArrowRight />
+            </Button>
+          )}
+          {isLast && (
+            <Button type="submit" disabled={submitting} aria-busy={submitting}>
+              {submitting ? <Loader2 className="animate-spin" /> : <Send />}
+              {submitting ? t("actions.submitting") : t("actions.submit")}
+            </Button>
+          )}
+        </div>
       </div>
     </form>
+  );
+}
+
+interface ReviewSectionProps {
+  title: string;
+  onEdit: () => void;
+  editLabel: string;
+  rows: Array<{ label: string; value: string }>;
+}
+
+function ReviewSection({ title, onEdit, editLabel, rows }: ReviewSectionProps) {
+  return (
+    <section className="rounded-md border border-border bg-card p-4">
+      <header className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <Button type="button" variant="ghost" size="sm" onClick={onEdit}>
+          <Pencil /> {editLabel}
+        </Button>
+      </header>
+      <dl className="grid gap-1 text-sm">
+        {rows.map((row) => (
+          <div key={row.label} className="grid grid-cols-[8rem_1fr] gap-2">
+            <dt className="text-xs text-muted-foreground">{row.label}</dt>
+            <dd className="whitespace-pre-line break-words">{row.value || "—"}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
