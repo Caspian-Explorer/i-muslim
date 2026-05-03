@@ -1794,6 +1794,12 @@
       "draftRestored": "Draft restored.",
       "draftCleared": "Draft cleared.",
       "discardDraft": "Discard draft",
+      "draftDialog": {
+        "title": "Continue your draft?",
+        "body": "You have an unsaved draft from {when}. Resume to keep editing, or start fresh to clear it.",
+        "resume": "Resume",
+        "startFresh": "Start fresh"
+      },
       "steps": {
         "basics": "Basics",
         "halal": "Halal",

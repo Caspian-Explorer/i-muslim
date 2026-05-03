@@ -6,6 +6,14 @@ import { ArrowLeft, ArrowRight, Loader2, Pencil, Send, Trash2 } from "lucide-rea
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CountryCombobox } from "@/components/common/CountryCombobox";
@@ -19,6 +27,24 @@ const STEPS = ["basics", "halal", "location", "review"] as const;
 type Step = (typeof STEPS)[number];
 
 const DRAFT_STORAGE_KEY = "i-muslim.business-submission-draft";
+const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+interface PendingDraft {
+  fields: Partial<FormState>;
+  savedAt: number;
+}
+
+function formatRelativeAge(savedAtMs: number, locale: string): string {
+  const diffMs = Date.now() - savedAtMs;
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+  const minutes = Math.round(diffMs / 60_000);
+  if (minutes < 1) return rtf.format(0, "minute");
+  if (minutes < 60) return rtf.format(-minutes, "minute");
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return rtf.format(-hours, "hour");
+  const days = Math.round(hours / 24);
+  return rtf.format(-days, "day");
+}
 
 interface FormState {
   name: string;
@@ -78,6 +104,7 @@ export function SubmitBusinessForm({ categories }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
+  const [pendingDraft, setPendingDraft] = useState<PendingDraft | null>(null);
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -85,39 +112,58 @@ export function SubmitBusinessForm({ categories }: Props) {
     try {
       const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
       if (raw) {
-        const saved = JSON.parse(raw) as Partial<FormState> & { __step?: number };
-        const { __step, ...savedFields } = saved;
+        const saved = JSON.parse(raw) as Partial<FormState> & {
+          __step?: number;
+          __savedAt?: number;
+        };
+        const { __step: _step, __savedAt, ...savedFields } = saved;
+        void _step;
         const hasContent = Object.entries(savedFields).some(([k, v]) => {
           if (k === "halalStatus") return v !== "self_declared";
           if (Array.isArray(v)) return v.length > 0;
           if (typeof v === "boolean") return v;
           return typeof v === "string" && v.length > 0;
         });
-        if (hasContent) {
-          setState((prev) => ({ ...prev, ...savedFields }));
-          if (typeof __step === "number" && __step >= 0 && __step < STEPS.length) {
-            setStepIdx(__step);
-          }
-          toast.message(t("draftRestored"));
+        const savedAt = typeof __savedAt === "number" ? __savedAt : 0;
+        const stale = Date.now() - savedAt > DRAFT_TTL_MS;
+        if (hasContent && !stale) {
+          setPendingDraft({ fields: savedFields, savedAt });
+          return;
         }
+        if (stale) sessionStorage.removeItem(DRAFT_STORAGE_KEY);
       }
     } catch {
       // ignore corrupt draft
     }
     hydrated.current = true;
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     if (!hydrated.current || typeof window === "undefined" || done) return;
     try {
       sessionStorage.setItem(
         DRAFT_STORAGE_KEY,
-        JSON.stringify({ ...state, __step: stepIdx }),
+        JSON.stringify({ ...state, __step: stepIdx, __savedAt: Date.now() }),
       );
     } catch {
       // quota exceeded — ignore
     }
   }, [state, stepIdx, done]);
+
+  function resumeDraft() {
+    if (!pendingDraft) return;
+    setState((prev) => ({ ...prev, ...pendingDraft.fields }));
+    setStepIdx(0);
+    setPendingDraft(null);
+    hydrated.current = true;
+    toast.message(t("draftRestored"));
+  }
+
+  function startFresh() {
+    clearDraft();
+    setPendingDraft(null);
+    hydrated.current = true;
+  }
 
   function clearDraft() {
     try {
@@ -230,6 +276,35 @@ export function SubmitBusinessForm({ categories }: Props) {
   const isLast = stepIdx === STEPS.length - 1;
 
   return (
+    <>
+      <Dialog
+        open={pendingDraft !== null}
+        onOpenChange={(open) => {
+          if (!open) startFresh();
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("draftDialog.title")}</DialogTitle>
+            <DialogDescription>
+              {pendingDraft
+                ? t("draftDialog.body", {
+                    when: formatRelativeAge(pendingDraft.savedAt, locale),
+                  })
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button type="button" variant="secondary" onClick={startFresh}>
+              {t("draftDialog.startFresh")}
+            </Button>
+            <Button type="button" onClick={resumeDraft}>
+              {t("draftDialog.resume")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     <form onSubmit={handleSubmit} className="space-y-6">
       <input
         type="text"
@@ -607,6 +682,7 @@ export function SubmitBusinessForm({ categories }: Props) {
         </div>
       </div>
     </form>
+    </>
   );
 }
 
