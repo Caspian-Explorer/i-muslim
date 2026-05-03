@@ -13,7 +13,7 @@ function pickLocaleFromCookie(req: NextRequest): string {
   return isLocale(fromCookie) ? fromCookie : DEFAULT_LOCALE;
 }
 
-export function proxy(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const hasSession = Boolean(req.cookies.get(SESSION_COOKIE)?.value);
 
