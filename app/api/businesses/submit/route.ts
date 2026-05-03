@@ -7,6 +7,7 @@ import {
   BUSINESS_SUBMISSIONS_RATE_LIMIT_PER_DAY,
 } from "@/lib/businesses/constants";
 import { verifyTurnstile } from "@/lib/mosques/turnstile";
+import { createNotification } from "@/lib/admin/data/notifications";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -86,6 +87,14 @@ export async function POST(req: Request) {
     submittedBy: { email: data.submitterEmail },
     submitterIp: ip,
     createdAt: Timestamp.now(),
+  });
+  await createNotification({
+    type: "submission",
+    title: "New business submission",
+    body: payload.name as string,
+    link: "/admin/businesses/submissions",
+    sourceCollection: BUSINESS_SUBMISSIONS_COLLECTION,
+    sourceId: docRef.id,
   });
   return NextResponse.json({ ok: true, id: docRef.id });
 }

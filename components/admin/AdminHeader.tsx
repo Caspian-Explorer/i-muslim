@@ -11,6 +11,7 @@ import type { SidebarBadges } from "./Sidebar";
 import type { AdminSession } from "@/lib/auth/session";
 import { BUNDLED_LOCALES } from "@/i18n/config";
 import { listActivatedReservedLocales } from "@/lib/admin/data/ui-locales";
+import { fetchNotifications } from "@/lib/admin/data/notifications";
 import { Button } from "@/components/ui/button";
 
 interface AdminHeaderProps {
@@ -19,9 +20,12 @@ interface AdminHeaderProps {
 }
 
 export async function AdminHeader({ session, badges }: AdminHeaderProps) {
-  const activated = await listActivatedReservedLocales();
+  const [activated, { items: notifications }, tSidebar] = await Promise.all([
+    listActivatedReservedLocales(),
+    fetchNotifications({ limit: 50 }),
+    getTranslations("sidebar"),
+  ]);
   const availableLocales = [...BUNDLED_LOCALES, ...activated];
-  const tSidebar = await getTranslations("sidebar");
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
       <MobileSidebarDrawer badges={badges} />
@@ -37,7 +41,7 @@ export async function AdminHeader({ session, badges }: AdminHeaderProps) {
         </div>
         <LanguageSwitcher availableLocales={availableLocales} />
         <ThemeMenu />
-        <NotificationsPopover />
+        <NotificationsPopover initialItems={notifications} />
         <Button
           variant="ghost"
           size="icon"

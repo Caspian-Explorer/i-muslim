@@ -26,7 +26,9 @@ export type NotificationType =
   | "flagged"
   | "donation"
   | "qa"
-  | "system";
+  | "system"
+  | "submission"
+  | "contact";
 
 export interface AdminNotification {
   id: string;
@@ -35,6 +37,7 @@ export interface AdminNotification {
   body: string;
   createdAt: string;
   read: boolean;
+  link?: string;
 }
 
 export interface ActivityEntry {

@@ -1,14 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { Bell, CheckCheck, HandCoins, MessageCircleQuestion, ShieldAlert, UserPlus, Zap } from "lucide-react";
+import {
+  Bell,
+  CheckCheck,
+  HandCoins,
+  Inbox,
+  Mail,
+  MessageCircleQuestion,
+  ShieldAlert,
+  UserPlus,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { MOCK_NOTIFICATIONS } from "@/lib/admin/mock/notifications";
 import { formatRelative } from "@/lib/utils";
 import type { AdminNotification, NotificationType } from "@/types/admin";
 
@@ -18,23 +27,92 @@ const TYPE_ICON: Record<NotificationType, typeof UserPlus> = {
   donation: HandCoins,
   qa: MessageCircleQuestion,
   system: Zap,
+  submission: Inbox,
+  contact: Mail,
 };
 
-export function NotificationsPopover() {
-  const [items, setItems] = useState<AdminNotification[]>(MOCK_NOTIFICATIONS);
+const POLL_INTERVAL_MS = 60_000;
+
+interface NotificationsPopoverProps {
+  initialItems: AdminNotification[];
+}
+
+export function NotificationsPopover({ initialItems }: NotificationsPopoverProps) {
+  const [items, setItems] = useState<AdminNotification[]>(initialItems);
+  const [open, setOpen] = useState(false);
   const unread = items.filter((n) => !n.read).length;
   const t = useTranslations("notifications");
   const tHeader = useTranslations("header");
 
-  function markAllRead() {
-    setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/notifications", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as { items?: AdminNotification[] };
+      if (Array.isArray(data.items)) setItems(data.items);
+    } catch {
+      // ignore — keep current state
+    }
+  }, []);
+
+  // Poll while the tab is visible.
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    function start() {
+      if (intervalRef.current) return;
+      intervalRef.current = setInterval(refresh, POLL_INTERVAL_MS);
+    }
+    function stop() {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+    function onVisibility() {
+      if (document.visibilityState === "visible") {
+        refresh();
+        start();
+      } else {
+        stop();
+      }
+    }
+    if (document.visibilityState === "visible") start();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [refresh]);
+
+  // Refetch each time the popover opens.
+  useEffect(() => {
+    if (open) refresh();
+  }, [open, refresh]);
+
+  async function markOne(id: string) {
+    const prev = items;
+    setItems((cur) => cur.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    try {
+      const res = await fetch(`/api/admin/notifications/${id}/read`, { method: "POST" });
+      if (!res.ok) setItems(prev);
+    } catch {
+      setItems(prev);
+    }
   }
-  function markOne(id: string) {
-    setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+
+  async function markAllRead() {
+    const prev = items;
+    setItems((cur) => cur.map((n) => ({ ...n, read: true })));
+    try {
+      const res = await fetch("/api/admin/notifications/mark-all-read", { method: "POST" });
+      if (!res.ok) setItems(prev);
+    } catch {
+      setItems(prev);
+    }
   }
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
@@ -107,30 +185,57 @@ function NotificationList({
   }
   return (
     <ul className="max-h-80 space-y-1 overflow-y-auto">
-      {items.map((n) => {
-        const Icon = TYPE_ICON[n.type];
-        return (
-          <li key={n.id}>
-            <button
-              type="button"
-              onClick={() => onMark(n.id)}
-              className="flex w-full items-start gap-3 rounded-md p-2 text-left hover:bg-muted"
-            >
-              <span className="mt-0.5 inline-flex size-7 items-center justify-center rounded-md bg-muted">
-                <Icon className="size-3.5" />
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground truncate">{n.title}</span>
-                  {!n.read && <span className="size-1.5 shrink-0 rounded-full bg-primary" />}
-                </div>
-                <p className="text-xs text-muted-foreground line-clamp-2">{n.body}</p>
-                <span className="text-[11px] text-muted-foreground">{formatRelative(n.createdAt)}</span>
-              </div>
-            </button>
-          </li>
-        );
-      })}
+      {items.map((n) => (
+        <li key={n.id}>
+          <NotificationRow item={n} onMark={onMark} />
+        </li>
+      ))}
     </ul>
+  );
+}
+
+function NotificationRow({
+  item,
+  onMark,
+}: {
+  item: AdminNotification;
+  onMark: (id: string) => void;
+}) {
+  const Icon = TYPE_ICON[item.type] ?? Zap;
+  const inner = (
+    <>
+      <span className="mt-0.5 inline-flex size-7 items-center justify-center rounded-md bg-muted">
+        <Icon className="size-3.5" />
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground truncate">{item.title}</span>
+          {!item.read && <span className="size-1.5 shrink-0 rounded-full bg-primary" />}
+        </div>
+        <p className="text-xs text-muted-foreground line-clamp-2">{item.body}</p>
+        <span className="text-[11px] text-muted-foreground">{formatRelative(item.createdAt)}</span>
+      </div>
+    </>
+  );
+
+  if (item.link) {
+    return (
+      <Link
+        href={item.link}
+        onClick={() => onMark(item.id)}
+        className="flex w-full items-start gap-3 rounded-md p-2 text-left hover:bg-muted"
+      >
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => onMark(item.id)}
+      className="flex w-full items-start gap-3 rounded-md p-2 text-left hover:bg-muted"
+    >
+      {inner}
+    </button>
   );
 }

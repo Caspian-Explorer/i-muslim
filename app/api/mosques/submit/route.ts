@@ -5,6 +5,7 @@ import { getDb } from "@/lib/firebase/admin";
 import { MOSQUE_SUBMISSIONS_COLLECTION, emptyServices } from "@/lib/mosques/constants";
 import { defaultPrayerCalc } from "@/lib/mosques/adhan";
 import { verifyTurnstile } from "@/lib/mosques/turnstile";
+import { createNotification } from "@/lib/admin/data/notifications";
 
 const schema = z.object({
   nameEn: z.string().min(2),
@@ -101,6 +102,14 @@ export async function POST(req: Request) {
     submittedBy: { email: data.submitterEmail },
     submitterIp: ip,
     createdAt: Timestamp.now(),
+  });
+  await createNotification({
+    type: "submission",
+    title: "New mosque submission",
+    body: data.nameEn,
+    link: "/admin/mosques/queue",
+    sourceCollection: MOSQUE_SUBMISSIONS_COLLECTION,
+    sourceId: docRef.id,
   });
   return NextResponse.json({ ok: true, id: docRef.id });
 }

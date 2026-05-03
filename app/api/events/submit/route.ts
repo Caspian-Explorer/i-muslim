@@ -3,6 +3,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase/admin";
 import { getSiteSession } from "@/lib/auth/session";
 import { EVENT_SUBMISSIONS_COLLECTION, eventSubmitSchema } from "@/lib/events/submit-schema";
+import { createNotification } from "@/lib/admin/data/notifications";
 
 export const runtime = "nodejs";
 
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
     // count() requires a composite index; if missing, skip rate limit rather than block submission.
   }
 
-  const payload = {
+  const payload = stripUndefined({
     title: data.title,
     description: data.description,
     category: data.category,
@@ -71,14 +72,40 @@ export async function POST(req: Request) {
       name: data.organizer.name,
       contact: data.organizer.contact,
     },
-  };
-
-  const docRef = await db.collection(EVENT_SUBMISSIONS_COLLECTION).add({
-    status: "pending_review",
-    payload,
-    submittedBy: { uid: session.uid, email: data.submitterEmail },
-    createdAt: Timestamp.now(),
   });
 
-  return NextResponse.json({ ok: true, id: docRef.id });
+  try {
+    const docRef = await db.collection(EVENT_SUBMISSIONS_COLLECTION).add({
+      status: "pending_review",
+      payload,
+      submittedBy: { uid: session.uid, email: data.submitterEmail },
+      createdAt: Timestamp.now(),
+    });
+    await createNotification({
+      type: "submission",
+      title: "New event submission",
+      body: data.title,
+      link: "/admin/events",
+      sourceCollection: EVENT_SUBMISSIONS_COLLECTION,
+      sourceId: docRef.id,
+    });
+    return NextResponse.json({ ok: true, id: docRef.id });
+  } catch (err) {
+    console.warn("[api/events/submit] write failed:", err);
+    return NextResponse.json({ ok: false, error: "write_failed" }, { status: 500 });
+  }
+}
+
+function stripUndefined<T extends Record<string, unknown>>(obj: T): T {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue;
+    if (v && typeof v === "object" && !Array.isArray(v) && !(v instanceof Date)) {
+      const nested = stripUndefined(v as Record<string, unknown>);
+      if (Object.keys(nested).length > 0) out[k] = nested;
+    } else {
+      out[k] = v;
+    }
+  }
+  return out as T;
 }

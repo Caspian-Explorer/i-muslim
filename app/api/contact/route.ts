@@ -3,6 +3,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase/admin";
 import { contactSubmitSchema } from "@/lib/contact/schemas";
 import { CONTACT_MESSAGES_COLLECTION } from "@/lib/admin/data/contact-messages";
+import { createNotification } from "@/lib/admin/data/notifications";
 
 export const runtime = "nodejs";
 
@@ -65,6 +66,14 @@ export async function POST(req: Request) {
     submitterIp: ip,
     userAgent,
     createdAt: Timestamp.now(),
+  });
+  await createNotification({
+    type: "contact",
+    title: "New contact message",
+    body: data.subject,
+    link: "/admin/contact",
+    sourceCollection: CONTACT_MESSAGES_COLLECTION,
+    sourceId: docRef.id,
   });
   return NextResponse.json({ ok: true, id: docRef.id });
 }
