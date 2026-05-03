@@ -1,8 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
-import { SESSION_COOKIE } from "@/lib/auth/session";
 import { routing } from "@/i18n/routing";
 import { LOCALES, DEFAULT_LOCALE, LOCALE_COOKIE, isLocale } from "@/i18n/config";
+
+// Inlined from lib/auth/session.ts — that module pulls in firebase-admin,
+// which is Node-only and can't run in the Edge middleware runtime.
+const SESSION_COOKIE = "__session";
 
 const intl = createIntlMiddleware(routing);
 
