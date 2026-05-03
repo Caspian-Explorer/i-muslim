@@ -1,14 +1,17 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
+  BadgeCheck,
   BarChart3,
   BookMarked,
   BookOpen,
   BookOpenCheck,
   CalendarDays,
   Clock,
+  ConciergeBell,
   FileBarChart,
   FileText,
+  Flag,
   GraduationCap,
   HandCoins,
   Heart,
@@ -56,6 +59,9 @@ export type NavItemKey =
   | "donations"
   | "businesses"
   | "businessesCategories"
+  | "businessesReports"
+  | "businessesCertBodies"
+  | "businessesAmenities"
   | "courses"
   | "matrimonial"
   | "contactMessages"
@@ -154,6 +160,9 @@ export const ADMIN_NAV: NavGroup[] = [
         badgeKey: "openReports",
         children: [
           { labelKey: "businessesCategories", href: "/admin/businesses/categories", icon: Tags },
+          { labelKey: "businessesReports", href: "/admin/businesses/reports", icon: Flag },
+          { labelKey: "businessesCertBodies", href: "/admin/businesses/cert-bodies", icon: BadgeCheck },
+          { labelKey: "businessesAmenities", href: "/admin/businesses/amenities", icon: ConciergeBell },
         ],
       },
       { labelKey: "courses", href: "/admin/courses", icon: BookOpenCheck },
