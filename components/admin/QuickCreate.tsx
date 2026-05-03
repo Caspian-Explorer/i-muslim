@@ -171,7 +171,7 @@ function SelectorView({
               key={item.id}
               value={`${item.name} ${item.description}`}
               onSelect={() => onSelect(item.id)}
-              className="my-0.5 flex items-center gap-3 rounded-lg px-3 py-2.5 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
+              className="my-0.5 flex items-center gap-3 rounded-lg px-3 py-2.5"
             >
               <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/60 text-muted-foreground">
                 <Icon className="size-[18px]" />
