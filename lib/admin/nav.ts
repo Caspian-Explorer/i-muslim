@@ -27,6 +27,7 @@ import {
   Shield,
   Sparkles,
   Store,
+  Tags,
   Users,
   Users2,
 } from "lucide-react";
@@ -54,6 +55,7 @@ export type NavItemKey =
   | "moderation"
   | "donations"
   | "businesses"
+  | "businessesCategories"
   | "courses"
   | "matrimonial"
   | "contactMessages"
@@ -81,6 +83,7 @@ export interface NavItem {
     | "pendingMosques"
     | "pendingMatrimonial"
     | "openContactMessages";
+  children?: NavItem[];
 }
 
 export interface NavGroup {
@@ -144,7 +147,15 @@ export const ADMIN_NAV: NavGroup[] = [
     id: "services",
     items: [
       { labelKey: "donations", href: "/admin/donations", icon: HandCoins },
-      { labelKey: "businesses", href: "/admin/businesses", icon: Store, badgeKey: "openReports" },
+      {
+        labelKey: "businesses",
+        href: "/admin/businesses",
+        icon: Store,
+        badgeKey: "openReports",
+        children: [
+          { labelKey: "businessesCategories", href: "/admin/businesses/categories", icon: Tags },
+        ],
+      },
       { labelKey: "courses", href: "/admin/courses", icon: BookOpenCheck },
       { labelKey: "matrimonial", href: "/admin/matrimonial", icon: Heart, badgeKey: "pendingMatrimonial" },
     ],
@@ -161,7 +172,9 @@ export const ADMIN_NAV: NavGroup[] = [
 ];
 
 export function flattenNav(): NavItem[] {
-  return ADMIN_NAV.flatMap((g) => g.items);
+  return ADMIN_NAV.flatMap((g) =>
+    g.items.flatMap((item) => (item.children ? [item, ...item.children] : [item])),
+  );
 }
 
 export function findNavItem(pathname: string): NavItem | null {

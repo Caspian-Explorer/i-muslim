@@ -153,7 +153,49 @@ export function Sidebar({ badges = {}, variant = "desktop", onNavigate }: Sideba
                       </Link>
                     );
 
-                    if (showLabels) return <li key={item.href}>{row}</li>;
+                    const childList =
+                      showLabels && item.children && item.children.length > 0 && active ? (
+                        <ul className="mt-0.5 space-y-0.5 ps-7">
+                          {item.children.map((child) => {
+                            const childActive = isActive(child.href);
+                            const childLabel = t(
+                              `items.${child.labelKey}` as `items.${typeof child.labelKey}`,
+                            );
+                            return (
+                              <li key={child.href}>
+                                <Link
+                                  href={child.href}
+                                  onClick={onNavigate}
+                                  className={cn(
+                                    "group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors",
+                                    "hover:bg-muted/70",
+                                    childActive &&
+                                      "bg-sidebar-accent text-sidebar-accent-foreground font-medium hover:bg-sidebar-accent",
+                                  )}
+                                  aria-current={childActive ? "page" : undefined}
+                                >
+                                  <child.icon
+                                    className={cn(
+                                      "size-3.5 shrink-0",
+                                      childActive ? "text-primary" : "text-muted-foreground",
+                                    )}
+                                  />
+                                  <span className="flex-1 truncate">{childLabel}</span>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : null;
+
+                    if (showLabels) {
+                      return (
+                        <li key={item.href}>
+                          {row}
+                          {childList}
+                        </li>
+                      );
+                    }
                     return (
                       <li key={item.href}>
                         <Tooltip>
