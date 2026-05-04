@@ -26,7 +26,7 @@ export default async function AdminMosquesPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="secondary" size="sm" asChild>
               <Link href="/admin/mosques/import">
-                <Upload /> {t("import")}
+                <Upload /> {t("importCta")}
               </Link>
             </Button>
             <NewMosqueButton label={t("newMosque")} />

@@ -1334,7 +1334,7 @@
     "subtitleLive": "بيانات حية من Firestore.",
     "subtitleMock": "بيانات تجريبية — قم بإعداد Firebase Admin لإدارة مساجد فعلية.",
     "newMosque": "مسجد جديد",
-    "import": "استيراد بالجملة",
+    "importCta": "استيراد بالجملة",
     "back": "العودة إلى المساجد",
     "search": "ابحث بالاسم أو المدينة أو الدولة…",
     "columns": {
