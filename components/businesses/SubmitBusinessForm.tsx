@@ -716,7 +716,7 @@ export function SubmitBusinessForm({ categories, userEmail }: Props) {
           <ReviewSection
             title={t("steps.basics")}
             onEdit={() => jumpToStep(0)}
-            editLabel={t("review.editStep")}
+            editLabel={t("review.editSection", { section: t("steps.basics") })}
             rows={[
               { label: t("fields.name"), value: state.name },
               { label: t("fields.description"), value: state.descriptionEn },
@@ -736,7 +736,7 @@ export function SubmitBusinessForm({ categories, userEmail }: Props) {
           <ReviewSection
             title={t("steps.halal")}
             onEdit={() => jumpToStep(1)}
-            editLabel={t("review.editStep")}
+            editLabel={t("review.editSection", { section: t("steps.halal") })}
             rows={[
               { label: t("fields.halalStatus"), value: tHalal(state.halalStatus) },
               ...(state.halalStatus === "certified" && state.certificationBodyName
@@ -749,7 +749,7 @@ export function SubmitBusinessForm({ categories, userEmail }: Props) {
           <ReviewSection
             title={t("steps.location")}
             onEdit={() => jumpToStep(2)}
-            editLabel={t("review.editStep")}
+            editLabel={t("review.editSection", { section: t("steps.location") })}
             rows={[
               {
                 label: t("fields.addressLine1"),
