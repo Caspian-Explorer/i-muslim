@@ -82,23 +82,11 @@ export async function Footer() {
               </Link>
             </li>
             {locale === "en" && (
-              <>
-                <li>
-                  <Link href="/articles" className={linkClass}>
-                    {t("articles")}
-                  </Link>
-                </li>
-                <li>
-                  <a
-                    className={linkClass}
-                    href="/articles/rss.xml"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {t("rss")}
-                  </a>
-                </li>
-              </>
+              <li>
+                <Link href="/articles" className={linkClass}>
+                  {t("articles")}
+                </Link>
+              </li>
             )}
           </ul>
         </nav>
@@ -146,6 +134,18 @@ export async function Footer() {
                     {t("contact")}
                   </Link>
                 </li>
+                {locale === "en" && (
+                  <li>
+                    <a
+                      className={linkClass}
+                      href="/articles/rss.xml"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {t("rss")}
+                    </a>
+                  </li>
+                )}
               </ul>
             </nav>
             <LocaleSwitcher availableLocales={availableLocales} />
