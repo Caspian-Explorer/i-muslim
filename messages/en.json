@@ -1868,15 +1868,6 @@
       "title": "Submit a halal business",
       "subtitle": "Help grow the directory. Our team reviews every submission before it goes live.",
       "noCategoriesYet": "Categories haven't been set up yet. Please check back soon.",
-      "draftRestored": "Draft restored.",
-      "draftCleared": "Draft cleared.",
-      "discardDraft": "Discard draft",
-      "draftDialog": {
-        "title": "Continue your draft?",
-        "body": "You have an unsaved draft from {when}. Resume to keep editing, or start fresh to clear it.",
-        "resume": "Resume",
-        "startFresh": "Start fresh"
-      },
       "steps": {
         "basics": "Basics",
         "halal": "Halal",

@@ -1,19 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeft, ArrowRight, Loader2, Pencil, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Pencil, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CountryCombobox } from "@/components/common/CountryCombobox";
@@ -34,31 +26,11 @@ type Step = (typeof ADMIN_STEPS)[number];
 
 const ADMIN_STATUSES: BusinessStatus[] = ["draft", "published", "archived"];
 
-const DRAFT_STORAGE_KEY = "i-muslim.business-submission-draft";
-const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-
-interface PendingDraft {
-  fields: Partial<FormState>;
-  savedAt: number;
-}
-
 type GeocodeState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "ok"; lat: number; lng: number }
   | { status: "fail" };
-
-function formatRelativeAge(savedAtMs: number, locale: string): string {
-  const diffMs = Date.now() - savedAtMs;
-  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
-  const minutes = Math.round(diffMs / 60_000);
-  if (minutes < 1) return rtf.format(0, "minute");
-  if (minutes < 60) return rtf.format(-minutes, "minute");
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return rtf.format(-hours, "hour");
-  const days = Math.round(hours / 24);
-  return rtf.format(-days, "day");
-}
 
 interface FormState {
   name: string;
@@ -107,7 +79,7 @@ const empty: FormState = {
 interface Props {
   categories: BusinessCategory[];
   userEmail: string;
-  /** When true, skip honeypot/Turnstile/isOwner/sessionStorage and submit via the admin server action. */
+  /** When true, skip honeypot/Turnstile/isOwner and submit via the admin server action. */
   adminMode?: boolean;
   onAdminSaved?: (result: { id: string }) => void;
   onAdminCancel?: () => void;
@@ -133,59 +105,23 @@ export function SubmitBusinessForm({
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
-  const [pendingDraft, setPendingDraft] = useState<PendingDraft | null>(null);
   const [geocode, setGeocode] = useState<GeocodeState>({ status: "idle" });
-  const hydrated = useRef(false);
 
-  // Draft load: only in public mode. Admin UAPOP is transient.
+  // Country default once on mount (used in both modes — admin/public alike).
   useEffect(() => {
-    if (adminMode || typeof window === "undefined") {
-      hydrated.current = true;
-      applyCountryDefault();
-      return;
-    }
-    try {
-      const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw) as Partial<FormState> & {
-          __step?: number;
-          __savedAt?: number;
-        };
-        const { __step: _step, __savedAt, ...savedFields } = saved;
-        void _step;
-        const hasContent = Object.entries(savedFields).some(([k, v]) => {
-          if (k === "halalStatus") return v !== "self_declared";
-          if (Array.isArray(v)) return v.length > 0;
-          if (typeof v === "boolean") return v;
-          return typeof v === "string" && v.length > 0;
-        });
-        const savedAt = typeof __savedAt === "number" ? __savedAt : 0;
-        const stale = Date.now() - savedAt > DRAFT_TTL_MS;
-        if (hasContent && !stale) {
-          setPendingDraft({ fields: savedFields, savedAt });
-          return;
-        }
-        if (stale) sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState((prev) => {
+      if (prev.countryCode) return prev;
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const detected = suggestCountryForTimezone(tz);
+        if (!detected) return prev;
+        return { ...prev, countryCode: detected };
+      } catch {
+        return prev;
       }
-    } catch {
-      // ignore corrupt draft
-    }
-    hydrated.current = true;
-    applyCountryDefault();
-  }, [adminMode]);
-
-  // Draft save: only in public mode.
-  useEffect(() => {
-    if (adminMode || !hydrated.current || typeof window === "undefined" || done) return;
-    try {
-      sessionStorage.setItem(
-        DRAFT_STORAGE_KEY,
-        JSON.stringify({ ...state, __step: stepIdx, __savedAt: Date.now() }),
-      );
-    } catch {
-      // quota exceeded — ignore
-    }
-  }, [state, stepIdx, done, adminMode]);
+    });
+  }, []);
 
   const reviewAddress =
     state.addressLine1.trim() && state.city.trim() && state.countryCode
@@ -223,53 +159,6 @@ export function SubmitBusinessForm({
       cancelled = true;
     };
   }, [stepIdx, reviewAddress, STEPS]);
-
-  function applyCountryDefault() {
-    setState((prev) => {
-      if (prev.countryCode) return prev;
-      try {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const detected = suggestCountryForTimezone(tz);
-        if (!detected) return prev;
-        return { ...prev, countryCode: detected };
-      } catch {
-        return prev;
-      }
-    });
-  }
-
-  function resumeDraft() {
-    if (!pendingDraft) return;
-    setState((prev) => ({ ...prev, ...pendingDraft.fields }));
-    setStepIdx(0);
-    setPendingDraft(null);
-    hydrated.current = true;
-    applyCountryDefault();
-    toast.message(t("draftRestored"));
-  }
-
-  function startFresh() {
-    clearDraft();
-    setPendingDraft(null);
-    hydrated.current = true;
-    applyCountryDefault();
-  }
-
-  function clearDraft() {
-    try {
-      sessionStorage.removeItem(DRAFT_STORAGE_KEY);
-    } catch {
-      // ignore
-    }
-  }
-
-  function discardDraft() {
-    clearDraft();
-    setState(empty);
-    setStepIdx(0);
-    setErrors({});
-    toast.success(t("draftCleared"));
-  }
 
   function validateStep(step: Step): Record<string, string> {
     const next: Record<string, string> = {};
@@ -463,7 +352,6 @@ export function SubmitBusinessForm({
         return;
       }
       toast.success(t("success"));
-      clearDraft();
       setState(empty);
       setDone(true);
     } finally {
@@ -483,38 +371,7 @@ export function SubmitBusinessForm({
   const isLast = stepIdx === STEPS.length - 1;
 
   return (
-    <>
-      {!adminMode && (
-        <Dialog
-          open={pendingDraft !== null}
-          onOpenChange={(open) => {
-            if (!open) startFresh();
-          }}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{t("draftDialog.title")}</DialogTitle>
-              <DialogDescription>
-                {pendingDraft
-                  ? t("draftDialog.body", {
-                      when: formatRelativeAge(pendingDraft.savedAt, locale),
-                    })
-                  : ""}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="gap-2 sm:justify-end">
-              <Button type="button" variant="secondary" onClick={startFresh}>
-                {t("draftDialog.startFresh")}
-              </Button>
-              <Button type="button" onClick={resumeDraft}>
-                {t("draftDialog.resume")}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
         {!adminMode && (
           <input
             type="text"
@@ -920,8 +777,8 @@ export function SubmitBusinessForm({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
-          {adminMode ? (
+        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
+          {adminMode && (
             <Button
               type="button"
               variant="ghost"
@@ -932,18 +789,8 @@ export function SubmitBusinessForm({
             >
               {tQuick("cancel")}
             </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={discardDraft}
-              className="text-muted-foreground"
-            >
-              <Trash2 /> {t("discardDraft")}
-            </Button>
           )}
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             {stepIdx > 0 && (
               <Button type="button" variant="secondary" onClick={handleBack} disabled={submitting}>
                 <ArrowLeft /> {t("actions.back")}
@@ -966,8 +813,7 @@ export function SubmitBusinessForm({
             )}
           </div>
         </div>
-      </form>
-    </>
+    </form>
   );
 }
 
