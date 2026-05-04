@@ -233,8 +233,8 @@ export type BusinessSubmissionStatus = "pending_review" | "approved" | "rejected
 export interface BusinessSubmission {
   id: string;
   status: BusinessSubmissionStatus;
-  payload: Omit<BusinessSubmissionInput, "submitterEmail" | "website_url_secondary" | "turnstileToken">;
-  submittedBy?: { email?: string };
+  payload: Omit<BusinessSubmissionInput, "website_url_secondary" | "turnstileToken">;
+  submittedBy?: { uid?: string; email?: string };
   submitterIp?: string;
   createdAt: string;
   decidedBy?: string;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Timestamp } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase/admin";
+import { getSiteSession } from "@/lib/auth/session";
 import { businessSubmissionSchema } from "@/lib/businesses/schemas";
 import {
   BUSINESS_SUBMISSIONS_COLLECTION,
@@ -10,6 +11,11 @@ import { verifyTurnstile } from "@/lib/mosques/turnstile";
 import { createNotification } from "@/lib/admin/data/notifications";
 
 export async function POST(req: Request) {
+  const session = await getSiteSession();
+  if (!session) {
+    return NextResponse.json({ ok: false, error: "auth" }, { status: 401 });
+  }
+
   let body: unknown;
   try {
     body = await req.json();
@@ -50,7 +56,7 @@ export async function POST(req: Request) {
   try {
     const recent = await db
       .collection(BUSINESS_SUBMISSIONS_COLLECTION)
-      .where("submitterIp", "==", ip)
+      .where("submittedBy.uid", "==", session.uid)
       .where("createdAt", ">", since)
       .count()
       .get();
@@ -84,7 +90,7 @@ export async function POST(req: Request) {
   const docRef = await db.collection(BUSINESS_SUBMISSIONS_COLLECTION).add({
     status: "pending_review",
     payload,
-    submittedBy: { email: data.submitterEmail },
+    submittedBy: { uid: session.uid, email: session.email },
     submitterIp: ip,
     createdAt: Timestamp.now(),
   });

@@ -63,7 +63,6 @@ interface FormState {
   website: string;
   instagram: string;
   whatsapp: string;
-  submitterEmail: string;
   // honeypot
   website_url_secondary: string;
 }
@@ -85,15 +84,15 @@ const empty: FormState = {
   website: "",
   instagram: "",
   whatsapp: "",
-  submitterEmail: "",
   website_url_secondary: "",
 };
 
 interface Props {
   categories: BusinessCategory[];
+  userEmail: string;
 }
 
-export function SubmitBusinessForm({ categories }: Props) {
+export function SubmitBusinessForm({ categories, userEmail }: Props) {
   const t = useTranslations("businesses.submit");
   const tHalal = useTranslations("businesses.halalStatuses");
   const locale = useLocale() as Locale;
@@ -213,11 +212,6 @@ export function SubmitBusinessForm({ categories }: Props) {
         }
       }
     }
-    if (step === "review") {
-      if (!/^.+@.+\..+$/.test(state.submitterEmail.trim())) {
-        next.submitterEmail = t("validation.submitterEmailRequired");
-      }
-    }
     return next;
   }
 
@@ -233,7 +227,6 @@ export function SubmitBusinessForm({ categories }: Props) {
       phone: "biz-phone",
       email: "biz-email",
       website: "biz-website",
-      submitterEmail: "biz-submitter",
     };
     const first = Object.keys(errs)[0];
     if (!first) return;
@@ -510,6 +503,12 @@ export function SubmitBusinessForm({ categories }: Props) {
               {t("fields.isOwner")}
             </Label>
           </div>
+
+          {state.isOwner && (
+            <p className="rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+              {t("ownerNotice", { email: userEmail })}
+            </p>
+          )}
         </div>
       )}
 
@@ -680,17 +679,6 @@ export function SubmitBusinessForm({ categories }: Props) {
               ...(state.whatsapp ? [{ label: t("fields.whatsapp"), value: state.whatsapp }] : []),
             ]}
           />
-
-          <div className="space-y-1.5 rounded-md border border-border bg-card p-4">
-            <Label htmlFor="biz-submitter">{t("fields.submitterEmail")}</Label>
-            <Input
-              id="biz-submitter"
-              type="email"
-              value={state.submitterEmail}
-              onChange={(e) => setState((s) => ({ ...s, submitterEmail: e.target.value }))}
-            />
-            {errors.submitterEmail && <p className="text-xs text-danger">{errors.submitterEmail}</p>}
-          </div>
         </div>
       )}
 

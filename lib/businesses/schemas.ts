@@ -152,7 +152,6 @@ export const businessSubmissionSchema = z.object({
   website: optionalUrl,
   instagram: optionalString,
   whatsapp: optionalString,
-  submitterEmail: z.string().email(),
   isOwner: z.boolean().default(false),
   // honeypot — must be empty
   website_url_secondary: z.string().optional(),

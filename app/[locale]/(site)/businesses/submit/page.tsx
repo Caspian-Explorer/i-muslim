@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { fetchCategories } from "@/lib/admin/data/business-taxonomies";
 import { SubmitBusinessForm } from "@/components/businesses/SubmitBusinessForm";
+import { getSiteSession } from "@/lib/auth/session";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("businesses.submit");
@@ -9,6 +11,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SubmitBusinessPage() {
+  const session = await getSiteSession();
+  if (!session) redirect("/login?callbackUrl=/businesses/submit");
+
   const [t, { categories }] = await Promise.all([
     getTranslations("businesses.submit"),
     fetchCategories(),
@@ -20,7 +25,7 @@ export default async function SubmitBusinessPage() {
         <p className="mt-2 text-sm text-muted-foreground">{t("subtitle")}</p>
       </header>
       <div className="mt-6">
-        <SubmitBusinessForm categories={categories} />
+        <SubmitBusinessForm categories={categories} userEmail={session.email} />
       </div>
     </div>
   );
