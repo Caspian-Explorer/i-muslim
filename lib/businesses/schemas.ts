@@ -138,7 +138,7 @@ export const businessSubmissionSchema = z.object({
   categoryIds: z.array(z.string().min(1)).min(1).max(3),
   halalStatus: halalStatusEnum,
   certificationBodyName: optionalString,
-  muslimOwned: z.boolean().default(false),
+  muslimOwned: z.boolean().optional(),
   addressLine1: z.string().min(2),
   city: z.string().min(1),
   region: optionalString,
@@ -157,7 +157,10 @@ export const businessSubmissionSchema = z.object({
   // honeypot — must be empty
   website_url_secondary: z.string().optional(),
   turnstileToken: z.string().optional(),
-});
+}).refine(
+  (v) => v.halalStatus !== "certified" || !!(v.certificationBodyName && v.certificationBodyName.trim().length > 0),
+  { message: "Certification body name is required for certified status", path: ["certificationBodyName"] },
+);
 export type BusinessSubmissionInput = z.infer<typeof businessSubmissionSchema>;
 
 const reportReasonEnum = z.enum(["not_halal", "closed", "wrong_info", "offensive", "duplicate", "other"]);

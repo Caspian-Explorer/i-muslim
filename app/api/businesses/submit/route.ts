@@ -66,7 +66,7 @@ export async function POST(req: Request) {
     descriptionEn: data.descriptionEn.trim(),
     categoryIds: data.categoryIds,
     halalStatus: data.halalStatus,
-    muslimOwned: data.muslimOwned,
+    muslimOwned: data.halalStatus === "muslim_owned",
     addressLine1: data.addressLine1.trim(),
     city: data.city.trim(),
     countryCode: data.countryCode,

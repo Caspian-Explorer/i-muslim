@@ -52,7 +52,6 @@ interface FormState {
   categoryIds: string[];
   halalStatus: HalalStatus;
   certificationBodyName: string;
-  muslimOwned: boolean;
   isOwner: boolean;
   addressLine1: string;
   city: string;
@@ -75,7 +74,6 @@ const empty: FormState = {
   categoryIds: [],
   halalStatus: "self_declared",
   certificationBodyName: "",
-  muslimOwned: false,
   isOwner: false,
   addressLine1: "",
   city: "",
@@ -187,6 +185,11 @@ export function SubmitBusinessForm({ categories }: Props) {
       if (state.name.trim().length < 2) next.name = t("validation.nameRequired");
       if (state.descriptionEn.trim().length < 10) next.descriptionEn = t("validation.descriptionRequired");
       if (state.categoryIds.length === 0) next.categoryIds = t("validation.categoryRequired");
+    }
+    if (step === "halal") {
+      if (state.halalStatus === "certified" && !state.certificationBodyName.trim()) {
+        next.certificationBodyName = t("validation.certBodyRequired");
+      }
     }
     if (step === "location") {
       if (state.addressLine1.trim().length < 2) next.addressLine1 = t("validation.addressRequired");
@@ -446,19 +449,11 @@ export function SubmitBusinessForm({ categories }: Props) {
                 onChange={(e) => setState((s) => ({ ...s, certificationBodyName: e.target.value }))}
                 placeholder={t("fields.certBodyPlaceholder")}
               />
+              {errors.certificationBodyName && (
+                <p className="text-xs text-danger">{errors.certificationBodyName}</p>
+              )}
             </div>
           )}
-
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="biz-muslim-owned"
-              checked={state.muslimOwned}
-              onCheckedChange={(v) => setState((s) => ({ ...s, muslimOwned: v === true }))}
-            />
-            <Label htmlFor="biz-muslim-owned" className="font-normal">
-              {t("fields.muslimOwned")}
-            </Label>
-          </div>
 
           <div className="flex items-center gap-2">
             <Checkbox
@@ -615,7 +610,6 @@ export function SubmitBusinessForm({ categories }: Props) {
               ...(state.halalStatus === "certified" && state.certificationBodyName
                 ? [{ label: t("fields.certBody"), value: state.certificationBodyName }]
                 : []),
-              { label: t("fields.muslimOwned"), value: state.muslimOwned ? "Yes" : "No" },
               { label: t("fields.isOwner"), value: state.isOwner ? "Yes" : "No" },
             ]}
           />
