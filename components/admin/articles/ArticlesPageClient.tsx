@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { openQuickCreate } from "@/components/admin/QuickCreate";
 import { toast } from "@/components/ui/sonner";
 import { cn, formatRelative } from "@/lib/utils";
 import type { AdminArticleRow, CategorySlug } from "@/types/blog";
@@ -112,10 +113,12 @@ export function ArticlesPageClient({
           ))}
         </select>
         <div className="ms-auto">
-          <Button asChild size="sm" disabled={source === "mock"}>
-            <Link href="/admin/articles/new">
-              <Plus /> New article
-            </Link>
+          <Button
+            size="sm"
+            onClick={() => openQuickCreate("article")}
+            disabled={source === "mock"}
+          >
+            <Plus /> New article
           </Button>
         </div>
       </div>

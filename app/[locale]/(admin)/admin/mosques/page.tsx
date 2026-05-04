@@ -3,9 +3,10 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Plus, Inbox, Upload } from "lucide-react";
+import { Inbox, Upload } from "lucide-react";
 import { fetchAllMosquesAdmin } from "@/lib/admin/data/mosques";
 import { MosquesPageClient } from "@/components/admin/mosques/MosquesPageClient";
+import { NewMosqueButton } from "@/components/admin/mosques/NewMosqueButton";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("mosquesAdmin");
@@ -33,11 +34,7 @@ export default async function AdminMosquesPage() {
                 <Upload /> {t("import")}
               </Link>
             </Button>
-            <Button size="sm" asChild>
-              <Link href="/admin/mosques/new">
-                <Plus /> {t("newMosque")}
-              </Link>
-            </Button>
+            <NewMosqueButton label={t("newMosque")} />
           </div>
         }
       />
