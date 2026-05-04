@@ -2095,10 +2095,32 @@
       "overview": "Overview",
       "reading": "Reading progress",
       "favorites": "Favorites",
+      "submissions": "My submissions",
       "matrimonial": "Matrimonial"
     },
     "collapse": "Collapse",
     "expand": "Expand"
+  },
+  "profileSubmissions": {
+    "pageTitle": "My submissions",
+    "pageDescription": "Track the status of events, businesses, and mosques you've submitted.",
+    "empty": "You haven't submitted anything yet. Share an event, propose a business, or suggest a mosque to see it here.",
+    "emptySection": "Nothing here yet.",
+    "viewLive": "View live",
+    "sections": {
+      "events": "Events",
+      "businesses": "Businesses",
+      "mosques": "Mosques"
+    },
+    "statuses": {
+      "under_review": "Under review",
+      "pending_review": "Pending review",
+      "draft": "Draft",
+      "published": "Published",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    }
   },
   "profileForm": {
     "save": "Save changes",
