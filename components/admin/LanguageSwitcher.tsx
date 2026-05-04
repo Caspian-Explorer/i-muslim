@@ -75,10 +75,14 @@ export function LanguageSwitcher({ availableLocales }: LanguageSwitcherProps = {
         <DropdownMenuLabel>{t("header.language")}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {visible.map((code) => (
-          <DropdownMenuItem key={code} onClick={() => select(code)}>
+          <DropdownMenuItem
+            key={code}
+            onClick={() => select(code)}
+            className={current === code ? "ui-selected font-medium" : ""}
+          >
             <span aria-hidden className="text-base leading-none">{flagFor(code)}</span>
             <span>{nativeNameFor(code)}</span>
-            {current === code && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
+            {current === code && <span className="ml-auto text-xs">✓</span>}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

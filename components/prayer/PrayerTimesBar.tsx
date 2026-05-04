@@ -42,7 +42,7 @@ export function PrayerTimesBar() {
                   className={
                     "inline-flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors " +
                     (isNext
-                      ? "bg-primary/10 text-primary font-medium"
+                      ? "ui-selected font-medium"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground")
                   }
                   aria-current={isNext ? "true" : undefined}

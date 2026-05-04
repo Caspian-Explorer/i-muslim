@@ -143,7 +143,10 @@ export function SearchableMultiCombobox({
                     key={o.value}
                     value={`${o.label} ${o.secondary ?? ""}`}
                     onSelect={() => handleSelect(o.value)}
-                    className="px-2 py-2 cursor-pointer"
+                    className={cn(
+                      "px-2 py-2 cursor-pointer",
+                      isSelected && "ui-selected",
+                    )}
                   >
                     <span className="flex-1 truncate">{o.label}</span>
                     {o.secondary && (

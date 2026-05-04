@@ -168,22 +168,22 @@ export function PrayerTimesSettings({ current, onChange }: Props) {
           <div className="space-y-1">
             <Label>{t("settings.madhab")}</Label>
             <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={madhab === "shafi" ? "primary" : "secondary"}
-                size="sm"
-                onClick={() => setMadhab("shafi")}
-              >
-                {t("settings.madhabShafi")}
-              </Button>
-              <Button
-                type="button"
-                variant={madhab === "hanafi" ? "primary" : "secondary"}
-                size="sm"
-                onClick={() => setMadhab("hanafi")}
-              >
-                {t("settings.madhabHanafi")}
-              </Button>
+              {(["shafi", "hanafi"] as const).map((key) => {
+                const active = madhab === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setMadhab(key)}
+                    className={`inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium transition-colors ${
+                      active ? "ui-selected-chip" : "ui-selected-chip-idle"
+                    }`}
+                  >
+                    {t(key === "shafi" ? "settings.madhabShafi" : "settings.madhabHanafi")}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

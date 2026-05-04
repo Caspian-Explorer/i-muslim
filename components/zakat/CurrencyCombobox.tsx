@@ -63,7 +63,10 @@ export function CurrencyCombobox({ value, onChange }: Props) {
                       onChange(curr.code);
                       setOpen(false);
                     }}
-                    className="px-2 py-2 cursor-pointer"
+                    className={cn(
+                      "px-2 py-2 cursor-pointer",
+                      curr.code === value && "ui-selected",
+                    )}
                   >
                     <span className="font-mono text-muted-foreground w-5 text-center shrink-0">
                       {curr.symbol}

@@ -152,7 +152,10 @@ export function CountryCombobox(props: CountryComboboxProps) {
                     key={c.code}
                     value={`${c.code} ${c.name}`}
                     onSelect={() => handleSelect(c.code)}
-                    className="px-2 py-2 cursor-pointer"
+                    className={cn(
+                      "px-2 py-2 cursor-pointer",
+                      isSelected && "ui-selected",
+                    )}
                   >
                     <span className="font-mono text-muted-foreground w-7 text-center shrink-0 text-xs">
                       {c.code}

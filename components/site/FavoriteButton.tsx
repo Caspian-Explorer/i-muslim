@@ -121,9 +121,7 @@ export function FavoriteButton({
       className={cn(
         "inline-flex items-center gap-1.5 rounded-md border transition-colors",
         size === "sm" ? "h-8 px-2 text-xs" : "h-9 px-3 text-sm",
-        favorited
-          ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15"
-          : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-primary",
+        favorited ? "ui-selected-chip" : "ui-selected-chip-idle",
         "disabled:opacity-60 disabled:cursor-not-allowed",
         className,
       )}

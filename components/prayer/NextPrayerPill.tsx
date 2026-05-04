@@ -52,7 +52,7 @@ export function NextPrayerPill({ today, className }: Props) {
   return (
     <span
       className={
-        "inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary " +
+        "ui-selected inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm " +
         (className ?? "")
       }
     >

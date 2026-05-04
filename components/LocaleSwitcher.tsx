@@ -59,7 +59,7 @@ export function LocaleSwitcher({ availableLocales }: LocaleSwitcherProps = {}) {
           <DropdownMenuItem
             key={l}
             onClick={() => switchLocale(l)}
-            className={l === locale ? "font-medium" : ""}
+            className={l === locale ? "ui-selected font-medium" : ""}
           >
             {nativeName(l)}
           </DropdownMenuItem>

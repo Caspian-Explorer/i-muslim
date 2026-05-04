@@ -152,7 +152,10 @@ export function LanguageCombobox(props: LanguageComboboxProps) {
                     key={l.code}
                     value={`${l.code} ${l.name}`}
                     onSelect={() => handleSelect(l.code)}
-                    className="px-2 py-2 cursor-pointer"
+                    className={cn(
+                      "px-2 py-2 cursor-pointer",
+                      isSelected && "ui-selected",
+                    )}
                   >
                     <span className="font-mono text-muted-foreground w-7 text-center shrink-0 text-xs">
                       {l.code}
