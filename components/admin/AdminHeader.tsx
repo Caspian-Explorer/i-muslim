@@ -6,6 +6,7 @@ import { NotificationsPopover } from "./NotificationsPopover";
 import { QuickCreate } from "./QuickCreate";
 import { ThemeMenu } from "./ThemeMenu";
 import { UserMenu } from "./UserMenu";
+import { PrayerPills } from "@/components/prayer/PrayerPills";
 import type { SidebarBadges } from "./Sidebar";
 import type { AdminSession } from "@/lib/auth/session";
 import { BUNDLED_LOCALES } from "@/i18n/config";
@@ -36,6 +37,7 @@ export async function AdminHeader({ session, badges }: AdminHeaderProps) {
       <div className="md:hidden flex-1 min-w-0">
         <Breadcrumbs />
       </div>
+      <PrayerPills className="hidden lg:flex mx-2" />
       <div className="ml-auto flex items-center gap-1">
         <div className="hidden md:block">
           <CommandPalette />

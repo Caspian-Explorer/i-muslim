@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HijriDate } from "@/components/admin/HijriDate";
-import { PrayerTimesWidget } from "@/components/admin/PrayerTimesWidget";
 import { StatCard } from "@/components/admin/StatCard";
 import { UserGrowthChart } from "@/components/admin/charts/UserGrowthChart";
 import { EngagementBarChart } from "@/components/admin/charts/EngagementBarChart";
@@ -42,19 +41,14 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            {t("greeting", { name: greetingName })}
-          </h1>
-          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <HijriDate />
-            <span aria-hidden>·</span>
-            <span>{today}</span>
-          </div>
-        </div>
-        <div className="md:min-w-[320px] md:flex-1 md:max-w-[560px]">
-          <PrayerTimesWidget />
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          {t("greeting", { name: greetingName })}
+        </h1>
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <HijriDate />
+          <span aria-hidden>·</span>
+          <span>{today}</span>
         </div>
       </div>
 
