@@ -201,7 +201,9 @@ export function SubmitBusinessForm({ categories, userEmail }: Props) {
     const next: Record<string, string> = {};
     if (step === "basics") {
       if (state.name.trim().length < 2) next.name = t("validation.nameRequired");
-      if (state.descriptionEn.trim().length < 10) next.descriptionEn = t("validation.descriptionRequired");
+      const descLen = state.descriptionEn.trim().length;
+      if (descLen < 40) next.descriptionEn = t("validation.descriptionMin");
+      else if (descLen > 500) next.descriptionEn = t("validation.descriptionMax");
       if (state.categoryIds.length === 0) next.categoryIds = t("validation.categoryRequired");
     }
     if (step === "halal") {
@@ -433,9 +435,21 @@ export function SubmitBusinessForm({ categories, userEmail }: Props) {
               className="min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={state.descriptionEn}
               onChange={(e) => setState((s) => ({ ...s, descriptionEn: e.target.value }))}
-              maxLength={2000}
+              maxLength={500}
             />
-            {errors.descriptionEn && <p className="text-xs text-danger">{errors.descriptionEn}</p>}
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-xs text-danger">{errors.descriptionEn ?? ""}</p>
+              {(() => {
+                const len = state.descriptionEn.length;
+                const tone =
+                  len > 500
+                    ? "text-danger"
+                    : len < 40 || len >= 450
+                      ? "text-amber-600 dark:text-amber-400"
+                      : "text-muted-foreground";
+                return <span className={`shrink-0 text-xs tabular-nums ${tone}`}>{len} / 500</span>;
+              })()}
+            </div>
           </div>
 
           <div className="space-y-1.5">

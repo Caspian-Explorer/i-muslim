@@ -134,7 +134,7 @@ export type CertBodyInput = z.infer<typeof certBodyInputSchema>;
 // to a draft `businesses` doc that they can finish editing/publishing.
 export const businessSubmissionSchema = z.object({
   name: z.string().min(2).max(120),
-  descriptionEn: z.string().min(10).max(2000),
+  descriptionEn: z.string().min(40).max(500),
   categoryIds: z.array(z.string().min(1)).min(1).max(3),
   halalStatus: halalStatusEnum,
   certificationBodyName: optionalString,

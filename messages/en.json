@@ -1839,7 +1839,8 @@
       "ownerNotice": "Owner verification: we may contact you at {email} to confirm ownership before publishing.",
       "validation": {
         "nameRequired": "Business name is required.",
-        "descriptionRequired": "Add a short description (10+ characters).",
+        "descriptionMin": "Description must be at least 40 characters — add a sentence about what the business does.",
+        "descriptionMax": "Description must be 500 characters or fewer.",
         "categoryRequired": "Pick at least one category.",
         "certBodyRequired": "Certification body name is required for certified halal status.",
         "addressRequired": "Street address is required.",
