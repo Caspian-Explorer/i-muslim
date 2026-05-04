@@ -28,9 +28,10 @@ import {
 import { cn } from "@/lib/utils";
 import { SubmitEventForm } from "@/components/site/events/SubmitEventForm";
 import { SubmitBusinessForm } from "@/components/businesses/SubmitBusinessForm";
-import { MosqueForm } from "./mosques/MosqueForm";
+import { SubmitMosqueForm } from "@/components/mosque/SubmitMosqueForm";
 import { ArticleEditorClient } from "./articles/ArticleEditorClient";
 import type { BusinessCategory } from "@/types/business";
+import type { EventCategoryDoc } from "@/types/event-category";
 
 type ViewId = "selector" | "event" | "business" | "mosque" | "article";
 
@@ -49,6 +50,7 @@ export function openQuickCreate(view?: Exclude<ViewId, "selector">) {
 
 interface QuickCreateProps {
   categories: BusinessCategory[];
+  eventCategories: EventCategoryDoc[];
   canPersist: boolean;
   adminEmail: string;
 }
@@ -67,7 +69,7 @@ const ITEMS: QuickCreateItem[] = [
   { id: "article", icon: FileText, nameKey: "article", shortcut: "A" },
 ];
 
-export function QuickCreate({ categories, canPersist, adminEmail }: QuickCreateProps) {
+export function QuickCreate({ categories, eventCategories, canPersist, adminEmail }: QuickCreateProps) {
   const router = useRouter();
   const t = useTranslations("quickCreate");
   const tTypes = useTranslations("quickCreate.types");
@@ -121,7 +123,9 @@ export function QuickCreate({ categories, canPersist, adminEmail }: QuickCreateP
           className={cn(
             "w-[92vw] rounded-2xl",
             isForm
-              ? "h-[80vh] max-h-[80vh] max-w-3xl"
+              ? view === "article"
+                ? "h-[80vh] max-h-[80vh] max-w-[1200px]"
+                : "h-[80vh] max-h-[80vh] max-w-3xl"
               : "h-auto max-h-[80vh] max-w-2xl sm:max-h-[80vh]",
           )}
           hideClose={!isForm}
@@ -146,6 +150,7 @@ export function QuickCreate({ categories, canPersist, adminEmail }: QuickCreateP
               backLabel={t("back")}
               titleFor={(v) => tFormTitles(v)}
               categories={categories}
+              eventCategories={eventCategories}
               canPersist={canPersist}
               adminEmail={adminEmail}
               router={router}
@@ -219,6 +224,7 @@ function FormView({
   backLabel,
   titleFor,
   categories,
+  eventCategories,
   canPersist,
   adminEmail,
   router,
@@ -229,6 +235,7 @@ function FormView({
   backLabel: string;
   titleFor: (view: Exclude<ViewId, "selector">) => string;
   categories: BusinessCategory[];
+  eventCategories: EventCategoryDoc[];
   canPersist: boolean;
   adminEmail: string;
   router: ReturnType<typeof useRouter>;
@@ -249,6 +256,7 @@ function FormView({
       <FormShell backButton={BackButton} title={titleFor("event")} fillHeight>
         <SubmitEventForm
           adminMode
+          categories={eventCategories}
           userEmail={adminEmail}
           onAdminSaved={() => {
             onClose();
@@ -279,10 +287,11 @@ function FormView({
 
   if (view === "mosque") {
     return (
-      <FormShell backButton={BackButton} title={titleFor("mosque")}>
-        <MosqueForm
-          mode="create"
-          onSaved={({ slug }) => {
+      <FormShell backButton={BackButton} title={titleFor("mosque")} fillHeight>
+        <SubmitMosqueForm
+          adminMode
+          userEmail={adminEmail}
+          onAdminSaved={({ slug }) => {
             onClose();
             if (slug) {
               router.push(`/admin/mosques/${slug}/edit`);
@@ -290,7 +299,7 @@ function FormView({
               router.refresh();
             }
           }}
-          onCancel={onClose}
+          onAdminCancel={onClose}
         />
       </FormShell>
     );
@@ -298,10 +307,11 @@ function FormView({
 
   if (view === "article") {
     return (
-      <FormShell backButton={BackButton} title={titleFor("article")}>
+      <FormShell backButton={BackButton} title={titleFor("article")} fillHeight>
         <ArticleEditorClient
           article={null}
           source={canPersist ? "firestore" : "mock"}
+          layout="dialog"
           onSaved={({ id }) => {
             onClose();
             router.push(`/admin/articles/${id}`);

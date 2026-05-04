@@ -2,16 +2,28 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Save, Send, Undo2 } from "lucide-react";
+import { Check, ChevronsUpDown, Eye, Save, Send, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { toast } from "@/components/ui/sonner";
-import { BUNDLED_LOCALES, type BundledLocale } from "@/i18n/config";
+import { BUNDLED_LOCALES, LOCALE_META, type BundledLocale } from "@/i18n/config";
 import { CATEGORY_SLUGS } from "@/lib/blog/taxonomy";
 import { slugify } from "@/lib/blog/slug";
 import { readingMinutes } from "@/lib/blog/reading-time";
+import { cn } from "@/lib/utils";
 import type { Article, CategorySlug } from "@/types/blog";
 import {
   createArticle,
@@ -71,13 +83,25 @@ function articleToForm(article: Article | null): FormState {
 interface Props {
   article: Article | null;
   source: "firestore" | "mock";
+  /**
+   * "page" — sticky footer in the document scroll (standalone editor route).
+   * "dialog" — flex-col container with internal scrollable body and a footer
+   * pinned outside the scroll area (UAPOP popup).
+   */
+  layout?: "page" | "dialog";
   /** When provided, called after a successful create instead of routing to the new article's edit page. */
   onSaved?: (result: { id: string }) => void;
   /** When provided, renders a Cancel button in the footer that calls this. */
   onCancel?: () => void;
 }
 
-export function ArticleEditorClient({ article, source, onSaved, onCancel }: Props) {
+export function ArticleEditorClient({
+  article,
+  source,
+  layout = "page",
+  onSaved,
+  onCancel,
+}: Props) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => articleToForm(article));
   const [activeLocale, setActiveLocale] = useState<BundledLocale>("en");
@@ -86,8 +110,22 @@ export function ArticleEditorClient({ article, source, onSaved, onCancel }: Prop
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [view, setView] = useState<"write" | "preview">("write");
-  const isMock = source === "mock";
+  const [localePopoverOpen, setLocalePopoverOpen] = useState(false);
 
+  // Per-locale "user has manually edited the slug" flag. While false, the slug
+  // tracks the title on every keystroke. Existing translations start touched so
+  // saved slugs aren't clobbered the moment the title is touched.
+  const [slugTouched, setSlugTouched] = useState<Record<BundledLocale, boolean>>(() => {
+    const seed: Record<BundledLocale, boolean> = { en: false, ar: false, tr: false, id: false };
+    if (article) {
+      for (const loc of BUNDLED_LOCALES) {
+        if (article.translations[loc]?.slug) seed[loc] = true;
+      }
+    }
+    return seed;
+  });
+
+  const isMock = source === "mock";
   const isNew = !article;
   const currentTranslation = form.translations[activeLocale];
   const currentStatus = article?.translations[activeLocale]?.status ?? "draft";
@@ -156,9 +194,31 @@ export function ArticleEditorClient({ article, source, onSaved, onCancel }: Prop
     }));
   }
 
-  function autoSlugFromTitle() {
-    const next = slugify(currentTranslation.title);
-    updateTranslation("slug", next);
+  function handleTitleChange(value: string) {
+    setForm((prev) => {
+      const t = prev.translations[activeLocale];
+      return {
+        ...prev,
+        translations: {
+          ...prev.translations,
+          [activeLocale]: {
+            ...t,
+            title: value,
+            slug: slugTouched[activeLocale] ? t.slug : slugify(value),
+          },
+        },
+      };
+    });
+  }
+
+  function handleSlugChange(value: string) {
+    setSlugTouched((prev) => ({ ...prev, [activeLocale]: true }));
+    updateTranslation("slug", value);
+  }
+
+  function regenerateSlug() {
+    setSlugTouched((prev) => ({ ...prev, [activeLocale]: false }));
+    updateTranslation("slug", slugify(currentTranslation.title));
   }
 
   function buildPayload() {
@@ -252,21 +312,99 @@ export function ArticleEditorClient({ article, source, onSaved, onCancel }: Prop
     });
   }
 
-  return (
+  const localeOptions = useMemo(
+    () =>
+      BUNDLED_LOCALES.map((loc) => ({
+        code: loc,
+        englishName: LOCALE_META[loc].englishName,
+        nativeName: LOCALE_META[loc].nativeName,
+        hasContent: form.translations[loc].title.trim().length > 0,
+      })),
+    [form.translations],
+  );
+
+  const localePicker = (
+    <div className="flex items-center gap-2">
+      <Label
+        htmlFor="article-locale"
+        className="text-xs uppercase tracking-wide text-muted-foreground"
+      >
+        Translation
+      </Label>
+      <Popover open={localePopoverOpen} onOpenChange={setLocalePopoverOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            id="article-locale"
+            aria-haspopup="listbox"
+            aria-expanded={localePopoverOpen}
+            className="flex h-9 min-w-[220px] items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="flex items-center gap-2 truncate">
+              <span className="font-mono text-xs uppercase text-muted-foreground">
+                {activeLocale}
+              </span>
+              <span className="truncate">
+                {LOCALE_META[activeLocale].englishName}
+              </span>
+              {form.translations[activeLocale].title.trim().length > 0 && (
+                <span className="size-1.5 shrink-0 rounded-full bg-primary" />
+              )}
+            </span>
+            <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-72 p-0">
+          <Command>
+            <CommandInput placeholder="Search language…" />
+            <CommandList>
+              <CommandEmpty>No matches.</CommandEmpty>
+              {localeOptions.map((opt) => {
+                const isSelected = opt.code === activeLocale;
+                return (
+                  <CommandItem
+                    key={opt.code}
+                    value={`${opt.code} ${opt.englishName} ${opt.nativeName}`}
+                    onSelect={() => {
+                      setActiveLocale(opt.code);
+                      setLocalePopoverOpen(false);
+                    }}
+                    className={cn(
+                      "flex items-center gap-3 px-2 py-2",
+                      isSelected && "ui-selected",
+                    )}
+                  >
+                    <span className="font-mono text-xs uppercase text-muted-foreground w-7 shrink-0">
+                      {opt.code}
+                    </span>
+                    <span className="flex-1 truncate">
+                      {opt.englishName}
+                      <span className="ms-1 text-muted-foreground">
+                        · {opt.nativeName}
+                      </span>
+                    </span>
+                    {opt.hasContent && (
+                      <span className="size-1.5 rounded-full bg-primary" />
+                    )}
+                    <Check
+                      className={cn(
+                        "size-4 ml-1 shrink-0",
+                        isSelected ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                  </CommandItem>
+                );
+              })}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+
+  const body = (
     <div className="space-y-4">
-      <Tabs value={activeLocale} onValueChange={(v) => setActiveLocale(v as BundledLocale)}>
-        <TabsList>
-          {BUNDLED_LOCALES.map((loc) => {
-            const has = form.translations[loc].title.trim().length > 0;
-            return (
-              <TabsTrigger key={loc} value={loc}>
-                <span className="uppercase">{loc}</span>
-                {has && <span className="ms-1 size-1.5 rounded-full bg-primary inline-block" />}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-      </Tabs>
+      {localePicker}
 
       <div className="grid gap-6 md:grid-cols-[260px_1fr]">
         <aside className="space-y-4">
@@ -307,27 +445,32 @@ export function ArticleEditorClient({ article, source, onSaved, onCancel }: Prop
             />
           </div>
           <div>
-            <Label htmlFor={`slug-${activeLocale}`}>Slug ({activeLocale.toUpperCase()})</Label>
+            <Label htmlFor={`slug-${activeLocale}`}>
+              Slug ({activeLocale.toUpperCase()})
+            </Label>
             <div className="mt-1 flex gap-2">
               <Input
                 id={`slug-${activeLocale}`}
                 value={currentTranslation.slug}
-                onChange={(e) => updateTranslation("slug", e.target.value)}
+                onChange={(e) => handleSlugChange(e.target.value)}
                 placeholder="auto-generated from title"
               />
               <Button
                 type="button"
                 variant="secondary"
                 size="sm"
-                onClick={autoSlugFromTitle}
-                aria-label="Regenerate slug"
+                onClick={regenerateSlug}
+                aria-label="Regenerate slug from title"
+                title="Regenerate slug from title"
               >
                 <Undo2 />
               </Button>
             </div>
           </div>
           <div>
-            <Label htmlFor={`excerpt-${activeLocale}`}>Excerpt (≤ 200 chars)</Label>
+            <Label htmlFor={`excerpt-${activeLocale}`}>
+              Excerpt (≤ 200 chars)
+            </Label>
             <textarea
               id={`excerpt-${activeLocale}`}
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -345,12 +488,7 @@ export function ArticleEditorClient({ article, source, onSaved, onCancel }: Prop
             <Input
               id={`title-${activeLocale}`}
               value={currentTranslation.title}
-              onChange={(e) => updateTranslation("title", e.target.value)}
-              onBlur={() => {
-                if (!currentTranslation.slug && currentTranslation.title) {
-                  updateTranslation("slug", slugify(currentTranslation.title));
-                }
-              }}
+              onChange={(e) => handleTitleChange(e.target.value)}
             />
           </div>
 
@@ -388,7 +526,9 @@ export function ArticleEditorClient({ article, source, onSaved, onCancel }: Prop
               {previewLoading ? (
                 <div className="text-sm text-muted-foreground">Rendering…</div>
               ) : previewError ? (
-                <div className="text-sm text-danger">Preview failed: {previewError}</div>
+                <div className="text-sm text-danger">
+                  Preview failed: {previewError}
+                </div>
               ) : (
                 <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
               )}
@@ -396,45 +536,74 @@ export function ArticleEditorClient({ article, source, onSaved, onCancel }: Prop
           )}
         </div>
       </div>
+    </div>
+  );
 
-      <div className="sticky bottom-0 -mx-4 md:-mx-8 flex flex-wrap items-center justify-between gap-2 border-t border-border bg-background/95 px-4 md:px-8 py-3 backdrop-blur">
-        <div className="text-xs text-muted-foreground">
-          {isNew ? "New article" : `Status (${activeLocale.toUpperCase()}): ${currentStatus}`}
-          {isMock && " · sample data mode (read-only)"}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {onCancel && (
-            <Button type="button" variant="ghost" onClick={onCancel} disabled={pending}>
-              Cancel
-            </Button>
-          )}
+  const footer = (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="text-xs text-muted-foreground">
+        {isNew
+          ? "New article"
+          : `Status (${activeLocale.toUpperCase()}): ${currentStatus}`}
+        {isMock && " · sample data mode (read-only)"}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {onCancel && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onCancel}
+            disabled={pending}
+          >
+            Cancel
+          </Button>
+        )}
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handleSave}
+          disabled={pending || isMock || !canSave}
+        >
+          <Save /> {pending ? "Saving…" : isNew ? "Create draft" : "Save"}
+        </Button>
+        {!isNew && currentStatus === "published" ? (
           <Button
             type="button"
             variant="secondary"
-            onClick={handleSave}
-            disabled={pending || isMock || !canSave}
+            onClick={handleUnpublish}
+            disabled={pending || isMock}
           >
-            <Save /> {pending ? "Saving…" : isNew ? "Create draft" : "Save"}
+            Unpublish ({activeLocale.toUpperCase()})
           </Button>
-          {!isNew && currentStatus === "published" ? (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleUnpublish}
-              disabled={pending || isMock}
-            >
-              Unpublish ({activeLocale.toUpperCase()})
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              onClick={handlePublish}
-              disabled={pending || isMock || isNew}
-            >
-              <Send /> Publish ({activeLocale.toUpperCase()})
-            </Button>
-          )}
+        ) : (
+          <Button
+            type="button"
+            onClick={handlePublish}
+            disabled={pending || isMock || isNew}
+          >
+            <Send /> Publish ({activeLocale.toUpperCase()})
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
+  if (layout === "dialog") {
+    return (
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">{body}</div>
+        <div className="border-t border-border bg-background px-5 py-3">
+          {footer}
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {body}
+      <div className="sticky bottom-0 -mx-4 md:-mx-8 border-t border-border bg-background/95 px-4 md:px-8 py-3 backdrop-blur">
+        {footer}
       </div>
     </div>
   );
