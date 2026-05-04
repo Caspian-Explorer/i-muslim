@@ -87,7 +87,7 @@
   --sidebar-accent-foreground: var(--selected-foreground);
   --sidebar-border: #e7e5e4;
 
-  --chart-1: #047857;
+  --chart-1: var(--selected-foreground);
   --chart-2: #0891b2;
   --chart-3: #7c3aed;
   --chart-4: #d97706;
@@ -130,7 +130,7 @@
   --sidebar-accent-foreground: var(--selected-foreground);
   --sidebar-border: #292524;
 
-  --chart-1: #34d399;
+  --chart-1: var(--selected-foreground);
   --chart-2: #22d3ee;
   --chart-3: #a78bfa;
   --chart-4: #f59e0b;

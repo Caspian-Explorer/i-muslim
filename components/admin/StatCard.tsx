@@ -27,7 +27,7 @@ export function StatCard({ label, value, delta, sparkline, suffix }: StatCardPro
             className={cn(
               "inline-flex items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-xs font-medium tabular-nums",
               positive
-                ? "bg-success/10 text-success dark:text-success-foreground"
+                ? "ui-selected"
                 : "bg-danger/10 text-danger dark:text-danger-foreground",
             )}
           >
@@ -49,12 +49,12 @@ export function StatCard({ label, value, delta, sparkline, suffix }: StatCardPro
                   <linearGradient id={`spark-${label}`} x1="0" y1="0" x2="0" y2="1">
                     <stop
                       offset="0%"
-                      stopColor={positive ? "var(--color-success)" : "var(--color-danger)"}
+                      stopColor={positive ? "var(--color-chart-1)" : "var(--color-danger)"}
                       stopOpacity={0.5}
                     />
                     <stop
                       offset="100%"
-                      stopColor={positive ? "var(--color-success)" : "var(--color-danger)"}
+                      stopColor={positive ? "var(--color-chart-1)" : "var(--color-danger)"}
                       stopOpacity={0}
                     />
                   </linearGradient>
@@ -62,7 +62,7 @@ export function StatCard({ label, value, delta, sparkline, suffix }: StatCardPro
                 <Area
                   type="monotone"
                   dataKey="v"
-                  stroke={positive ? "var(--color-success)" : "var(--color-danger)"}
+                  stroke={positive ? "var(--color-chart-1)" : "var(--color-danger)"}
                   strokeWidth={1.5}
                   fill={`url(#spark-${label})`}
                   isAnimationActive={false}
