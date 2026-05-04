@@ -1845,6 +1845,9 @@
         "addressRequired": "Street address is required.",
         "cityRequired": "City is required.",
         "countryRequired": "Country is required.",
+        "phoneInvalid": "Enter a valid phone number.",
+        "emailInvalid": "Enter a valid email address.",
+        "websiteInvalid": "Enter a valid URL (e.g. https://example.com).",
         "submitterEmailRequired": "Enter a valid email so we can follow up.",
         "fixStep": "Fix the highlighted fields before continuing."
       },

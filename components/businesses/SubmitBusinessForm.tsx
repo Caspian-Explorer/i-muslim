@@ -195,6 +195,23 @@ export function SubmitBusinessForm({ categories }: Props) {
       if (state.addressLine1.trim().length < 2) next.addressLine1 = t("validation.addressRequired");
       if (!state.city.trim()) next.city = t("validation.cityRequired");
       if (!/^[A-Za-z]{2}$/.test(state.countryCode.trim())) next.countryCode = t("validation.countryRequired");
+      const phone = state.phone.trim();
+      if (phone && !/^[+]?[\d\s()-]{7,}$/.test(phone)) {
+        next.phone = t("validation.phoneInvalid");
+      }
+      const email = state.email.trim();
+      if (email && !/^.+@.+\..+$/.test(email)) {
+        next.email = t("validation.emailInvalid");
+      }
+      const website = state.website.trim();
+      if (website) {
+        const candidate = /^https?:\/\//i.test(website) ? website : `https://${website}`;
+        try {
+          new URL(candidate);
+        } catch {
+          next.website = t("validation.websiteInvalid");
+        }
+      }
     }
     if (step === "review") {
       if (!/^.+@.+\..+$/.test(state.submitterEmail.trim())) {
@@ -204,6 +221,32 @@ export function SubmitBusinessForm({ categories }: Props) {
     return next;
   }
 
+  function focusFirstError(errs: Record<string, string>) {
+    const FIELD_TO_ID: Record<string, string> = {
+      name: "biz-name",
+      descriptionEn: "biz-description",
+      categoryIds: "biz-category",
+      certificationBodyName: "biz-cert-body",
+      addressLine1: "biz-address",
+      city: "biz-city",
+      countryCode: "biz-country",
+      phone: "biz-phone",
+      email: "biz-email",
+      website: "biz-website",
+      submitterEmail: "biz-submitter",
+    };
+    const first = Object.keys(errs)[0];
+    if (!first) return;
+    const id = FIELD_TO_ID[first];
+    if (!id) return;
+    requestAnimationFrame(() => {
+      const el = document.getElementById(id);
+      if (el && typeof (el as HTMLElement).focus === "function") {
+        (el as HTMLElement).focus();
+      }
+    });
+  }
+
   function handleNext() {
     const step = STEPS[stepIdx];
     if (!step) return;
@@ -211,6 +254,7 @@ export function SubmitBusinessForm({ categories }: Props) {
     setErrors(stepErrors);
     if (Object.keys(stepErrors).length > 0) {
       toast.error(t("validation.fixStep"));
+      focusFirstError(stepErrors);
       return;
     }
     if (stepIdx < STEPS.length - 1) setStepIdx(stepIdx + 1);
@@ -235,6 +279,7 @@ export function SubmitBusinessForm({ categories }: Props) {
         setErrors(stepErrors);
         setStepIdx(i);
         toast.error(t("validation.fixStep"));
+        focusFirstError(stepErrors);
         return;
       }
     }
@@ -528,6 +573,7 @@ export function SubmitBusinessForm({ categories }: Props) {
                 value={state.phone}
                 onChange={(e) => setState((s) => ({ ...s, phone: e.target.value }))}
               />
+              {errors.phone && <p className="text-xs text-danger">{errors.phone}</p>}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="biz-email">{t("fields.email")}</Label>
@@ -537,6 +583,7 @@ export function SubmitBusinessForm({ categories }: Props) {
                 value={state.email}
                 onChange={(e) => setState((s) => ({ ...s, email: e.target.value }))}
               />
+              {errors.email && <p className="text-xs text-danger">{errors.email}</p>}
             </div>
           </div>
 
@@ -549,6 +596,7 @@ export function SubmitBusinessForm({ categories }: Props) {
               value={state.website}
               onChange={(e) => setState((s) => ({ ...s, website: e.target.value }))}
             />
+            {errors.website && <p className="text-xs text-danger">{errors.website}</p>}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
