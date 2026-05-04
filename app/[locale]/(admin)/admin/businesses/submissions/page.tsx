@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { PageHeader } from "@/components/admin/PageHeader";
 import { BusinessSubmissionsClient } from "@/components/admin/businesses/BusinessSubmissionsClient";
 import { fetchBusinessSubmissions } from "@/lib/admin/data/businesses";
 import { fetchCategories } from "@/lib/admin/data/business-taxonomies";
@@ -11,19 +10,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AdminBusinessSubmissionsPage() {
-  const [t, { submissions, source }, { categories }] = await Promise.all([
-    getTranslations("businesses.admin.submissions"),
+  const [{ submissions, source }, { categories }] = await Promise.all([
     fetchBusinessSubmissions(),
     fetchCategories(),
   ]);
   return (
-    <div>
-      <PageHeader title={t("queueTitle")} subtitle={t("queueSubtitle")} />
-      <BusinessSubmissionsClient
-        initialSubmissions={submissions}
-        categories={categories}
-        canPersist={source === "firestore"}
-      />
-    </div>
+    <BusinessSubmissionsClient
+      initialSubmissions={submissions}
+      categories={categories}
+      canPersist={source === "firestore"}
+    />
   );
 }
