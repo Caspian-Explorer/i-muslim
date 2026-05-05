@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { SubmitEventForm } from "@/components/site/events/SubmitEventForm";
 import { getSiteSession } from "@/lib/auth/session";
+import { fetchEventCategories } from "@/lib/admin/data/event-categories";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("eventsPublic.submit");
@@ -14,6 +15,8 @@ export default async function SubmitEventPage() {
   const session = await getSiteSession();
   if (!session) redirect("/login?callbackUrl=/events/submit");
 
+  const { categories } = await fetchEventCategories();
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
       <header className="border-b border-border pb-6">
@@ -24,7 +27,7 @@ export default async function SubmitEventPage() {
         </p>
       </header>
       <div className="mt-6">
-        <SubmitEventForm userEmail={session.email} />
+        <SubmitEventForm userEmail={session.email} categories={categories} />
       </div>
     </div>
   );

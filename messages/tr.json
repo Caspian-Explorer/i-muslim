@@ -58,8 +58,11 @@
   "header": {
     "openMenu": "Menüyü aç",
     "navigation": "Gezinme",
-    "searchPlaceholder": "Sayfa, kullanıcı, ayar ara…",
+    "searchPlaceholder": "Sayfa, cami, makale ara…",
     "searchFallback": "Ara",
+    "searchLoading": "Yükleniyor…",
+    "groupMosques": "Camiler",
+    "groupArticles": "Makaleler",
     "openCommandPalette": "Komut paletini aç",
     "languageLabel": "Dil: {label}",
     "language": "Dil",

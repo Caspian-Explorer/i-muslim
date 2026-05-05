@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { fetchPublicEvents } from "@/lib/events/public";
+import { fetchEventCategories } from "@/lib/admin/data/event-categories";
 import { PublicEventsList } from "@/components/site/PublicEventsList";
 import { Button } from "@/components/ui/button";
 
@@ -15,7 +16,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function EventsListPage() {
-  const { events } = await fetchPublicEvents({ windowDays: 60, limit: 100 });
+  const [{ events }, { categories }] = await Promise.all([
+    fetchPublicEvents({ windowDays: 60, limit: 100 }),
+    fetchEventCategories(),
+  ]);
   const t = await getTranslations("eventsPublic");
 
   return (
@@ -32,7 +36,7 @@ export default async function EventsListPage() {
           </Link>
         </Button>
       </header>
-      <PublicEventsList items={events} />
+      <PublicEventsList items={events} categories={categories} />
     </div>
   );
 }

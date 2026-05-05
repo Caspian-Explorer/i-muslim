@@ -6,18 +6,15 @@ import { FieldValue } from "firebase-admin/firestore";
 import { requireDb } from "@/lib/firebase/admin";
 import { requireAdminSession } from "@/lib/auth/session";
 import { normalizeEvent } from "@/lib/admin/data/events";
+import { fetchEventCategories } from "@/lib/admin/data/event-categories";
 import type { AdminEvent } from "@/types/admin";
 
-const categoryEnum = z.enum([
-  "prayer",
-  "lecture",
-  "iftar",
-  "janazah",
-  "class",
-  "fundraiser",
-  "community",
-  "other",
-]);
+// Slug shape only — slug existence is verified against the live
+// `eventCategories` collection inside each create/update action.
+const categoryEnum = z
+  .string()
+  .min(2)
+  .regex(/^[a-z0-9-]+$/, "Invalid category");
 const statusEnum = z.enum(["under_review", "draft", "published", "cancelled"]);
 const locationModeEnum = z.enum(["in-person", "online", "hybrid"]);
 const prayerAnchorEnum = z.enum(["fajr", "dhuhr", "asr", "maghrib", "isha"]);
@@ -109,6 +106,15 @@ async function authorize() {
   await requireAdminSession();
 }
 
+async function assertActiveCategorySlug(slug: string): Promise<string | null> {
+  const { categories, source } = await fetchEventCategories();
+  if (source !== "firestore") return null; // mock/unavailable: don't block
+  const match = categories.find((c) => c.slug === slug);
+  if (!match) return "Unknown category";
+  if (!match.isActive) return "Category is inactive";
+  return null;
+}
+
 export async function createEventAction(input: EventInput): Promise<ActionResult> {
   try {
     await authorize();
@@ -119,6 +125,8 @@ export async function createEventAction(input: EventInput): Promise<ActionResult
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
+  const categoryError = await assertActiveCategorySlug(parsed.data.category);
+  if (categoryError) return { ok: false, error: categoryError };
 
   let db;
   try {
@@ -159,6 +167,8 @@ export async function updateEventAction(id: string, input: EventInput): Promise<
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
+  const categoryError = await assertActiveCategorySlug(parsed.data.category);
+  if (categoryError) return { ok: false, error: categoryError };
 
   let db;
   try {

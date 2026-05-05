@@ -17,23 +17,13 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { getHijriParts } from "@/lib/admin/hijri";
 import { haversineKm } from "@/lib/events/geo";
+import { resolveCategoryName } from "@/lib/events/categories";
 import type {
   AdminEvent,
   EventCategory,
 } from "@/types/admin";
+import type { EventCategoryDoc } from "@/types/event-category";
 import type { PublicEventListItem } from "@/lib/events/public";
-
-const CATEGORIES: Array<EventCategory | "all"> = [
-  "all",
-  "prayer",
-  "lecture",
-  "iftar",
-  "janazah",
-  "class",
-  "fundraiser",
-  "community",
-  "other",
-];
 
 function categoryVariant(category: EventCategory): "accent" | "info" | "success" | "warning" | "danger" | "neutral" {
   switch (category) {
@@ -54,15 +44,29 @@ function categoryVariant(category: EventCategory): "accent" | "info" | "success"
   }
 }
 
-export function PublicEventsList({ items }: { items: PublicEventListItem[] }) {
+export function PublicEventsList({
+  items,
+  categories,
+}: {
+  items: PublicEventListItem[];
+  categories: EventCategoryDoc[];
+}) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<EventCategory | "all">("all");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geoState, setGeoState] = useState<"idle" | "requesting" | "denied" | "unsupported">("idle");
   const t = useTranslations("eventsPublic");
-  const tCategories = useTranslations("events.categories");
+  const tCategoriesAll = useTranslations("events.categories");
   const tHijriMonths = useTranslations("hijri.months");
   const locale = useLocale();
+
+  const activeCategories = useMemo(
+    () =>
+      [...categories]
+        .filter((c) => c.isActive)
+        .sort((a, b) => a.sortOrder - b.sortOrder),
+    [categories],
+  );
 
   function requestLocation() {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -135,8 +139,11 @@ export function PublicEventsList({ items }: { items: PublicEventListItem[] }) {
           onChange={(e) => setCategory(e.target.value as EventCategory | "all")}
           aria-label={t("filterByCategory")}
         >
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>{tCategories(c)}</option>
+          <option value="all">{tCategoriesAll("all")}</option>
+          {activeCategories.map((c) => (
+            <option key={c.id} value={c.slug}>
+              {resolveCategoryName(c.slug, categories, locale)}
+            </option>
           ))}
         </select>
         <Button
@@ -172,6 +179,7 @@ export function PublicEventsList({ items }: { items: PublicEventListItem[] }) {
                 distanceKm={distanceKm}
                 locale={locale}
                 hijriMonth={(idx) => tHijriMonths(String(idx))}
+                categories={categories}
               />
             </li>
           ))}
@@ -187,15 +195,16 @@ function EventCard({
   distanceKm,
   locale,
   hijriMonth,
+  categories,
 }: {
   event: AdminEvent;
   nextStartsAt: string;
   distanceKm: number | null;
   locale: string;
   hijriMonth: (idx: number) => string;
+  categories: EventCategoryDoc[];
 }) {
   const t = useTranslations("eventsPublic");
-  const tCategories = useTranslations("events.categories");
   const start = new Date(nextStartsAt);
   const hijri = getHijriParts(start);
   const dateStr = start.toLocaleDateString(locale, {
@@ -223,7 +232,7 @@ function EventCard({
           <h2 className="text-base font-semibold text-foreground truncate">{event.title}</h2>
         </div>
         <Badge variant={categoryVariant(event.category)}>
-          {tCategories(event.category)}
+          {resolveCategoryName(event.category, categories, locale)}
         </Badge>
       </div>
 

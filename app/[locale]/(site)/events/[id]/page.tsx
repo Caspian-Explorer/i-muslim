@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { fetchPublicEvent, nextThreeOccurrences } from "@/lib/events/public";
+import { fetchEventCategories } from "@/lib/admin/data/event-categories";
+import { resolveCategoryName } from "@/lib/events/categories";
 import { describeRRule } from "@/lib/admin/recurrence";
 import { getHijriParts } from "@/lib/admin/hijri";
 import { RsvpButton } from "@/components/site/RsvpButton";
@@ -68,9 +70,9 @@ export default async function EventDetailPage({ params }: PageContext) {
   if (!event) notFound();
 
   const t = await getTranslations("eventsPublic");
-  const tCategories = await getTranslations("events.categories");
   const tHijriMonths = await getTranslations("hijri.months");
   const locale = await getLocale();
+  const { categories } = await fetchEventCategories();
   const session = await getSiteSession();
   const initialFavorited = session
     ? await isFavorited(session.uid, "event", event.id)
@@ -171,7 +173,7 @@ export default async function EventDetailPage({ params }: PageContext) {
       <header className="mt-6 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={categoryVariant(event.category)}>
-            {tCategories(event.category)}
+            {resolveCategoryName(event.category, categories, locale)}
           </Badge>
           {recurrenceLabel && (
             <Badge variant="neutral">

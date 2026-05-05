@@ -55,22 +55,13 @@ import type {
   EventCategory,
   EventStatus,
 } from "@/types/admin";
+import type { EventCategoryDoc } from "@/types/event-category";
+import { resolveCategoryName } from "@/lib/events/categories";
 import { EventEditorDrawer } from "./EventEditorDrawer";
 import { EventsCalendarView } from "./EventsCalendarView";
 
 const PAGE_SIZES = [10, 25, 50, 100];
 
-const CATEGORY_VALUES = [
-  "all",
-  "prayer",
-  "lecture",
-  "iftar",
-  "janazah",
-  "class",
-  "fundraiser",
-  "community",
-  "other",
-] as const;
 const STATUS_VALUES = ["all", "under_review", "draft", "published", "cancelled"] as const;
 const WINDOW_VALUES = ["upcoming", "past", "all"] as const;
 
@@ -106,9 +97,11 @@ function statusVariant(status: EventStatus): "success" | "warning" | "danger" | 
 export function EventsPageClient({
   initialEvents,
   source,
+  categories,
 }: {
   initialEvents: AdminEvent[];
   source: "firestore" | "mock";
+  categories: EventCategoryDoc[];
 }) {
   const searchParams = useSearchParams();
   const initialStatus = (() => {
@@ -139,7 +132,7 @@ export function EventsPageClient({
   const [deleteTarget, setDeleteTarget] = useState<AdminEvent | null>(null);
 
   const t = useTranslations("events");
-  const tCategories = useTranslations("events.categories");
+  const tCategoriesAll = useTranslations("events.categories");
   const tStatuses = useTranslations("events.statuses");
   const tWindow = useTranslations("events.windows");
   const tHijriMonths = useTranslations("hijri.months");
@@ -147,6 +140,14 @@ export function EventsPageClient({
   const locale = useLocale();
 
   const canPersist = source === "firestore";
+
+  const activeCategories = useMemo(
+    () =>
+      [...categories]
+        .filter((c) => c.isActive)
+        .sort((a, b) => a.sortOrder - b.sortOrder),
+    [categories],
+  );
 
   const filtered = useMemo(() => {
     const now = Date.now();
@@ -212,7 +213,7 @@ export function EventsPageClient({
         header: t("columns.category"),
         cell: ({ row }) => (
           <Badge variant={categoryVariant(row.original.category)}>
-            {tCategories(row.original.category)}
+            {resolveCategoryName(row.original.category, categories, locale)}
           </Badge>
         ),
       },
@@ -337,7 +338,7 @@ export function EventsPageClient({
         size: 48,
       },
     ],
-    [t, tCategories, tStatuses, tHijriMonths, tCommon, locale],
+    [t, categories, tStatuses, tHijriMonths, tCommon, locale],
   );
 
   const table = useReactTable({
@@ -394,75 +395,74 @@ export function EventsPageClient({
   return (
     <div className="space-y-4">
       <Tabs defaultValue="table" className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <TabsList>
-            <TabsTrigger value="table">
-              <ListTree className="me-1 size-3.5" /> {t("viewTable")}
-            </TabsTrigger>
-            <TabsTrigger value="calendar">
-              <LayoutGrid className="me-1 size-3.5" /> {t("viewCalendar")}
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t("searchPlaceholder")}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="ps-8 w-64"
+              aria-label={t("searchAria")}
+            />
+          </div>
+          <select
+            className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+            value={category}
+            onChange={(e) => setCategory(e.target.value as EventCategory | "all")}
+            aria-label={t("filterByCategory")}
+          >
+            <option value="all">{tCategoriesAll("all")}</option>
+            {activeCategories.map((c) => (
+              <option key={c.id} value={c.slug}>
+                {resolveCategoryName(c.slug, categories, locale)}
+              </option>
+            ))}
+          </select>
+          <select
+            className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as EventStatus | "all")}
+            aria-label={t("filterByStatus")}
+          >
+            {STATUS_VALUES.map((v) => (
+              <option key={v} value={v}>
+                {v === "all" ? tStatuses("all") : tStatuses(v)}
+              </option>
+            ))}
+          </select>
+          <select
+            className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+            value={windowFilter}
+            onChange={(e) => setWindowFilter(e.target.value as WindowFilter)}
+            aria-label={t("filterByWindow")}
+          >
+            {WINDOW_VALUES.map((v) => (
+              <option key={v} value={v}>{tWindow(v)}</option>
+            ))}
+          </select>
+          <div className="ms-auto flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={() => openQuickCreate("event")}
+              disabled={!canPersist}
+              title={!canPersist ? t("noPersistTitle") : undefined}
+            >
+              <Plus /> {t("newEvent")}
+            </Button>
+          </div>
         </div>
+
+        <TabsList>
+          <TabsTrigger value="table" aria-label={t("viewTable")} title={t("viewTable")}>
+            <ListTree className="size-4" />
+          </TabsTrigger>
+          <TabsTrigger value="calendar" aria-label={t("viewCalendar")} title={t("viewCalendar")}>
+            <LayoutGrid className="size-4" />
+          </TabsTrigger>
+        </TabsList>
 
       <TabsContent value="table" className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative">
-          <Search className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t("searchPlaceholder")}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="ps-8 w-64"
-            aria-label={t("searchAria")}
-          />
-        </div>
-        <select
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-          value={category}
-          onChange={(e) => setCategory(e.target.value as EventCategory | "all")}
-          aria-label={t("filterByCategory")}
-        >
-          {CATEGORY_VALUES.map((v) => (
-            <option key={v} value={v}>
-              {v === "all" ? tCategories("all") : tCategories(v)}
-            </option>
-          ))}
-        </select>
-        <select
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as EventStatus | "all")}
-          aria-label={t("filterByStatus")}
-        >
-          {STATUS_VALUES.map((v) => (
-            <option key={v} value={v}>
-              {v === "all" ? tStatuses("all") : tStatuses(v)}
-            </option>
-          ))}
-        </select>
-        <select
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-          value={windowFilter}
-          onChange={(e) => setWindowFilter(e.target.value as WindowFilter)}
-          aria-label={t("filterByWindow")}
-        >
-          {WINDOW_VALUES.map((v) => (
-            <option key={v} value={v}>{tWindow(v)}</option>
-          ))}
-        </select>
-        <div className="ms-auto flex items-center gap-2">
-          <Button
-            size="sm"
-            onClick={() => openQuickCreate("event")}
-            disabled={!canPersist}
-            title={!canPersist ? t("noPersistTitle") : undefined}
-          >
-            <Plus /> {t("newEvent")}
-          </Button>
-        </div>
-      </div>
-
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -589,7 +589,7 @@ export function EventsPageClient({
       </TabsContent>
       <TabsContent value="calendar">
         <EventsCalendarView
-          events={events}
+          events={filtered}
           onEdit={(e) => {
             setEditing(e);
             setEditorOpen(true);
@@ -606,6 +606,7 @@ export function EventsPageClient({
         }}
         event={editing}
         canPersist={canPersist}
+        categories={categories}
         onSaved={handleSaved}
       />
 

@@ -58,8 +58,11 @@
   "header": {
     "openMenu": "فتح القائمة",
     "navigation": "التنقّل",
-    "searchPlaceholder": "ابحث في الصفحات والمستخدمين والإعدادات…",
+    "searchPlaceholder": "ابحث في الصفحات والمساجد والمقالات…",
     "searchFallback": "بحث",
+    "searchLoading": "جارٍ التحميل…",
+    "groupMosques": "المساجد",
+    "groupArticles": "المقالات",
     "openCommandPalette": "فتح لوحة الأوامر",
     "languageLabel": "اللغة: {label}",
     "language": "اللغة",

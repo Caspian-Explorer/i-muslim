@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -23,27 +23,18 @@ import { cn } from "@/lib/utils";
 import { suggestTimezoneForCountry } from "@/lib/events/country-tz";
 import { buildIcs } from "@/lib/events/ics";
 import { createEventAction, type EventInput } from "@/lib/admin/actions/events";
+import { resolveCategoryName } from "@/lib/events/categories";
 import type {
   AdminEvent,
   EventCategory,
   EventLocationMode,
   EventStatus,
 } from "@/types/admin";
+import type { EventCategoryDoc } from "@/types/event-category";
 
 const PUBLIC_STEPS = ["basics", "when", "where", "who", "review"] as const;
 const ADMIN_STEPS = ["basics", "when", "where", "who", "admin", "review"] as const;
 type Step = (typeof ADMIN_STEPS)[number];
-
-const CATEGORIES: EventCategory[] = [
-  "prayer",
-  "lecture",
-  "iftar",
-  "janazah",
-  "class",
-  "fundraiser",
-  "community",
-  "other",
-];
 
 const LOCATION_MODES: EventLocationMode[] = ["in-person", "online", "hybrid"];
 const RECURRENCE_PRESETS = ["none", "weekly", "monthly"] as const;
@@ -51,7 +42,9 @@ type RecurrencePreset = (typeof RECURRENCE_PRESETS)[number];
 
 const ADMIN_STATUSES: EventStatus[] = ["draft", "published", "cancelled"];
 
-const CATEGORIES_WITH_HINTS: ReadonlySet<EventCategory> = new Set([
+// Built-in slugs that ship with `eventsPublic.submit.categoryHints.<slug>`
+// translation keys. Custom admin-added categories simply render with no hint.
+const SLUGS_WITH_HINTS: ReadonlySet<string> = new Set([
   "janazah",
   "iftar",
   "lecture",
@@ -85,13 +78,13 @@ interface FormState {
   website_url_secondary: string;
 }
 
-function makeEmpty(email: string): FormState {
+function makeEmpty(email: string, defaultCategory: EventCategory): FormState {
   const tz =
     typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC";
   return {
     title: "",
     description: "",
-    category: "community",
+    category: defaultCategory,
     startsAt: "",
     endsAt: "",
     timezone: tz || "UTC",
@@ -118,6 +111,7 @@ interface ValidationResult {
 
 interface SubmitEventFormProps {
   userEmail: string;
+  categories: EventCategoryDoc[];
   /** When true, skip honeypot/submitter-email/sessionStorage and submit via the admin server action. */
   adminMode?: boolean;
   onAdminSaved?: (result: { id: string }) => void;
@@ -126,18 +120,32 @@ interface SubmitEventFormProps {
 
 export function SubmitEventForm({
   userEmail,
+  categories,
   adminMode = false,
   onAdminSaved,
   onAdminCancel,
 }: SubmitEventFormProps) {
   const t = useTranslations("eventsPublic.submit");
-  const tCategories = useTranslations("events.categories");
   const tStatuses = useTranslations("events.statuses");
   const tQuick = useTranslations("quickCreate");
+  const locale = useLocale();
 
   const STEPS: readonly Step[] = adminMode ? ADMIN_STEPS : PUBLIC_STEPS;
 
-  const [state, setState] = useState<FormState>(() => makeEmpty(userEmail));
+  const activeCategories = useMemo(
+    () =>
+      [...categories]
+        .filter((c) => c.isActive)
+        .sort((a, b) => a.sortOrder - b.sortOrder),
+    [categories],
+  );
+
+  const defaultCategory: EventCategory =
+    activeCategories.find((c) => c.slug === "community")?.slug ??
+    activeCategories[0]?.slug ??
+    "other";
+
+  const [state, setState] = useState<FormState>(() => makeEmpty(userEmail, defaultCategory));
   const [stepIdx, setStepIdx] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -365,7 +373,7 @@ export function SubmitEventForm({
       }
       toast.success(t("success.headline"));
       setSubmitted({ ...state });
-      setState(makeEmpty(userEmail));
+      setState(makeEmpty(userEmail, defaultCategory));
       timezoneTouched.current = false;
       setDone(true);
     } finally {
@@ -480,13 +488,13 @@ export function SubmitEventForm({
               value={state.category}
               onChange={(e) => setState((s) => ({ ...s, category: e.target.value as EventCategory }))}
             >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {tCategories(c)}
+              {activeCategories.map((c) => (
+                <option key={c.id} value={c.slug}>
+                  {resolveCategoryName(c.slug, categories, locale)}
                 </option>
               ))}
             </select>
-            {CATEGORIES_WITH_HINTS.has(state.category) && (
+            {SLUGS_WITH_HINTS.has(state.category) && (
               <div className="mt-2 flex items-start gap-2 rounded-md border border-accent/30 bg-accent/5 p-3 text-xs text-foreground">
                 <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-accent" />
                 <p>
@@ -740,7 +748,7 @@ export function SubmitEventForm({
             rows={[
               { label: t("fields.title"), value: state.title },
               { label: t("fields.description"), value: state.description },
-              { label: t("fields.category"), value: tCategories(state.category) },
+              { label: t("fields.category"), value: resolveCategoryName(state.category, categories, locale) },
             ]}
           />
 

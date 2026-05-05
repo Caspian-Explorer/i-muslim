@@ -5,6 +5,7 @@ import {
   EditorDialogContent,
 } from "@/components/ui/editor-dialog";
 import type { AdminEvent } from "@/types/admin";
+import type { EventCategoryDoc } from "@/types/event-category";
 import { EventEditorBody } from "./EventEditorBody";
 
 interface Props {
@@ -12,10 +13,18 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   event?: AdminEvent | null;
   canPersist: boolean;
+  categories: EventCategoryDoc[];
   onSaved: (saved: AdminEvent, mode: "create" | "update") => void;
 }
 
-export function EventEditorDrawer({ open, onOpenChange, event, canPersist, onSaved }: Props) {
+export function EventEditorDrawer({
+  open,
+  onOpenChange,
+  event,
+  canPersist,
+  categories,
+  onSaved,
+}: Props) {
   return (
     <EditorDialog open={open} onOpenChange={onOpenChange}>
       <EditorDialogContent>
@@ -23,6 +32,7 @@ export function EventEditorDrawer({ open, onOpenChange, event, canPersist, onSav
           key={open ? "open" : "closed"}
           event={event}
           canPersist={canPersist}
+          categories={categories}
           onSaved={(saved, mode) => {
             onSaved(saved, mode);
             onOpenChange(false);

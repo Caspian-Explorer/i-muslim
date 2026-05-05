@@ -3,7 +3,6 @@ import { getDb } from "@/lib/firebase/admin";
 import { MOCK_EVENTS } from "@/lib/admin/mock/events";
 import type {
   AdminEvent,
-  EventCategory,
   EventLocation,
   EventLocationMode,
   EventStatus,
@@ -19,16 +18,6 @@ export type EventsResult = {
   source: "firestore" | "mock";
 };
 
-const CATEGORIES: EventCategory[] = [
-  "prayer",
-  "lecture",
-  "iftar",
-  "janazah",
-  "class",
-  "fundraiser",
-  "community",
-  "other",
-];
 const STATUSES: EventStatus[] = ["under_review", "draft", "published", "cancelled"];
 const LOCATION_MODES: EventLocationMode[] = ["in-person", "online", "hybrid"];
 const PRAYER_ANCHORS: PrayerAnchor[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
@@ -111,9 +100,11 @@ export function normalizeEvent(id: string, raw: Record<string, unknown>): AdminE
 
   const description = asOptionalString(raw.description);
 
-  const rawCategory = typeof raw.category === "string" ? raw.category : "other";
-  const category: EventCategory = CATEGORIES.includes(rawCategory as EventCategory)
-    ? (rawCategory as EventCategory)
+  // Categories are admin-managed in Firestore; accept any non-empty slug.
+  // Unknown slugs (e.g. tied to a deleted category doc) render as the raw slug
+  // at consumer surfaces via resolveCategoryName().
+  const category = typeof raw.category === "string" && raw.category.length > 0
+    ? raw.category
     : "other";
 
   const rawStatus = typeof raw.status === "string" ? raw.status : "draft";

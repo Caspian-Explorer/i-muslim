@@ -58,8 +58,11 @@
   "header": {
     "openMenu": "Buka menu",
     "navigation": "Navigasi",
-    "searchPlaceholder": "Cari halaman, pengguna, pengaturan…",
+    "searchPlaceholder": "Cari halaman, masjid, artikel…",
     "searchFallback": "Cari",
+    "searchLoading": "Memuat…",
+    "groupMosques": "Masjid",
+    "groupArticles": "Artikel",
     "openCommandPalette": "Buka palet perintah",
     "languageLabel": "Bahasa: {label}",
     "language": "Bahasa",

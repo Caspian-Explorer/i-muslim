@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { z } from "zod";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import {
   type EventInput,
 } from "@/lib/admin/actions/events";
 import { buildRRule } from "@/lib/admin/recurrence";
+import { resolveCategoryName } from "@/lib/events/categories";
 import type {
   AdminEvent,
   EventCategory,
@@ -30,17 +31,8 @@ import type {
   EventStatus,
   PrayerAnchor,
 } from "@/types/admin";
+import type { EventCategoryDoc } from "@/types/event-category";
 
-const CATEGORIES: EventCategory[] = [
-  "prayer",
-  "lecture",
-  "iftar",
-  "janazah",
-  "class",
-  "fundraiser",
-  "community",
-  "other",
-];
 const STATUSES: EventStatus[] = ["draft", "published", "cancelled"];
 const LOCATION_MODES: EventLocationMode[] = ["in-person", "online", "hybrid"];
 const PRAYER_ANCHORS: PrayerAnchor[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
@@ -74,6 +66,7 @@ type FormValues = {
 interface Props {
   event?: AdminEvent | null;
   canPersist: boolean;
+  categories: EventCategoryDoc[];
   onSaved: (saved: AdminEvent, mode: "create" | "update") => void;
   onCancel: () => void;
   /** Optional left-aligned header element (e.g. Quick Create back button). */
@@ -110,14 +103,17 @@ function detectRecurrenceCount(rrule?: string): string {
   return match ? match[1]! : "";
 }
 
-function defaultsFromEvent(event?: AdminEvent | null): FormValues {
+function defaultsFromEvent(
+  event: AdminEvent | null | undefined,
+  fallbackCategory: EventCategory,
+): FormValues {
   const tz =
     event?.timezone ??
     (typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC");
   return {
     title: event?.title ?? "",
     description: event?.description ?? "",
-    category: event?.category ?? "lecture",
+    category: event?.category ?? fallbackCategory,
     status: event?.status ?? "draft",
     startsAt: isoToLocalInput(event?.startsAt),
     endsAt: isoToLocalInput(event?.endsAt),
@@ -142,17 +138,34 @@ function defaultsFromEvent(event?: AdminEvent | null): FormValues {
   };
 }
 
-export function EventEditorBody({ event, canPersist, onSaved, onCancel, headerLeading }: Props) {
+export function EventEditorBody({
+  event,
+  canPersist,
+  categories,
+  onSaved,
+  onCancel,
+  headerLeading,
+}: Props) {
   const t = useTranslations("events.editor");
-  const tCategories = useTranslations("events.categories");
   const tStatuses = useTranslations("events.statuses");
   const tLocations = useTranslations("events.locationModes");
   const tRecurrence = useTranslations("events.recurrence");
   const tPrayerNames = useTranslations("prayerTimes");
   const tHijriMonths = useTranslations("hijri.months");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const [submitting, setSubmitting] = useState(false);
   const editing = Boolean(event);
+
+  const activeCategories = useMemo(
+    () =>
+      [...categories]
+        .filter((c) => c.isActive)
+        .sort((a, b) => a.sortOrder - b.sortOrder),
+    [categories],
+  );
+
+  const fallbackCategory: EventCategory = activeCategories[0]?.slug ?? "other";
 
   const schema = useMemo(
     () =>
@@ -160,7 +173,7 @@ export function EventEditorBody({ event, canPersist, onSaved, onCancel, headerLe
         .object({
           title: z.string().min(2, t("errorTitle")),
           description: z.string(),
-          category: z.enum(CATEGORIES as [EventCategory, ...EventCategory[]]),
+          category: z.string().min(1),
           status: z.enum(STATUSES as [EventStatus, ...EventStatus[]]),
           startsAt: z.string().min(1, t("errorStartsAt")),
           endsAt: z.string(),
@@ -219,12 +232,12 @@ export function EventEditorBody({ event, canPersist, onSaved, onCancel, headerLe
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: defaultsFromEvent(event),
+    defaultValues: defaultsFromEvent(event, fallbackCategory),
   });
 
   useEffect(() => {
-    reset(defaultsFromEvent(event));
-  }, [event, reset]);
+    reset(defaultsFromEvent(event, fallbackCategory));
+  }, [event, reset, fallbackCategory]);
 
   const locationMode = watch("locationMode");
   const recurrenceMode = watch("recurrenceMode");
@@ -334,8 +347,10 @@ export function EventEditorBody({ event, canPersist, onSaved, onCancel, headerLe
                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                 {...register("category")}
               >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{tCategories(c)}</option>
+                {activeCategories.map((c) => (
+                  <option key={c.id} value={c.slug}>
+                    {resolveCategoryName(c.slug, categories, locale)}
+                  </option>
                 ))}
               </select>
             </Field>

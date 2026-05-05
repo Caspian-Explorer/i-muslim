@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { EventsPageClient } from "@/components/admin/events/EventsPageClient";
 import { fetchEvents } from "@/lib/admin/data/events";
+import { fetchEventCategories } from "@/lib/admin/data/event-categories";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("events");
@@ -10,7 +11,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function EventsPage() {
-  const { events, source } = await fetchEvents();
+  const [{ events, source }, { categories }] = await Promise.all([
+    fetchEvents(),
+    fetchEventCategories(),
+  ]);
   const t = await getTranslations("events");
 
   return (
@@ -19,7 +23,7 @@ export default async function EventsPage() {
         title={t("pageTitle")}
         subtitle={source === "firestore" ? t("subtitleLive") : t("subtitleMock")}
       />
-      <EventsPageClient initialEvents={events} source={source} />
+      <EventsPageClient initialEvents={events} source={source} categories={categories} />
     </div>
   );
 }

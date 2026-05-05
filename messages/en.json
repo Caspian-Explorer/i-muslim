@@ -119,7 +119,27 @@
     "tabUnread": "Unread",
     "markAllRead": "Mark all as read",
     "viewAll": "View all notifications",
-    "empty": "Nothing to show."
+    "empty": "Nothing to show.",
+    "page": {
+      "title": "Notifications",
+      "description": "Review and triage admin notifications.",
+      "filterAllTypes": "All types",
+      "filterByType": "Filter by type",
+      "markRead": "Mark read",
+      "emptyAll": "No notifications yet.",
+      "noResults": "No notifications match the current filter.",
+      "markedAllReadToast": "All notifications marked as read.",
+      "markFailedToast": "Couldn't update notification. Please try again.",
+      "types": {
+        "signup": "New signup",
+        "flagged": "Flagged content",
+        "donation": "Donation",
+        "qa": "Q&A",
+        "system": "System",
+        "submission": "Submission",
+        "contact": "Contact"
+      }
+    }
   },
   "sidebar": {
     "newButton": "New",
@@ -2103,6 +2123,7 @@
       "overview": "Overview",
       "reading": "Reading progress",
       "favorites": "Favorites",
+      "notes": "My notes",
       "submissions": "My submissions",
       "matrimonial": "Matrimonial"
     },
@@ -2219,6 +2240,40 @@
       "matrimonialProfile": "Profiles"
     },
     "empty": "Nothing saved yet."
+  },
+  "notes": {
+    "addNote": "Add note",
+    "editNote": "Edit note",
+    "saveNote": "Save",
+    "cancelNote": "Cancel",
+    "deleteNote": "Delete",
+    "confirmDelete": "Delete this note?",
+    "placeholder": "Your private note…",
+    "charLimit": "{count} / {max}",
+    "savedToast": "Note saved",
+    "deletedToast": "Note deleted",
+    "saveFailed": "Couldn't save note — please try again.",
+    "deleteFailed": "Couldn't delete — please try again.",
+    "tooLong": "Note is too long.",
+    "signInRequired": "Sign in to save notes",
+    "signInCta": "Sign in",
+    "editedAt": "Edited {when}",
+    "yourNote": "Your note"
+  },
+  "profileNotes": {
+    "pageTitle": "My notes",
+    "pageDescription": "Your private notes on ayahs and hadith. Only you can see these.",
+    "empty": "No notes yet. Add one from any ayah or hadith page.",
+    "open": "Open",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "tabs": {
+      "all": "All",
+      "ayah": "Ayahs",
+      "hadith": "Hadith"
+    }
   },
   "reading": {
     "title": "Reading progress",

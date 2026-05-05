@@ -3,6 +3,7 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase/admin";
 import { getSiteSession } from "@/lib/auth/session";
 import { eventSubmitSchema } from "@/lib/events/submit-schema";
+import { fetchEventCategories } from "@/lib/admin/data/event-categories";
 import { createNotification } from "@/lib/admin/data/notifications";
 import { buildRRule } from "@/lib/admin/recurrence";
 
@@ -40,6 +41,12 @@ export async function POST(req: Request) {
   const db = getDb();
   if (!db) {
     return NextResponse.json({ ok: false, error: "firestore_not_configured" }, { status: 503 });
+  }
+
+  const { categories: activeCategories } = await fetchEventCategories();
+  const knownSlug = activeCategories.find((c) => c.slug === data.category && c.isActive);
+  if (!knownSlug) {
+    return NextResponse.json({ ok: false, error: "unknown_category" }, { status: 400 });
   }
 
   const since = Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
