@@ -76,6 +76,12 @@ export function CommentItem({
 
   const [replyOpen, setReplyOpen] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
+  // Replies the user just posted in this session — seeded into CommentReplyList
+  // so they render immediately without waiting on a refetch (the API would
+  // otherwise return them, but indexing race or a missing composite index can
+  // mask them; this also avoids the mount-order race where a window event was
+  // dispatched before the list's listener attached).
+  const [seedReplies, setSeedReplies] = useState<CommentRecord[]>([]);
   const replyCount = comment.replyCount;
 
   const editTextareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -299,12 +305,10 @@ export function CommentItem({
                   onCreated={(reply) => {
                     setReplyOpen(false);
                     setShowReplies(true);
+                    setSeedReplies((prev) =>
+                      prev.some((r) => r.id === reply.id) ? prev : [reply, ...prev],
+                    );
                     onUpdate({ ...comment, replyCount: comment.replyCount + 1 });
-                    // Tell the reply list to inject the new reply
-                    const ev = new CustomEvent("comments:reply-created", {
-                      detail: { parentId: comment.id, reply },
-                    });
-                    if (typeof window !== "undefined") window.dispatchEvent(ev);
                   }}
                 />
               </div>
@@ -330,6 +334,7 @@ export function CommentItem({
                 itemMeta={itemMeta}
                 currentUid={currentUid}
                 signedIn={signedIn}
+                seedReplies={seedReplies}
                 onSignInRequired={onSignInRequired}
                 onFlag={onFlag}
               />

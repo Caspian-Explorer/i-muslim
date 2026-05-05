@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
@@ -21,6 +21,14 @@ interface Props {
   itemMeta: CommentItemMeta;
   currentUid: string | null;
   signedIn: boolean;
+  /**
+   * Replies the user just posted in this session, owned by the parent
+   * CommentItem. Rendered immediately at the top of the list (deduped by id
+   * against the fetched page) so a freshly-posted reply is visible without
+   * relying on the API roundtrip — the previous window-event mechanism lost
+   * the new reply because this list mounts AFTER the event fires.
+   */
+  seedReplies?: CommentRecord[];
   onSignInRequired: () => void;
   onFlag: (commentId: string) => void;
 }
@@ -40,6 +48,7 @@ export function CommentReplyList({
   itemMeta,
   currentUid,
   signedIn,
+  seedReplies,
   onSignInRequired,
   onFlag,
 }: Props) {
@@ -97,17 +106,11 @@ export function CommentReplyList({
     };
   }, [fetchPage, t]);
 
-  // Listen for new replies created for this parent and inject them at the top.
+  // Keep the user's selected reaction-kind highlight in sync across mounts.
+  // Optimistic-reply injection is handled by the `seedReplies` prop instead
+  // of a window event (the event fired before this component mounted, so its
+  // listener was attached too late and the freshly-posted reply was lost).
   useEffect(() => {
-    function onCreated(e: Event) {
-      const ev = e as CustomEvent<{ parentId: string; reply: CommentRecord }>;
-      if (ev.detail?.parentId !== parentId) return;
-      setReplies((prev) =>
-        prev.some((r) => r.id === ev.detail.reply.id)
-          ? prev
-          : [ev.detail.reply, ...prev],
-      );
-    }
     function onUserKind(e: Event) {
       const ev = e as CustomEvent<{ id: string; kind: CommentReactionKind | null }>;
       setReactionMap((prev) => {
@@ -117,13 +120,11 @@ export function CommentReplyList({
         return next;
       });
     }
-    window.addEventListener("comments:reply-created", onCreated);
     window.addEventListener("comments:user-kind", onUserKind);
     return () => {
-      window.removeEventListener("comments:reply-created", onCreated);
       window.removeEventListener("comments:user-kind", onUserKind);
     };
-  }, [parentId]);
+  }, []);
 
   async function loadMore() {
     setLoadingMore(true);
@@ -151,17 +152,27 @@ export function CommentReplyList({
     setReplies((prev) => prev.map((r) => (r.id === next.id ? next : r)));
   }
 
-  if (loading) {
+  // Seeded replies (just posted in this session) are rendered first; the
+  // fetched page follows, with anything already present in the seed list
+  // filtered out so the same reply can't render twice.
+  const merged = useMemo(() => {
+    const seeds = seedReplies ?? [];
+    if (seeds.length === 0) return replies;
+    const seedIds = new Set(seeds.map((r) => r.id));
+    return [...seeds, ...replies.filter((r) => !seedIds.has(r.id))];
+  }, [seedReplies, replies]);
+
+  if (loading && merged.length === 0) {
     return <div className="py-3 text-xs text-muted-foreground">{t("loading")}</div>;
   }
 
-  if (replies.length === 0) {
+  if (merged.length === 0) {
     return null;
   }
 
   return (
     <div className="comment-thread">
-      {replies.map((reply) => (
+      {merged.map((reply) => (
         <CommentItem
           key={reply.id}
           comment={reply}
