@@ -297,14 +297,6 @@ body {
     opacity: 0.6;
     cursor: not-allowed;
   }
-  .comment-disclaimer {
-    border: 1px solid color-mix(in oklab, var(--chart-2) 30%, transparent);
-    background: color-mix(in oklab, var(--chart-2) 8%, var(--background));
-    color: color-mix(in oklab, var(--chart-2) 80%, var(--foreground));
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-md);
-    font-size: 0.8125rem;
-  }
   .comment-textarea {
     width: 100%;
     min-height: 4.5rem;

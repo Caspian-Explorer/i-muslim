@@ -133,7 +133,6 @@ export function CommentsPopupButton({
           <EditorDialogTitle>{dialogTitle}</EditorDialogTitle>
         </EditorDialogHeader>
         <EditorDialogBody>
-          <div className="comment-disclaimer mb-4">{t("disclaimer")}</div>
           {loading || !data ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
               {t("loading")}
@@ -148,7 +147,6 @@ export function CommentsPopupButton({
               initialUserReactions={initialUserReactions}
               signedIn={signedIn}
               currentUid={currentUid}
-              hideDisclaimer
             />
           )}
         </EditorDialogBody>

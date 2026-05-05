@@ -53,7 +53,6 @@ export async function CommentThread({ entityType, entityId, itemMeta, bare }: Pr
       initialUserReactions={userReactions}
       signedIn={!!session}
       currentUid={session?.uid ?? null}
-      hideDisclaimer={bare}
     />
   );
 

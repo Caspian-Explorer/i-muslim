@@ -25,8 +25,6 @@ interface Props {
   initialUserReactions: Record<string, CommentReactionKind>;
   signedIn: boolean;
   currentUid: string | null;
-  /** Skip the disclaimer banner (used in the ayah popup which already shows one). */
-  hideDisclaimer?: boolean;
   /** Skip the form (read-only mode). */
   readOnly?: boolean;
 }
@@ -40,7 +38,6 @@ export function CommentList({
   initialUserReactions,
   signedIn,
   currentUid,
-  hideDisclaimer,
   readOnly,
 }: Props) {
   const t = useTranslations("comments");
@@ -122,10 +119,6 @@ export function CommentList({
 
   return (
     <div className="space-y-4">
-      {!hideDisclaimer && (
-        <div className="comment-disclaimer">{t("disclaimer")}</div>
-      )}
-
       {!readOnly && (
         <CommentForm
           entityType={entityType}
