@@ -13,6 +13,7 @@
     "seed:hadith": "tsx scripts/seed-hadith.ts",
     "seed:hadith:lang": "tsx scripts/seed-hadith-translation.ts",
     "seed:business-categories": "tsx scripts/seed-business-categories.ts",
+    "seed:mosques": "tsx scripts/seed-mosques.ts",
     "cleanup:muslim-owned-submissions": "tsx scripts/cleanup-muslim-owned-submissions.ts",
     "sync:locales": "tsx scripts/sync-locale-translations.ts",
     "recompute:translation-stats": "tsx scripts/recompute-translation-stats.ts",
