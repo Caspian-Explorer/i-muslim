@@ -127,7 +127,26 @@ export function Sidebar({ badges = {}, variant = "desktop", onNavigate }: Sideba
                     const badgeValue = item.badgeKey ? badges[item.badgeKey] : undefined;
                     const label = t(`items.${item.labelKey}` as `items.${typeof item.labelKey}`);
 
-                    const row = (
+                    const row = item.comingSoon ? (
+                      <div
+                        className={cn(
+                          "relative flex items-center gap-2.5 rounded-md py-2 text-sm text-muted-foreground/60 cursor-not-allowed select-none",
+                          showLabels ? "px-2" : "justify-center px-0",
+                        )}
+                        aria-disabled="true"
+                      >
+                        <item.icon className="size-4 shrink-0 text-muted-foreground/60" />
+                        {showLabels && <span className="flex-1 truncate">{label}</span>}
+                        {showLabels && (
+                          <Badge
+                            variant="neutral"
+                            className="ml-auto text-[10px] uppercase tracking-wide opacity-70"
+                          >
+                            {t("soonBadge")}
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
                       <Link
                         href={item.href}
                         onClick={onNavigate}
@@ -154,7 +173,7 @@ export function Sidebar({ badges = {}, variant = "desktop", onNavigate }: Sideba
                     );
 
                     const childList =
-                      showLabels && item.children && item.children.length > 0 && active ? (
+                      !item.comingSoon && showLabels && item.children && item.children.length > 0 && active ? (
                         <ul className="mt-0.5 space-y-0.5 ps-7">
                           {item.children.map((child) => {
                             const childActive = isActive(child.href);

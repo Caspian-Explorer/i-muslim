@@ -155,13 +155,13 @@
     "newButton": "New",
     "expand": "Expand",
     "collapse": "Collapse sidebar",
+    "soonBadge": "Soon",
     "groups": {
       "overview": "Overview",
       "community": "Community",
       "content": "Content",
       "worship": "Worship & Calendar",
       "engagement": "Engagement",
-      "services": "Services",
       "system": "System"
     },
     "items": {

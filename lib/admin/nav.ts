@@ -80,7 +80,6 @@ export type NavGroupKey =
   | "content"
   | "worship"
   | "engagement"
-  | "services"
   | "system";
 
 export interface NavItem {
@@ -95,6 +94,7 @@ export interface NavItem {
     | "openContactMessages"
     | "autoHiddenComments";
   children?: NavItem[];
+  comingSoon?: boolean;
 }
 
 export interface NavGroup {
@@ -136,6 +136,21 @@ export const ADMIN_NAV: NavGroup[] = [
       { labelKey: "duas", href: "/admin/duas", icon: Sparkles },
       { labelKey: "khutbahs", href: "/admin/khutbahs", icon: Mic2 },
       { labelKey: "media", href: "/admin/media", icon: Image },
+      {
+        labelKey: "businesses",
+        href: "/admin/businesses",
+        icon: Store,
+        comingSoon: true,
+        badgeKey: "openReports",
+        children: [
+          { labelKey: "businessesCategories", href: "/admin/businesses/categories", icon: Tags },
+          { labelKey: "businessesReports", href: "/admin/businesses/reports", icon: Flag },
+          { labelKey: "businessesCertBodies", href: "/admin/businesses/cert-bodies", icon: BadgeCheck },
+          { labelKey: "businessesAmenities", href: "/admin/businesses/amenities", icon: ConciergeBell },
+        ],
+      },
+      { labelKey: "courses", href: "/admin/courses", icon: BookOpenCheck, comingSoon: true },
+      { labelKey: "matrimonial", href: "/admin/matrimonial", icon: Heart, comingSoon: true, badgeKey: "pendingMatrimonial" },
     ],
   },
   {
@@ -175,32 +190,13 @@ export const ADMIN_NAV: NavGroup[] = [
     ],
   },
   {
-    id: "services",
-    items: [
-      { labelKey: "donations", href: "/admin/donations", icon: HandCoins },
-      {
-        labelKey: "businesses",
-        href: "/admin/businesses",
-        icon: Store,
-        badgeKey: "openReports",
-        children: [
-          { labelKey: "businessesCategories", href: "/admin/businesses/categories", icon: Tags },
-          { labelKey: "businessesReports", href: "/admin/businesses/reports", icon: Flag },
-          { labelKey: "businessesCertBodies", href: "/admin/businesses/cert-bodies", icon: BadgeCheck },
-          { labelKey: "businessesAmenities", href: "/admin/businesses/amenities", icon: ConciergeBell },
-        ],
-      },
-      { labelKey: "courses", href: "/admin/courses", icon: BookOpenCheck },
-      { labelKey: "matrimonial", href: "/admin/matrimonial", icon: Heart, badgeKey: "pendingMatrimonial" },
-    ],
-  },
-  {
     id: "system",
     items: [
       { labelKey: "reports", href: "/admin/reports", icon: FileBarChart },
       { labelKey: "audit", href: "/admin/audit", icon: ScrollText },
       { labelKey: "settings", href: "/admin/settings", icon: Settings },
       { labelKey: "integrations", href: "/admin/integrations", icon: Plug },
+      { labelKey: "donations", href: "/admin/donations", icon: HandCoins, comingSoon: true },
     ],
   },
 ];
