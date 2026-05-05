@@ -69,6 +69,13 @@ export function CommentsPopupButton({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ApiResponse | null>(null);
+  // Comments the user just posted in this popup session — kept here so they
+  // survive the dialog close/reopen cycle (CommentList itself unmounts and
+  // loses its local state). They're rendered alongside the fetched page,
+  // deduped by id, so the just-posted comment shows whether or not the API
+  // returns it (e.g. when the listComments composite index hasn't been
+  // deployed yet, the API returns []).
+  const [seedComments, setSeedComments] = useState<CommentRecord[]>([]);
   const count = initialCount;
 
   const load = useCallback(async () => {
@@ -92,7 +99,11 @@ export function CommentsPopupButton({
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
-    if (next && !data && !loading) {
+    // Refetch on every open so changes made elsewhere (other tabs, admin
+    // moderation, etc.) are reflected. The previous "load only on first open"
+    // gate cached an empty result and showed "Be the first to comment" even
+    // after the user had posted.
+    if (next) {
       void load();
     }
   }
@@ -147,6 +158,12 @@ export function CommentsPopupButton({
               initialUserReactions={initialUserReactions}
               signedIn={signedIn}
               currentUid={currentUid}
+              seedComments={seedComments}
+              onCommentCreated={(c) =>
+                setSeedComments((prev) =>
+                  prev.some((s) => s.id === c.id) ? prev : [c, ...prev],
+                )
+              }
             />
           )}
         </EditorDialogBody>

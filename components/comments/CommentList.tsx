@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
@@ -25,6 +25,21 @@ interface Props {
   initialUserReactions: Record<string, CommentReactionKind>;
   signedIn: boolean;
   currentUid: string | null;
+  /**
+   * Comments owned by a parent (e.g. CommentsPopupButton) that should be
+   * rendered alongside the fetched page. Used to keep just-posted comments
+   * visible across mount cycles — when the popup closes, this list unmounts
+   * and loses its local `comments` state, but the parent still holds the
+   * seed and re-passes it on reopen so the user's own comment is still shown.
+   * Deduped by id against `initialComments` / fetched pages.
+   */
+  seedComments?: CommentRecord[];
+  /**
+   * Bubble newly-posted top-level comments up to a parent that wants to
+   * remember them (typically to seed them back via `seedComments` on the
+   * next mount).
+   */
+  onCommentCreated?: (c: CommentRecord) => void;
   /** Skip the form (read-only mode). */
   readOnly?: boolean;
 }
@@ -38,6 +53,8 @@ export function CommentList({
   initialUserReactions,
   signedIn,
   currentUid,
+  seedComments,
+  onCommentCreated,
   readOnly,
 }: Props) {
   const t = useTranslations("comments");
@@ -117,6 +134,17 @@ export function CommentList({
     setComments((prev) => prev.map((c) => (c.id === next.id ? next : c)));
   }
 
+  // Seeded comments (held by the parent across our mount cycles) are merged
+  // in front of the fetched/local list, deduped by id.
+  const merged = useMemo(() => {
+    const seeds = seedComments ?? [];
+    if (seeds.length === 0) return comments;
+    const seen = new Set(comments.map((c) => c.id));
+    const seedsToPrepend = seeds.filter((s) => !seen.has(s.id));
+    if (seedsToPrepend.length === 0) return comments;
+    return [...seedsToPrepend, ...comments];
+  }, [seedComments, comments]);
+
   return (
     <div className="space-y-4">
       {!readOnly && (
@@ -126,15 +154,20 @@ export function CommentList({
           parentId={null}
           itemMeta={itemMeta}
           signedIn={signedIn}
-          onCreated={(c) => setComments((prev) => [c, ...prev])}
+          onCreated={(c) => {
+            setComments((prev) =>
+              prev.some((p) => p.id === c.id) ? prev : [c, ...prev],
+            );
+            onCommentCreated?.(c);
+          }}
         />
       )}
 
-      {comments.length === 0 ? (
+      {merged.length === 0 ? (
         <div className="comment-thread-empty">{t("empty")}</div>
       ) : (
         <div className="comment-thread">
-          {comments.map((c) => (
+          {merged.map((c) => (
             <CommentItem
               key={c.id}
               comment={c}
