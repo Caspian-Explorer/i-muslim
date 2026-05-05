@@ -2367,6 +2367,18 @@
       "eventCategory": {
         "name": "Event Category",
         "description": "Add a category that events can be tagged with."
+      },
+      "businessCategory": {
+        "name": "Business Category",
+        "description": "Add a category that businesses can be tagged with."
+      },
+      "businessAmenity": {
+        "name": "Business Amenity",
+        "description": "Add an amenity that businesses can advertise."
+      },
+      "businessCertBody": {
+        "name": "Certification Body",
+        "description": "Add a halal certification body that businesses can claim."
       }
     },
     "formTitles": {
@@ -2375,7 +2387,10 @@
       "mosque": "New mosque",
       "article": "New article",
       "articleCategory": "New article category",
-      "eventCategory": "New event category"
+      "eventCategory": "New event category",
+      "businessCategory": "New business category",
+      "businessAmenity": "New business amenity",
+      "businessCertBody": "New certification body"
     },
     "steps": {
       "admin": "Admin"

@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
+  BadgeCheck,
   Building2,
   CalendarPlus,
+  ConciergeBell,
   FileText,
   type LucideIcon,
   Plus,
@@ -33,6 +35,9 @@ import { SubmitMosqueForm } from "@/components/mosque/SubmitMosqueForm";
 import { ArticleEditorClient } from "./articles/ArticleEditorClient";
 import { ArticleCategoryForm } from "./articles/ArticleCategoryForm";
 import { EventCategoryForm } from "./events/EventCategoryForm";
+import { BusinessCategoryForm } from "./businesses/BusinessCategoryForm";
+import { BusinessAmenityForm } from "./businesses/BusinessAmenityForm";
+import { CertBodyForm } from "./businesses/CertBodyForm";
 import type { BusinessCategory } from "@/types/business";
 import type { EventCategoryDoc } from "@/types/event-category";
 import type { ArticleCategoryDoc } from "@/types/blog";
@@ -44,7 +49,10 @@ type ViewId =
   | "mosque"
   | "article"
   | "articleCategory"
-  | "eventCategory";
+  | "eventCategory"
+  | "businessCategory"
+  | "businessAmenity"
+  | "businessCertBody";
 
 export const QUICK_CREATE_OPEN_EVENT = "quick-create:open";
 
@@ -76,7 +84,10 @@ interface QuickCreateItem {
     | "mosque"
     | "article"
     | "articleCategory"
-    | "eventCategory";
+    | "eventCategory"
+    | "businessCategory"
+    | "businessAmenity"
+    | "businessCertBody";
   shortcut: string;
 }
 
@@ -87,6 +98,9 @@ const ITEMS: QuickCreateItem[] = [
   { id: "article", icon: FileText, nameKey: "article", shortcut: "A" },
   { id: "articleCategory", icon: Tags, nameKey: "articleCategory", shortcut: "C" },
   { id: "eventCategory", icon: Tags, nameKey: "eventCategory", shortcut: "V" },
+  { id: "businessCategory", icon: Tags, nameKey: "businessCategory", shortcut: "G" },
+  { id: "businessAmenity", icon: ConciergeBell, nameKey: "businessAmenity", shortcut: "Y" },
+  { id: "businessCertBody", icon: BadgeCheck, nameKey: "businessCertBody", shortcut: "F" },
 ];
 
 export function QuickCreate({
@@ -151,7 +165,10 @@ export function QuickCreate({
             isForm
               ? view === "article" ||
                 view === "articleCategory" ||
-                view === "eventCategory"
+                view === "eventCategory" ||
+                view === "businessCategory" ||
+                view === "businessAmenity" ||
+                view === "businessCertBody"
                 ? "h-[80vh] max-h-[80vh] max-w-[1200px]"
                 : "h-[80vh] max-h-[80vh] max-w-3xl"
               : "h-auto max-h-[80vh] max-w-2xl sm:max-h-[80vh]",
@@ -388,6 +405,69 @@ function FormView({
           onSaved={() => {
             onClose();
             router.push("/admin/events/categories");
+            router.refresh();
+          }}
+          onCancel={onClose}
+        />
+      </FormShell>
+    );
+  }
+
+  if (view === "businessCategory") {
+    return (
+      <FormShell
+        backButton={BackButton}
+        title={titleFor("businessCategory")}
+        fillHeight
+      >
+        <BusinessCategoryForm
+          category={null}
+          canPersist={canPersist}
+          onSaved={() => {
+            onClose();
+            router.push("/admin/businesses/categories");
+            router.refresh();
+          }}
+          onCancel={onClose}
+        />
+      </FormShell>
+    );
+  }
+
+  if (view === "businessAmenity") {
+    return (
+      <FormShell
+        backButton={BackButton}
+        title={titleFor("businessAmenity")}
+        fillHeight
+      >
+        <BusinessAmenityForm
+          amenity={null}
+          canPersist={canPersist}
+          onSaved={() => {
+            onClose();
+            router.push("/admin/businesses/amenities");
+            router.refresh();
+          }}
+          onCancel={onClose}
+        />
+      </FormShell>
+    );
+  }
+
+  if (view === "businessCertBody") {
+    return (
+      <FormShell
+        backButton={BackButton}
+        title={titleFor("businessCertBody")}
+        fillHeight
+      >
+        <CertBodyForm
+          certBody={null}
+          canPersist={canPersist}
+          onSaved={() => {
+            onClose();
+            router.push("/admin/businesses/cert-bodies");
             router.refresh();
           }}
           onCancel={onClose}
