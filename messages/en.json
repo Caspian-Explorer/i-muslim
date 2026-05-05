@@ -2330,13 +2330,18 @@
       "article": {
         "name": "Article",
         "description": "Draft a new article. Publish per locale once ready."
+      },
+      "articleCategory": {
+        "name": "Article Category",
+        "description": "Add a category that articles can be tagged with."
       }
     },
     "formTitles": {
       "event": "New event",
       "business": "New business",
       "mosque": "New mosque",
-      "article": "New article"
+      "article": "New article",
+      "articleCategory": "New article category"
     },
     "steps": {
       "admin": "Admin"

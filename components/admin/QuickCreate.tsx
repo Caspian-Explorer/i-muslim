@@ -11,6 +11,7 @@ import {
   type LucideIcon,
   Plus,
   Store,
+  Tags,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,11 +31,18 @@ import { SubmitEventForm } from "@/components/site/events/SubmitEventForm";
 import { SubmitBusinessForm } from "@/components/businesses/SubmitBusinessForm";
 import { SubmitMosqueForm } from "@/components/mosque/SubmitMosqueForm";
 import { ArticleEditorClient } from "./articles/ArticleEditorClient";
+import { ArticleCategoryForm } from "./articles/ArticleCategoryForm";
 import type { BusinessCategory } from "@/types/business";
 import type { EventCategoryDoc } from "@/types/event-category";
 import type { ArticleCategoryDoc } from "@/types/blog";
 
-type ViewId = "selector" | "event" | "business" | "mosque" | "article";
+type ViewId =
+  | "selector"
+  | "event"
+  | "business"
+  | "mosque"
+  | "article"
+  | "articleCategory";
 
 export const QUICK_CREATE_OPEN_EVENT = "quick-create:open";
 
@@ -60,7 +68,7 @@ interface QuickCreateProps {
 interface QuickCreateItem {
   id: Exclude<ViewId, "selector">;
   icon: LucideIcon;
-  nameKey: "event" | "business" | "mosque" | "article";
+  nameKey: "event" | "business" | "mosque" | "article" | "articleCategory";
   shortcut: string;
 }
 
@@ -69,6 +77,7 @@ const ITEMS: QuickCreateItem[] = [
   { id: "business", icon: Store, nameKey: "business", shortcut: "B" },
   { id: "mosque", icon: Building2, nameKey: "mosque", shortcut: "M" },
   { id: "article", icon: FileText, nameKey: "article", shortcut: "A" },
+  { id: "articleCategory", icon: Tags, nameKey: "articleCategory", shortcut: "C" },
 ];
 
 export function QuickCreate({
@@ -131,7 +140,7 @@ export function QuickCreate({
           className={cn(
             "w-[92vw] rounded-2xl",
             isForm
-              ? view === "article"
+              ? view === "article" || view === "articleCategory"
                 ? "h-[80vh] max-h-[80vh] max-w-[1200px]"
                 : "h-[80vh] max-h-[80vh] max-w-3xl"
               : "h-auto max-h-[80vh] max-w-2xl sm:max-h-[80vh]",
@@ -327,6 +336,26 @@ function FormView({
           onSaved={({ id }) => {
             onClose();
             router.push(`/admin/articles/${id}`);
+          }}
+          onCancel={onClose}
+        />
+      </FormShell>
+    );
+  }
+
+  if (view === "articleCategory") {
+    return (
+      <FormShell
+        backButton={BackButton}
+        title={titleFor("articleCategory")}
+        fillHeight
+      >
+        <ArticleCategoryForm
+          category={null}
+          canPersist={canPersist}
+          onSaved={() => {
+            onClose();
+            router.push("/admin/articles/categories");
           }}
           onCancel={onClose}
         />
