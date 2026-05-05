@@ -4,24 +4,21 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { CheckCircle2, Edit, ExternalLink, XCircle } from "lucide-react";
+import { CheckCircle2, Edit, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   EditorDialog,
   EditorDialogBody,
   EditorDialogContent,
-  EditorDialogDescription,
   EditorDialogFooter,
-  EditorDialogHeader,
-  EditorDialogTitle,
 } from "@/components/ui/editor-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MosqueProfile } from "@/components/mosque/MosqueProfile";
 import { toast } from "sonner";
 import { formatRelative } from "@/lib/utils";
-import { countryName } from "@/lib/mosques/countries";
-import type { Mosque, MosqueServices, MosqueSubmission } from "@/types/mosque";
+import type { Mosque, MosqueSubmission } from "@/types/mosque";
 import {
   promoteSubmission,
   rejectSubmission,
@@ -31,38 +28,27 @@ export type MosqueViewSource =
   | { kind: "mosque"; data: Mosque }
   | { kind: "submission"; data: MosqueSubmission };
 
-interface ViewModel {
-  name: Mosque["name"];
-  denomination: Mosque["denomination"];
-  address: Mosque["address"];
-  city: string;
-  region?: string;
-  country: string;
-  location: { lat: number; lng: number };
-  hasRealLocation: boolean;
-  contact?: Mosque["contact"];
-  description?: Mosque["description"];
-  languages: string[];
-  services: MosqueServices;
+function citySlugFor(city: string): string {
+  return city
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60) || "city";
 }
 
-function toViewModel(source: MosqueViewSource): ViewModel {
-  const data = source.kind === "mosque" ? source.data : source.data.payload;
-  const location = data.location ?? { lat: 0, lng: 0 };
+function submissionToMosque(s: MosqueSubmission): Mosque {
   return {
-    name: data.name,
-    denomination: data.denomination,
-    address: data.address,
-    city: data.city,
-    region: data.region,
-    country: data.country,
-    location,
-    hasRealLocation:
-      source.kind === "mosque" && (location.lat !== 0 || location.lng !== 0),
-    contact: data.contact,
-    description: data.description,
-    languages: data.languages ?? [],
-    services: data.services,
+    ...s.payload,
+    slug: s.id,
+    status: "pending_review",
+    citySlug: citySlugFor(s.payload.city),
+    countrySlug: s.payload.country.toLowerCase(),
+    geohash: "",
+    searchTokens: [],
+    createdAt: s.createdAt,
+    updatedAt: s.createdAt,
   };
 }
 
@@ -92,7 +78,8 @@ export function MosqueViewDialog({
   }
 
   if (!source) return null;
-  const view = toViewModel(source);
+  const mosque =
+    source.kind === "mosque" ? source.data : submissionToMosque(source.data);
 
   function callAction(
     fn: () => Promise<{ ok: boolean; error?: string }>,
@@ -131,106 +118,27 @@ export function MosqueViewDialog({
   return (
     <EditorDialog open={open} onOpenChange={handleOpenChange}>
       <EditorDialogContent>
-        <EditorDialogHeader>
-          <div className="flex items-start gap-2">
-            <EditorDialogTitle className="flex-1">{view.name.en}</EditorDialogTitle>
-            <Badge variant={source.kind === "submission" ? "warning" : "neutral"}>
-              {source.kind === "submission" ? t("badgeSubmission") : t("badgeMosque")}
-            </Badge>
+        {source.kind === "submission" && (
+          <div className="border-b border-border bg-warning/5 px-5 py-3 pe-12">
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <Badge variant="warning">{t("badgeSubmission")}</Badge>
+              <span className="text-muted-foreground">
+                {t("submittedMeta", {
+                  who:
+                    source.data.submittedBy?.email
+                    ?? source.data.submittedBy?.uid
+                    ?? t("anonymous"),
+                  when: formatRelative(source.data.createdAt),
+                })}
+              </span>
+            </div>
           </div>
-          {view.name.ar && (
-            <EditorDialogDescription
-              dir="rtl"
-              lang="ar"
-              className="font-arabic text-base"
-            >
-              {view.name.ar}
-            </EditorDialogDescription>
-          )}
-          {source.kind === "submission" && (
-            <EditorDialogDescription>
-              {t("submittedMeta", {
-                who: source.data.submittedBy?.email
-                  ?? source.data.submittedBy?.uid
-                  ?? t("anonymous"),
-                when: formatRelative(source.data.createdAt),
-              })}
-            </EditorDialogDescription>
-          )}
-        </EditorDialogHeader>
+        )}
 
-        <EditorDialogBody className="space-y-6">
-          <Section label={t("sectionLocation")}>
-            <Field label={t("address")}>
-              {view.address.line1}
-              {view.address.line2 && (
-                <>
-                  <br />
-                  {view.address.line2}
-                </>
-              )}
-            </Field>
-            <Field label={t("city")}>
-              {view.city}
-              {view.region ? `, ${view.region}` : ""}
-            </Field>
-            <Field label={t("country")}>{countryName(view.country)}</Field>
-            {view.hasRealLocation && (
-              <Field label={t("coordinates")}>
-                <span className="tabular-nums">
-                  {view.location.lat.toFixed(5)}, {view.location.lng.toFixed(5)}
-                </span>
-              </Field>
-            )}
-          </Section>
-
-          <Section label={t("sectionIdentity")}>
-            <Field label={t("denomination")}>{t(`denominations.${view.denomination}`)}</Field>
-            {view.languages.length > 0 && (
-              <Field label={t("languages")}>{view.languages.join(", ")}</Field>
-            )}
-            {view.description?.en && (
-              <Field label={t("description")}>
-                <p className="whitespace-pre-line text-sm leading-relaxed">
-                  {view.description.en}
-                </p>
-              </Field>
-            )}
-          </Section>
-
-          {view.contact && (view.contact.phone || view.contact.email || view.contact.website) && (
-            <Section label={t("sectionContact")}>
-              {view.contact.phone && (
-                <Field label={t("phone")}>
-                  <a className="text-primary hover:underline" href={`tel:${view.contact.phone}`}>
-                    {view.contact.phone}
-                  </a>
-                </Field>
-              )}
-              {view.contact.email && (
-                <Field label={t("email")}>
-                  <a className="text-primary hover:underline" href={`mailto:${view.contact.email}`}>
-                    {view.contact.email}
-                  </a>
-                </Field>
-              )}
-              {view.contact.website && (
-                <Field label={t("website")}>
-                  <a
-                    className="inline-flex items-center gap-1 text-primary hover:underline"
-                    href={view.contact.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {view.contact.website}
-                    <ExternalLink className="size-3" />
-                  </a>
-                </Field>
-              )}
-            </Section>
-          )}
-
-          <ServicesSection services={view.services} title={t("sectionServices")} emptyLabel={t("noServices")} />
+        <EditorDialogBody className="p-0">
+          <div className="px-5 py-6">
+            <MosqueProfile mosque={mosque} />
+          </div>
         </EditorDialogBody>
 
         <EditorDialogFooter>
@@ -291,55 +199,5 @@ export function MosqueViewDialog({
         </EditorDialogFooter>
       </EditorDialogContent>
     </EditorDialog>
-  );
-}
-
-function Section({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </h3>
-      <div className="space-y-3">{children}</div>
-    </section>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-1 gap-1 sm:grid-cols-[160px_1fr]">
-      <div className="text-xs text-muted-foreground sm:pt-0.5">{label}</div>
-      <div className="text-sm text-foreground">{children}</div>
-    </div>
-  );
-}
-
-function ServicesSection({
-  services,
-  title,
-  emptyLabel,
-}: {
-  services: MosqueServices;
-  title: string;
-  emptyLabel: string;
-}) {
-  const t = useTranslations("mosquesAdmin.viewDialog.services");
-  const enabled = (Object.keys(services) as Array<keyof MosqueServices>).filter(
-    (k) => services[k],
-  );
-  return (
-    <Section label={title}>
-      {enabled.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{emptyLabel}</p>
-      ) : (
-        <ul className="flex flex-wrap gap-2">
-          {enabled.map((k) => (
-            <li key={k}>
-              <Badge variant="neutral">{t(k)}</Badge>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Section>
   );
 }
