@@ -4,11 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/auth/session";
 import { getDb } from "@/lib/firebase/admin";
-import {
-  MOSQUES_COLLECTION,
-  MOSQUE_SUBMISSIONS_COLLECTION,
-  emptyServices,
-} from "@/lib/mosques/constants";
+import { MOSQUES_COLLECTION, emptyServices } from "@/lib/mosques/constants";
 import { buildMosqueSlug, isReservedSlug, withCollisionSuffix } from "@/lib/mosques/slug";
 import { buildSearchTokens } from "@/lib/mosques/search";
 import { geohashFor } from "@/lib/mosques/geo";
@@ -100,7 +96,9 @@ const mosqueInputSchema = z.object({
     .optional(),
   coverImageUrl: z.string().url().optional().or(z.literal("")),
   logoUrl: z.string().url().optional().or(z.literal("")),
-  status: z.enum(["draft", "pending_review", "published", "suspended"]).default("draft"),
+  status: z
+    .enum(["draft", "pending_review", "published", "rejected", "suspended"])
+    .default("draft"),
 });
 
 export type MosqueInput = z.infer<typeof mosqueInputSchema>;
@@ -327,46 +325,23 @@ export async function deleteMosque(slug: string): Promise<ActionResult> {
   return { ok: true, slug };
 }
 
-export async function rejectSubmission(submissionId: string, reason: string): Promise<ActionResult> {
+export async function rejectMosque(slug: string, reason: string): Promise<ActionResult> {
   const session = await requireAdminSession();
   const db = getDb();
   if (!db) return { ok: false, error: "firestore_not_configured" };
-  const ref = db.collection(MOSQUE_SUBMISSIONS_COLLECTION).doc(submissionId);
+  const ref = db.collection(MOSQUES_COLLECTION).doc(slug);
+  const snap = await ref.get();
+  if (!snap.exists) return { ok: false, error: "not_found" };
+  const now = new Date();
   await ref.update({
     status: "rejected",
-    decidedBy: session.uid,
-    decidedAt: Timestamp.now(),
-    rejectionReason: reason,
+    updatedAt: Timestamp.fromDate(now),
+    "moderation.reviewedBy": session.uid,
+    "moderation.reviewedAt": now.toISOString(),
+    "moderation.rejectionReason": reason,
   });
   revalidatePath("/admin/mosques");
-  return { ok: true };
-}
-
-export async function promoteSubmission(submissionId: string): Promise<ActionResult> {
-  const session = await requireAdminSession();
-  const db = getDb();
-  if (!db) return { ok: false, error: "firestore_not_configured" };
-
-  const subRef = db.collection(MOSQUE_SUBMISSIONS_COLLECTION).doc(submissionId);
-  const subSnap = await subRef.get();
-  if (!subSnap.exists) return { ok: false, error: "not_found" };
-  const submission = subSnap.data() ?? {};
-  const payload = submission.payload as Partial<MosqueInput> | undefined;
-  if (!payload || !payload.name?.en || !payload.city || !payload.country || !payload.location) {
-    return { ok: false, error: "invalid_submission" };
-  }
-
-  const result = await createMosque({ ...payload, status: "published" });
-  if (!result.ok) return result;
-
-  await subRef.update({
-    status: "approved",
-    decidedBy: session.uid,
-    decidedAt: Timestamp.now(),
-    promotedSlug: result.slug,
-  });
-  revalidatePath("/admin/mosques");
-  return result;
+  return { ok: true, slug };
 }
 
 export async function bulkImport(rows: unknown[]): Promise<{ ok: boolean; created: number; failed: number; errors: string[] }> {

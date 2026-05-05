@@ -1,7 +1,6 @@
 import type { Denomination, MosqueServices, PrayerKey } from "@/types/mosque";
 
 export const MOSQUES_COLLECTION = "mosques";
-export const MOSQUE_SUBMISSIONS_COLLECTION = "mosqueSubmissions";
 export const MOSQUE_GEOCODE_CACHE_COLLECTION = "geocodeCache";
 
 export const KAABA_LAT = 21.4225;

@@ -31,53 +31,33 @@ import {
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { NewMosqueButton } from "@/components/admin/mosques/NewMosqueButton";
-import {
-  MosqueViewDialog,
-  type MosqueViewSource,
-} from "@/components/admin/mosques/MosqueViewDialog";
+import { MosqueViewDialog } from "@/components/admin/mosques/MosqueViewDialog";
 import { toast } from "sonner";
 import { cn, formatRelative } from "@/lib/utils";
 import type { Mosque, MosqueStatus } from "@/types/mosque";
-import type { AdminMosqueRow } from "@/lib/admin/data/mosques";
 import { deleteMosque, setMosqueStatus } from "@/app/[locale]/(admin)/admin/mosques/actions";
 import { countryName } from "@/lib/mosques/countries";
 
-const STATUS_VALUES = ["all", "draft", "pending_review", "published", "suspended"] as const;
+const STATUS_VALUES = [
+  "all",
+  "draft",
+  "pending_review",
+  "published",
+  "rejected",
+  "suspended",
+] as const;
 const PAGE_SIZES = [10, 25, 50, 100];
 
 type SortKey = "name" | "city" | "country" | "status" | "updatedAt";
 type SortDir = "asc" | "desc";
 
-function statusVariant(status: MosqueStatus): "success" | "warning" | "danger" | "neutral" {
+function statusVariant(
+  status: MosqueStatus,
+): "success" | "warning" | "danger" | "neutral" {
   if (status === "published") return "success";
   if (status === "pending_review") return "warning";
-  if (status === "suspended") return "danger";
+  if (status === "suspended" || status === "rejected") return "danger";
   return "neutral";
-}
-
-function rowKey(row: AdminMosqueRow): string {
-  return row.kind === "mosque" ? `mosque:${row.mosque.slug}` : `submission:${row.submission.id}`;
-}
-
-function rowStatus(row: AdminMosqueRow): MosqueStatus {
-  return row.kind === "mosque" ? row.mosque.status : "pending_review";
-}
-
-function rowUpdatedAt(row: AdminMosqueRow): string {
-  return row.kind === "mosque" ? row.mosque.updatedAt : row.submission.createdAt;
-}
-
-function rowCity(row: AdminMosqueRow): string {
-  return row.kind === "mosque" ? row.mosque.city : row.submission.payload.city;
-}
-
-function rowCountry(row: AdminMosqueRow): string {
-  return row.kind === "mosque" ? row.mosque.country : row.submission.payload.country;
-}
-
-function rowName(row: AdminMosqueRow): { en: string; ar?: string } {
-  const n = row.kind === "mosque" ? row.mosque.name : row.submission.payload.name;
-  return { en: n.en, ar: n.ar };
 }
 
 function SortHeader({
@@ -105,9 +85,9 @@ function SortHeader({
 }
 
 export function MosquesPageClient({
-  initialRows,
+  initialMosques,
 }: {
-  initialRows: AdminMosqueRow[];
+  initialMosques: Mosque[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -117,9 +97,8 @@ export function MosquesPageClient({
   const tStatuses = useTranslations("mosquesAdmin.statuses");
   const tActions = useTranslations("mosquesAdmin.form.actions");
   const tToast = useTranslations("mosquesAdmin.actions");
-  const tDialog = useTranslations("mosquesAdmin.viewDialog");
 
-  const rows = initialRows;
+  const mosques = initialMosques;
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<MosqueStatus | "all">("all");
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
@@ -128,53 +107,49 @@ export function MosquesPageClient({
   const [pageSize, setPageSize] = useState(25);
   const [deleteTarget, setDeleteTarget] = useState<Mosque | null>(null);
 
-  // Auto-open the dialog if the user landed via a notification deep link
-  // (?submission=<id>). Initialized once per mount; the URL param is stripped
-  // by the effect below so refresh doesn't re-open after the user closes.
-  const initialSubmissionId = searchParams.get("submission");
-  const [viewSource, setViewSource] = useState<MosqueViewSource | null>(() => {
-    if (!initialSubmissionId) return null;
-    const match = initialRows.find(
-      (r) => r.kind === "submission" && r.submission.id === initialSubmissionId,
-    );
-    return match?.kind === "submission" ? { kind: "submission", data: match.submission } : null;
+  // Auto-open the dialog when arriving via a notification deep-link
+  // (?slug=<slug>). Initialized once per mount; the URL param is
+  // stripped by the effect below so a refresh doesn't re-open.
+  const initialSlug = searchParams.get("slug");
+  const [viewMosque, setViewMosque] = useState<Mosque | null>(() => {
+    if (!initialSlug) return null;
+    return initialMosques.find((m) => m.slug === initialSlug) ?? null;
   });
   useEffect(() => {
-    if (initialSubmissionId) router.replace(pathname);
-  }, [initialSubmissionId, pathname, router]);
+    if (initialSlug) router.replace(pathname);
+  }, [initialSlug, pathname, router]);
 
   const [, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
-    const list = rows.filter((r) => {
-      const s = rowStatus(r);
-      if (status !== "all" && s !== status) return false;
+    const list = mosques.filter((m) => {
+      if (status !== "all" && m.status !== status) return false;
       if (query) {
         const q = query.toLowerCase();
-        const n = rowName(r);
         if (
-          !n.en.toLowerCase().includes(q) &&
-          !rowCity(r).toLowerCase().includes(q) &&
-          !rowCountry(r).toLowerCase().includes(q)
-        ) return false;
+          !m.name.en.toLowerCase().includes(q) &&
+          !m.city.toLowerCase().includes(q) &&
+          !m.country.toLowerCase().includes(q)
+        )
+          return false;
       }
       return true;
     });
     const sign = sortDir === "asc" ? 1 : -1;
     return [...list].sort((a, b) => {
       let cmp = 0;
-      if (sortKey === "name") cmp = rowName(a).en.localeCompare(rowName(b).en);
-      else if (sortKey === "city") cmp = rowCity(a).localeCompare(rowCity(b));
+      if (sortKey === "name") cmp = a.name.en.localeCompare(b.name.en);
+      else if (sortKey === "city") cmp = a.city.localeCompare(b.city);
       else if (sortKey === "country") {
-        cmp = countryName(rowCountry(a)).localeCompare(countryName(rowCountry(b)));
-      } else if (sortKey === "status") cmp = rowStatus(a).localeCompare(rowStatus(b));
+        cmp = countryName(a.country).localeCompare(countryName(b.country));
+      } else if (sortKey === "status") cmp = a.status.localeCompare(b.status);
       else if (sortKey === "updatedAt") {
-        cmp = new Date(rowUpdatedAt(a)).getTime() - new Date(rowUpdatedAt(b)).getTime();
+        cmp = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
       }
       if (cmp !== 0) return cmp * sign;
-      return new Date(rowUpdatedAt(b)).getTime() - new Date(rowUpdatedAt(a)).getTime();
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
-  }, [rows, query, status, sortKey, sortDir]);
+  }, [mosques, query, status, sortKey, sortDir]);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -189,7 +164,11 @@ export function MosquesPageClient({
   const visible = filtered.slice(pageStart, pageStart + pageSize);
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
 
-  function callAction(name: string, fn: () => Promise<{ ok: boolean; error?: string }>, onOk: () => void) {
+  function callAction(
+    name: string,
+    fn: () => Promise<{ ok: boolean; error?: string }>,
+    onOk: () => void,
+  ) {
     startTransition(async () => {
       const res = await fn();
       if (!res.ok) {
@@ -219,18 +198,22 @@ export function MosquesPageClient({
       "status",
       () => setMosqueStatus(target.slug, next),
       () => {
-        if (next === "published") toast.success(tToast("publishedToast", { name: target.name.en }));
-        else if (next === "suspended") toast.success(tToast("suspendedToast", { name: target.name.en }));
+        if (next === "published")
+          toast.success(tToast("publishedToast", { name: target.name.en }));
+        else if (next === "suspended")
+          toast.success(tToast("suspendedToast", { name: target.name.en }));
         else toast.success(tToast("updatedToast", { name: target.name.en }));
       },
     );
   }
 
-  function openRow(row: AdminMosqueRow) {
-    if (row.kind === "submission") {
-      setViewSource({ kind: "submission", data: row.submission });
+  function openRow(mosque: Mosque) {
+    // Pending submissions open in a read-only view dialog so the admin can
+    // approve/reject without losing context. Everything else jumps to edit.
+    if (mosque.status === "pending_review") {
+      setViewMosque(mosque);
     } else {
-      router.push(`/admin/mosques/${row.mosque.slug}/edit`);
+      router.push(`/admin/mosques/${mosque.slug}/edit`);
     }
   }
 
@@ -312,9 +295,6 @@ export function MosquesPageClient({
                     onToggle={() => toggleSort("status")}
                   />
                 </th>
-                <th className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t("columns.type")}
-                </th>
                 <th className="px-3 py-2">
                   <SortHeader
                     label={t("columns.updatedAt")}
@@ -329,91 +309,112 @@ export function MosquesPageClient({
             <tbody>
               {visible.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-sm text-muted-foreground">
+                  <td
+                    colSpan={6}
+                    className="py-12 text-center text-sm text-muted-foreground"
+                  >
                     {t("noResults")}
                   </td>
                 </tr>
               ) : (
-                visible.map((row) => {
-                  const name = rowName(row);
-                  const city = rowCity(row);
-                  const country = rowCountry(row);
-                  const s = rowStatus(row);
-                  return (
-                    <tr
-                      key={rowKey(row)}
-                      className={cn(
-                        "border-b border-border last:border-b-0 hover:bg-muted/40 cursor-pointer",
+                visible.map((mosque) => (
+                  <tr
+                    key={mosque.slug}
+                    className={cn(
+                      "border-b border-border last:border-b-0 hover:bg-muted/40 cursor-pointer",
+                    )}
+                    onClick={() => openRow(mosque)}
+                  >
+                    <td className="px-3 py-2">
+                      <div className="font-medium text-foreground">{mosque.name.en}</div>
+                      {mosque.name.ar && (
+                        <div
+                          dir="rtl"
+                          lang="ar"
+                          className="font-arabic text-sm text-muted-foreground"
+                        >
+                          {mosque.name.ar}
+                        </div>
                       )}
-                      onClick={() => openRow(row)}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">{mosque.city}</td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {countryName(mosque.country)}
+                    </td>
+                    <td className="px-3 py-2">
+                      <Badge variant={statusVariant(mosque.status)}>
+                        {tStatuses(mosque.status)}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground tabular-nums">
+                      {formatRelative(mosque.updatedAt)}
+                    </td>
+                    <td
+                      className="px-3 py-2 text-end"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <td className="px-3 py-2">
-                        <div className="font-medium text-foreground">{name.en}</div>
-                        {name.ar && (
-                          <div dir="rtl" lang="ar" className="font-arabic text-sm text-muted-foreground">
-                            {name.ar}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-muted-foreground">{city}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{countryName(country)}</td>
-                      <td className="px-3 py-2">
-                        <Badge variant={statusVariant(s)}>{tStatuses(s)}</Badge>
-                      </td>
-                      <td className="px-3 py-2">
-                        <Badge variant={row.kind === "submission" ? "warning" : "neutral"}>
-                          {row.kind === "submission" ? tDialog("badgeSubmission") : tDialog("badgeMosque")}
-                        </Badge>
-                      </td>
-                      <td className="px-3 py-2 text-muted-foreground tabular-nums">
-                        {formatRelative(rowUpdatedAt(row))}
-                      </td>
-                      <td className="px-3 py-2 text-end" onClick={(e) => e.stopPropagation()}>
-                        {row.kind === "mosque" && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" aria-label={`Actions for ${name.en}`}>
-                                <MoreHorizontal className="size-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem asChild>
-                                <Link href={`/admin/mosques/${row.mosque.slug}/edit`}>
-                                  <Edit /> {tCommon("edit")}
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link href={`/mosques/${row.mosque.slug}`} target="_blank" rel="noopener noreferrer">
-                                  <Eye /> View public page <ExternalLink className="ms-auto size-3" />
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              {row.mosque.status !== "published" && (
-                                <DropdownMenuItem onClick={() => handleStatus(row.mosque, "published")}>
-                                  <Upload /> {tActions("publish")}
-                                </DropdownMenuItem>
-                              )}
-                              {row.mosque.status === "published" && (
-                                <DropdownMenuItem onClick={() => handleStatus(row.mosque, "draft")}>
-                                  {tActions("unpublish")}
-                                </DropdownMenuItem>
-                              )}
-                              {row.mosque.status !== "suspended" && (
-                                <DropdownMenuItem onClick={() => handleStatus(row.mosque, "suspended")}>
-                                  <ShieldX /> {tActions("suspend")}
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem variant="danger" onClick={() => setDeleteTarget(row.mosque)}>
-                                <Trash2 /> {tCommon("delete")}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Actions for ${mosque.name.en}`}
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/admin/mosques/${mosque.slug}/edit`}>
+                              <Edit /> {tCommon("edit")}
+                            </Link>
+                          </DropdownMenuItem>
+                          {mosque.status === "published" && (
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href={`/mosques/${mosque.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Eye /> View public page{" "}
+                                <ExternalLink className="ms-auto size-3" />
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          {mosque.status !== "published" && (
+                            <DropdownMenuItem
+                              onClick={() => handleStatus(mosque, "published")}
+                            >
+                              <Upload /> {tActions("publish")}
+                            </DropdownMenuItem>
+                          )}
+                          {mosque.status === "published" && (
+                            <DropdownMenuItem
+                              onClick={() => handleStatus(mosque, "draft")}
+                            >
+                              {tActions("unpublish")}
+                            </DropdownMenuItem>
+                          )}
+                          {mosque.status !== "suspended" && (
+                            <DropdownMenuItem
+                              onClick={() => handleStatus(mosque, "suspended")}
+                            >
+                              <ShieldX /> {tActions("suspend")}
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            variant="danger"
+                            onClick={() => setDeleteTarget(mosque)}
+                          >
+                            <Trash2 /> {tCommon("delete")}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -468,16 +469,18 @@ export function MosquesPageClient({
         open={Boolean(deleteTarget)}
         onOpenChange={(next) => !next && setDeleteTarget(null)}
         title={t("deleteTitle")}
-        description={deleteTarget ? t("deleteDescription", { name: deleteTarget.name.en }) : ""}
+        description={
+          deleteTarget ? t("deleteDescription", { name: deleteTarget.name.en }) : ""
+        }
         confirmLabel={tCommon("delete")}
         confirmWord={deleteTarget?.name.en}
         onConfirm={handleDelete}
       />
 
       <MosqueViewDialog
-        open={Boolean(viewSource)}
-        onOpenChange={(next) => !next && setViewSource(null)}
-        source={viewSource}
+        open={Boolean(viewMosque)}
+        onOpenChange={(next) => !next && setViewMosque(null)}
+        mosque={viewMosque}
       />
     </div>
   );

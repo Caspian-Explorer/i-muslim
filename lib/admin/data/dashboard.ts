@@ -7,7 +7,7 @@ import {
   CONTACT_MESSAGES_COLLECTION,
   normalizeContactMessage,
 } from "@/lib/admin/data/contact-messages";
-import { MOSQUE_SUBMISSIONS_COLLECTION } from "@/lib/mosques/constants";
+import { MOSQUES_COLLECTION } from "@/lib/mosques/constants";
 import type { ActivityEntry, DashboardData, UpcomingEvent } from "@/types/admin";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -213,8 +213,12 @@ async function fetchMosqueSubmissionActivity(
   limit: number,
 ): Promise<ActivitySource[]> {
   try {
+    // After the mosqueSubmissions → mosques collection unification,
+    // user-submitted-but-not-yet-reviewed mosques live in the same
+    // collection as admin-created ones, distinguished by status.
     const snap = await db
-      .collection(MOSQUE_SUBMISSIONS_COLLECTION)
+      .collection(MOSQUES_COLLECTION)
+      .where("status", "==", "pending_review")
       .orderBy("createdAt", "desc")
       .limit(limit)
       .get();
@@ -229,8 +233,7 @@ async function fetchMosqueSubmissionActivity(
           : typeof submitter.email === "string"
             ? submitter.email
             : "Visitor";
-      const payload = (data.payload ?? {}) as Record<string, unknown>;
-      const nameObj = (payload.name ?? {}) as Record<string, unknown>;
+      const nameObj = (data.name ?? {}) as Record<string, unknown>;
       const target = typeof nameObj.en === "string" ? nameObj.en : "a mosque";
       return [
         {

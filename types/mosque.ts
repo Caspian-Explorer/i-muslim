@@ -5,7 +5,12 @@ export type LocalizedString = {
   id?: string;
 };
 
-export type MosqueStatus = "draft" | "pending_review" | "published" | "suspended";
+export type MosqueStatus =
+  | "draft"
+  | "pending_review"
+  | "published"
+  | "rejected"
+  | "suspended";
 
 export type Denomination =
   | "sunni"
@@ -146,23 +151,6 @@ export interface Mosque {
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
-}
-
-// Public submission — superset of input; not yet a published Mosque.
-export interface MosqueSubmission {
-  id: string;
-  status: "pending_review" | "approved" | "rejected";
-  payload: Omit<
-    Mosque,
-    "slug" | "status" | "createdAt" | "updatedAt" | "publishedAt" | "searchTokens" | "geohash" | "citySlug" | "countrySlug"
-  > & {
-    proposedSlug?: string;
-  };
-  submittedBy: { uid?: string; email?: string };
-  createdAt: string;
-  decidedBy?: string;
-  decidedAt?: string;
-  rejectionReason?: string;
 }
 
 export type MosqueSource = "firestore" | "mock";

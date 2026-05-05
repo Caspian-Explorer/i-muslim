@@ -42,12 +42,6 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
-    match /mosqueSubmissions/{submissionId} {
-      // Public submissions write through /api/mosques/submit using Admin SDK.
-      // Reads are admin-only via Admin SDK.
-      allow read, create, update, delete: if false;
-    }
-
     match /geocodeCache/{cacheId} {
       allow read, create, update, delete: if false;
     }

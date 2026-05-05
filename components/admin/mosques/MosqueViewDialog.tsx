@@ -18,48 +18,20 @@ import { Label } from "@/components/ui/label";
 import { MosqueProfile } from "@/components/mosque/MosqueProfile";
 import { toast } from "sonner";
 import { formatRelative } from "@/lib/utils";
-import type { Mosque, MosqueSubmission } from "@/types/mosque";
+import type { Mosque } from "@/types/mosque";
 import {
-  promoteSubmission,
-  rejectSubmission,
+  rejectMosque,
+  setMosqueStatus,
 } from "@/app/[locale]/(admin)/admin/mosques/actions";
-
-export type MosqueViewSource =
-  | { kind: "mosque"; data: Mosque }
-  | { kind: "submission"; data: MosqueSubmission };
-
-function citySlugFor(city: string): string {
-  return city
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60) || "city";
-}
-
-function submissionToMosque(s: MosqueSubmission): Mosque {
-  return {
-    ...s.payload,
-    slug: s.id,
-    status: "pending_review",
-    citySlug: citySlugFor(s.payload.city),
-    countrySlug: s.payload.country.toLowerCase(),
-    geohash: "",
-    searchTokens: [],
-    createdAt: s.createdAt,
-    updatedAt: s.createdAt,
-  };
-}
 
 export function MosqueViewDialog({
   open,
   onOpenChange,
-  source,
+  mosque,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  source: MosqueViewSource | null;
+  mosque: Mosque | null;
 }) {
   const router = useRouter();
   const t = useTranslations("mosquesAdmin.viewDialog");
@@ -77,9 +49,8 @@ export function MosqueViewDialog({
     onOpenChange(next);
   }
 
-  if (!source) return null;
-  const mosque =
-    source.kind === "mosque" ? source.data : submissionToMosque(source.data);
+  if (!mosque) return null;
+  const isPending = mosque.status === "pending_review";
 
   function callAction(
     fn: () => Promise<{ ok: boolean; error?: string }>,
@@ -98,19 +69,19 @@ export function MosqueViewDialog({
   }
 
   function handleApprove() {
-    if (source?.kind !== "submission") return;
-    const id = source.data.id;
+    if (!mosque) return;
+    const slug = mosque.slug;
     callAction(
-      () => promoteSubmission(id),
+      () => setMosqueStatus(slug, "published"),
       () => toast.success(tToast("promotedToast")),
     );
   }
 
   function handleReject() {
-    if (source?.kind !== "submission") return;
-    const id = source.data.id;
+    if (!mosque) return;
+    const slug = mosque.slug;
     callAction(
-      () => rejectSubmission(id, rejectReason),
+      () => rejectMosque(slug, rejectReason),
       () => toast.success(tToast("rejectedToast")),
     );
   }
@@ -118,17 +89,17 @@ export function MosqueViewDialog({
   return (
     <EditorDialog open={open} onOpenChange={handleOpenChange}>
       <EditorDialogContent>
-        {source.kind === "submission" && (
+        {isPending && (
           <div className="border-b border-border bg-warning/5 px-5 py-3 pe-12">
             <div className="flex flex-wrap items-center gap-3 text-xs">
               <Badge variant="warning">{t("badgeSubmission")}</Badge>
               <span className="text-muted-foreground">
                 {t("submittedMeta", {
                   who:
-                    source.data.submittedBy?.email
-                    ?? source.data.submittedBy?.uid
+                    mosque.submittedBy?.email
+                    ?? mosque.submittedBy?.uid
                     ?? t("anonymous"),
-                  when: formatRelative(source.data.createdAt),
+                  when: formatRelative(mosque.createdAt),
                 })}
               </span>
             </div>
@@ -142,7 +113,7 @@ export function MosqueViewDialog({
         </EditorDialogBody>
 
         <EditorDialogFooter>
-          {source.kind === "submission" ? (
+          {isPending ? (
             rejecting ? (
               <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end">
                 <div className="flex-1 space-y-1">
@@ -190,7 +161,7 @@ export function MosqueViewDialog({
                 {tCommon("close")}
               </Button>
               <Button asChild>
-                <Link href={`/admin/mosques/${source.data.slug}/edit`}>
+                <Link href={`/admin/mosques/${mosque.slug}/edit`}>
                   <Edit /> {t("edit")}
                 </Link>
               </Button>

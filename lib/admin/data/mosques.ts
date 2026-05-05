@@ -8,9 +8,8 @@ import type {
   MosqueServices,
   MosqueSource,
   MosqueStatus,
-  MosqueSubmission,
 } from "@/types/mosque";
-import { MOSQUES_COLLECTION, MOSQUE_SUBMISSIONS_COLLECTION, emptyServices } from "@/lib/mosques/constants";
+import { MOSQUES_COLLECTION, emptyServices } from "@/lib/mosques/constants";
 import { mosqueMatchesQuery } from "@/lib/mosques/search";
 import { distanceKm, sortByDistance } from "@/lib/mosques/geo";
 import type { Timestamp } from "firebase-admin/firestore";
@@ -66,22 +65,6 @@ function normalizeMosque(id: string, raw: Record<string, unknown>): Mosque | nul
     createdAt: asIso(raw.createdAt),
     updatedAt: asIso(raw.updatedAt),
     publishedAt: raw.publishedAt ? asIso(raw.publishedAt) : undefined,
-  };
-}
-
-function normalizeSubmission(id: string, raw: Record<string, unknown>): MosqueSubmission | null {
-  if (!raw) return null;
-  const payload = raw.payload as MosqueSubmission["payload"];
-  if (!payload) return null;
-  return {
-    id,
-    status: (raw.status as MosqueSubmission["status"]) ?? "pending_review",
-    payload,
-    submittedBy: (raw.submittedBy as MosqueSubmission["submittedBy"]) ?? {},
-    createdAt: asIso(raw.createdAt),
-    decidedBy: raw.decidedBy as string | undefined,
-    decidedAt: raw.decidedAt ? asIso(raw.decidedAt) : undefined,
-    rejectionReason: raw.rejectionReason as string | undefined,
   };
 }
 
@@ -227,62 +210,28 @@ export async function fetchCityAggregates(countrySlug: string): Promise<CityAggr
 
 // ---- Admin reads (all statuses) ----
 
-export type AdminMosqueRow =
-  | { kind: "mosque"; mosque: Mosque }
-  | { kind: "submission"; submission: MosqueSubmission };
-
 export interface AdminMosquesResult {
-  rows: AdminMosqueRow[];
+  mosques: Mosque[];
   source: MosqueSource;
-}
-
-function rowSortKey(row: AdminMosqueRow): number {
-  const iso = row.kind === "mosque" ? row.mosque.updatedAt : row.submission.createdAt;
-  return new Date(iso).getTime();
 }
 
 export async function fetchAllMosquesAdmin(): Promise<AdminMosquesResult> {
   const db = getDb();
-  if (!db) {
-    return {
-      rows: MOCK_MOSQUES.map((mosque) => ({ kind: "mosque" as const, mosque })),
-      source: "mock",
-    };
-  }
+  if (!db) return { mosques: MOCK_MOSQUES, source: "mock" };
   try {
-    const [mosquesSnap, subsSnap] = await Promise.all([
-      db.collection(MOSQUES_COLLECTION).orderBy("updatedAt", "desc").limit(500).get(),
-      db
-        .collection(MOSQUE_SUBMISSIONS_COLLECTION)
-        .where("status", "==", "pending_review")
-        .orderBy("createdAt", "desc")
-        .limit(200)
-        .get(),
-    ]);
-    if (mosquesSnap.empty && subsSnap.empty) {
-      return {
-        rows: MOCK_MOSQUES.map((mosque) => ({ kind: "mosque" as const, mosque })),
-        source: "mock",
-      };
-    }
-    const mosqueRows: AdminMosqueRow[] = mosquesSnap.docs
+    const snap = await db
+      .collection(MOSQUES_COLLECTION)
+      .orderBy("updatedAt", "desc")
+      .limit(500)
+      .get();
+    if (snap.empty) return { mosques: MOCK_MOSQUES, source: "mock" };
+    const mosques = snap.docs
       .map((d) => normalizeMosque(d.id, d.data() as Record<string, unknown>))
-      .filter((m): m is Mosque => m !== null)
-      .map((mosque) => ({ kind: "mosque", mosque }));
-    const submissionRows: AdminMosqueRow[] = subsSnap.docs
-      .map((d) => normalizeSubmission(d.id, d.data() as Record<string, unknown>))
-      .filter((s): s is MosqueSubmission => s !== null)
-      .map((submission) => ({ kind: "submission", submission }));
-    const rows = [...mosqueRows, ...submissionRows].sort(
-      (a, b) => rowSortKey(b) - rowSortKey(a),
-    );
-    return { rows, source: "firestore" };
+      .filter((m): m is Mosque => m !== null);
+    return { mosques, source: "firestore" };
   } catch (err) {
     console.warn("[mosques] admin firestore read failed, falling back to mock:", err);
-    return {
-      rows: MOCK_MOSQUES.map((mosque) => ({ kind: "mosque" as const, mosque })),
-      source: "mock",
-    };
+    return { mosques: MOCK_MOSQUES, source: "mock" };
   }
 }
 
@@ -290,11 +239,12 @@ export async function countPendingMosques(): Promise<number> {
   const db = getDb();
   if (!db) return 0;
   try {
-    const [pendingDocs, pendingSubs] = await Promise.all([
-      db.collection(MOSQUES_COLLECTION).where("status", "==", "pending_review").count().get(),
-      db.collection(MOSQUE_SUBMISSIONS_COLLECTION).where("status", "==", "pending_review").count().get(),
-    ]);
-    return pendingDocs.data().count + pendingSubs.data().count;
+    const pending = await db
+      .collection(MOSQUES_COLLECTION)
+      .where("status", "==", "pending_review")
+      .count()
+      .get();
+    return pending.data().count;
   } catch {
     return 0;
   }

@@ -4,13 +4,19 @@ import { getDb } from "@/lib/firebase/admin";
 import {
   BUSINESS_SUBMISSIONS_COLLECTION,
 } from "@/lib/businesses/constants";
-import { MOSQUE_SUBMISSIONS_COLLECTION } from "@/lib/mosques/constants";
+import { MOSQUES_COLLECTION } from "@/lib/mosques/constants";
 
 export type SubmissionEntity = "event" | "business" | "mosque";
 
 export type EventSubmissionStatus = "under_review" | "draft" | "published" | "cancelled";
 export type BusinessSubmissionStatus = "pending_review" | "approved" | "rejected";
-export type MosqueSubmissionStatus = "pending_review" | "approved" | "rejected";
+// Submitter-facing status for mosques. Mirrors MosqueStatus from the
+// unified `mosques` collection: "draft" / "suspended" don't apply to
+// the public submission flow and aren't surfaced here.
+export type MosqueSubmissionStatus =
+  | "pending_review"
+  | "published"
+  | "rejected";
 
 export interface MySubmission {
   id: string;
@@ -99,8 +105,10 @@ function normalizeMosqueSubmission(
   id: string,
   raw: Record<string, unknown>,
 ): MySubmission | null {
-  const payload = (raw.payload ?? {}) as Record<string, unknown>;
-  const nameField = payload.name;
+  // After the mosqueSubmissions → mosques unification, every submission
+  // is just a row in the mosques collection. The full Mosque shape lives
+  // at the top level; there's no `payload` wrapper anymore.
+  const nameField = raw.name;
   const title =
     typeof nameField === "string"
       ? nameField
@@ -111,11 +119,13 @@ function normalizeMosqueSubmission(
   if (!title) return null;
   const statusRaw = asString(raw.status);
   const status: MosqueSubmissionStatus =
-    statusRaw === "approved" || statusRaw === "rejected" ? statusRaw : "pending_review";
-  const promotedSlug = asString(raw.promotedMosqueSlug, "");
-  const liveUrl = status === "approved" && promotedSlug ? `/mosques/${promotedSlug}` : null;
-  const city = asString(payload.city, "");
-  const country = asString(payload.country, "");
+    statusRaw === "published" || statusRaw === "rejected"
+      ? statusRaw
+      : "pending_review";
+  const slug = asString(raw.slug, id);
+  const liveUrl = status === "published" ? `/mosques/${slug}` : null;
+  const city = asString(raw.city, "");
+  const country = asString(raw.country, "");
   const subtitle = [city, country].filter(Boolean).join(", ") || null;
   return {
     id,
@@ -131,16 +141,11 @@ function normalizeMosqueSubmission(
 /**
  * Lists submissions made by the current user across events / businesses / mosques.
  *
- * - Events live in the unified `events` collection; we filter by `submittedBy.uid`
- *   so admin-created drafts (no submittedBy) don't leak in.
- * - Business and mosque submissions live in their own moderation collections.
- * - Mosque submissions are tracked by `submittedBy.email` only (the public form
- *   isn't auth-gated), so the email match is the best identifier we have.
+ * All three submission paths are now auth-gated and store `submittedBy.uid`,
+ * so identity is matched on UID across the board. Mosque submissions written
+ * before the auth gate landed don't carry a UID and are not surfaced here.
  */
-export async function listMySubmissions(
-  uid: string,
-  email: string,
-): Promise<MySubmissionsBundle> {
+export async function listMySubmissions(uid: string): Promise<MySubmissionsBundle> {
   const db = getDb();
   if (!db) return { events: [], businesses: [], mosques: [] };
 
@@ -159,8 +164,9 @@ export async function listMySubmissions(
         return null;
       }),
     db
-      .collection(MOSQUE_SUBMISSIONS_COLLECTION)
-      .where("submittedBy.email", "==", email)
+      .collection(MOSQUES_COLLECTION)
+      .where("submittedBy.uid", "==", uid)
+      .where("status", "in", ["pending_review", "published", "rejected"])
       .limit(100)
       .get()
       .catch((err) => {

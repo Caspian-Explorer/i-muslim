@@ -3,8 +3,15 @@ import { z } from "zod";
 import { Timestamp } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase/admin";
 import { getSiteSession } from "@/lib/auth/session";
-import { MOSQUE_SUBMISSIONS_COLLECTION, emptyServices } from "@/lib/mosques/constants";
+import { MOSQUES_COLLECTION, emptyServices } from "@/lib/mosques/constants";
 import { defaultPrayerCalc } from "@/lib/mosques/adhan";
+import {
+  buildMosqueSlug,
+  isReservedSlug,
+  slugify,
+  withCollisionSuffix,
+} from "@/lib/mosques/slug";
+import { buildSearchTokens } from "@/lib/mosques/search";
 import { verifyTurnstile } from "@/lib/mosques/turnstile";
 import { createNotification } from "@/lib/admin/data/notifications";
 
@@ -25,6 +32,22 @@ const schema = z.object({
 });
 
 const RATE_LIMIT_PER_DAY = 5;
+
+async function nextSlug(
+  db: FirebaseFirestore.Firestore,
+  base: string,
+): Promise<string> {
+  const taken = new Set<string>();
+  if (isReservedSlug(base)) taken.add(base);
+  const baseDoc = await db.collection(MOSQUES_COLLECTION).doc(base).get();
+  if (baseDoc.exists) taken.add(base);
+  for (let i = 2; i <= 5; i += 1) {
+    const probe = `${base}-${i}`;
+    const d = await db.collection(MOSQUES_COLLECTION).doc(probe).get();
+    if (d.exists) taken.add(probe);
+  }
+  return withCollisionSuffix(base, taken);
+}
 
 export async function POST(req: Request) {
   const session = await getSiteSession();
@@ -67,11 +90,13 @@ export async function POST(req: Request) {
   }
 
   // Rate limit per uid per day, matching the events + business submit routes.
+  // Counts only this user's pending_review docs in the last 24 hours.
   const since = Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
   try {
     const recent = await db
-      .collection(MOSQUE_SUBMISSIONS_COLLECTION)
+      .collection(MOSQUES_COLLECTION)
       .where("submittedBy.uid", "==", session.uid)
+      .where("status", "==", "pending_review")
       .where("createdAt", ">", since)
       .count()
       .get();
@@ -89,35 +114,60 @@ export async function POST(req: Request) {
   if (data.website) contact.website = data.website;
   if (data.email) contact.email = data.email;
 
-  const payload = {
-    name: { en: data.nameEn.trim(), ...(data.nameAr ? { ar: data.nameAr.trim() } : {}) },
+  const nameEn = data.nameEn.trim();
+  const city = data.city.trim();
+  const country = data.country.toUpperCase();
+  const citySlug = slugify(city);
+  const countrySlug = country.toLowerCase();
+  const baseSlug = buildMosqueSlug(nameEn, citySlug);
+  const slug = await nextSlug(db, baseSlug);
+
+  const now = Timestamp.now();
+  const name: { en: string; ar?: string } = { en: nameEn };
+  if (data.nameAr) name.ar = data.nameAr.trim();
+
+  const searchTokenSeed = {
+    name,
+    city,
+    country,
+    languages: data.languages,
     denomination: data.denomination,
     address: { line1: data.addressLine1.trim() },
-    city: data.city.trim(),
-    country: data.country.toUpperCase(),
-    location: { lat: 0, lng: 0 }, // admin will geocode + set on promote
+  };
+
+  const doc: Record<string, unknown> = {
+    slug,
+    status: "pending_review",
+    name,
+    denomination: data.denomination,
+    address: { line1: data.addressLine1.trim() },
+    city,
+    citySlug,
+    country,
+    countrySlug,
+    location: { lat: 0, lng: 0 }, // admin will geocode + set on review
+    geohash: "",
     timezone: "UTC",
-    ...(Object.keys(contact).length > 0 ? { contact } : {}),
     services: emptyServices(),
     languages: data.languages,
     prayerCalc: defaultPrayerCalc(),
-    ...(data.description ? { description: { en: data.description.trim() } } : {}),
-  };
-
-  const docRef = await db.collection(MOSQUE_SUBMISSIONS_COLLECTION).add({
-    status: "pending_review",
-    payload,
     submittedBy: { uid: session.uid, email: session.email },
     submitterIp: ip,
-    createdAt: Timestamp.now(),
-  });
+    searchTokens: buildSearchTokens(searchTokenSeed),
+    createdAt: now,
+    updatedAt: now,
+  };
+  if (Object.keys(contact).length > 0) doc.contact = contact;
+  if (data.description) doc.description = { en: data.description.trim() };
+
+  await db.collection(MOSQUES_COLLECTION).doc(slug).set(doc, { merge: false });
   await createNotification({
     type: "submission",
     title: "New mosque submission",
-    body: data.nameEn,
-    link: `/admin/mosques?submission=${docRef.id}`,
-    sourceCollection: MOSQUE_SUBMISSIONS_COLLECTION,
-    sourceId: docRef.id,
+    body: nameEn,
+    link: `/admin/mosques?slug=${slug}`,
+    sourceCollection: MOSQUES_COLLECTION,
+    sourceId: slug,
   });
-  return NextResponse.json({ ok: true, id: docRef.id });
+  return NextResponse.json({ ok: true, slug });
 }
