@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { Timestamp } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase/admin";
+import { getSiteSession } from "@/lib/auth/session";
 import { MOSQUE_SUBMISSIONS_COLLECTION, emptyServices } from "@/lib/mosques/constants";
 import { defaultPrayerCalc } from "@/lib/mosques/adhan";
 import { verifyTurnstile } from "@/lib/mosques/turnstile";
@@ -18,7 +19,6 @@ const schema = z.object({
   website: z.string().url().optional().or(z.literal("")),
   email: z.string().email().optional().or(z.literal("")),
   description: z.string().optional(),
-  submitterEmail: z.string().email(),
   languages: z.array(z.string()).max(20).default([]),
   website_url_secondary: z.string().optional(), // honeypot
   turnstileToken: z.string().optional(),
@@ -27,6 +27,11 @@ const schema = z.object({
 const RATE_LIMIT_PER_DAY = 5;
 
 export async function POST(req: Request) {
+  const session = await getSiteSession();
+  if (!session) {
+    return NextResponse.json({ ok: false, error: "auth" }, { status: 401 });
+  }
+
   let body: unknown;
   try {
     body = await req.json();
@@ -61,12 +66,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "firestore_not_configured" }, { status: 503 });
   }
 
-  // Rate limit per IP per day.
+  // Rate limit per uid per day, matching the events + business submit routes.
   const since = Timestamp.fromDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
   try {
     const recent = await db
       .collection(MOSQUE_SUBMISSIONS_COLLECTION)
-      .where("submitterIp", "==", ip)
+      .where("submittedBy.uid", "==", session.uid)
       .where("createdAt", ">", since)
       .count()
       .get();
@@ -77,6 +82,13 @@ export async function POST(req: Request) {
     // count() requires composite index; if missing, skip rate limit rather than block submission.
   }
 
+  // Firestore Admin SDK rejects undefined field values by default, so build the
+  // optional pieces conditionally rather than letting them resolve to undefined.
+  const contact: { phone?: string; website?: string; email?: string } = {};
+  if (data.phone) contact.phone = data.phone;
+  if (data.website) contact.website = data.website;
+  if (data.email) contact.email = data.email;
+
   const payload = {
     name: { en: data.nameEn.trim(), ...(data.nameAr ? { ar: data.nameAr.trim() } : {}) },
     denomination: data.denomination,
@@ -85,21 +97,17 @@ export async function POST(req: Request) {
     country: data.country.toUpperCase(),
     location: { lat: 0, lng: 0 }, // admin will geocode + set on promote
     timezone: "UTC",
-    contact: {
-      phone: data.phone || undefined,
-      website: data.website || undefined,
-      email: data.email || undefined,
-    },
+    ...(Object.keys(contact).length > 0 ? { contact } : {}),
     services: emptyServices(),
     languages: data.languages,
     prayerCalc: defaultPrayerCalc(),
-    description: data.description ? { en: data.description.trim() } : undefined,
+    ...(data.description ? { description: { en: data.description.trim() } } : {}),
   };
 
   const docRef = await db.collection(MOSQUE_SUBMISSIONS_COLLECTION).add({
     status: "pending_review",
     payload,
-    submittedBy: { email: data.submitterEmail },
+    submittedBy: { uid: session.uid, email: session.email },
     submitterIp: ip,
     createdAt: Timestamp.now(),
   });
@@ -107,7 +115,7 @@ export async function POST(req: Request) {
     type: "submission",
     title: "New mosque submission",
     body: data.nameEn,
-    link: "/admin/mosques/queue",
+    link: `/admin/mosques?submission=${docRef.id}`,
     sourceCollection: MOSQUE_SUBMISSIONS_COLLECTION,
     sourceId: docRef.id,
   });

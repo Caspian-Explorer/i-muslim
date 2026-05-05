@@ -38,9 +38,12 @@ export default function LeafletMapInner({ lat, lng, label, zoom = 15, className 
         zoom,
         scrollWheelZoom: false,
       });
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/voyager/{z}/{x}/{y}.png", {
+      // Use the standard OSM tile server. CARTO's basemaps CDN was previously
+      // used here, but Chrome's Opaque Response Blocking (ERR_BLOCKED_BY_ORB)
+      // rejects its tile responses cross-origin, leaving the map gray.
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
       }).addTo(map);
       const marker = L.marker([lat, lng], { icon }).addTo(map);
