@@ -24,6 +24,13 @@
     "moreCountries": "+{count} more",
     "removeChip": "Remove {name}"
   },
+  "madhhabCombobox": {
+    "selectMadhhabs": "Select madhhabs",
+    "searchPlaceholder": "Search madhhab…",
+    "noResults": "No madhhab found.",
+    "moreMadhhabs": "+{count} more",
+    "removeChip": "Remove {name}"
+  },
   "languageCombobox": {
     "selectLanguage": "Select language",
     "selectLanguages": "Select languages",
@@ -2243,12 +2250,14 @@
     "disabledToast": "Matrimonial disabled",
     "disableFailed": "Couldn't disable — please try again.",
     "enable": {
-      "preferencesTitle": "Matchmaking preferences",
-      "preferencesDescription": "These fields are matrimonial-only — used to filter who sees you and whom you see.",
+      "aboutYouTitle": "About you",
+      "aboutYouDescription": "Your own profile facts — these display on your card to potential matches.",
+      "matchPreferencesTitle": "Match preferences",
+      "matchPreferencesDescription": "Filters used to narrow who you see and who sees you.",
       "lookingForGender": "Looking for",
       "ageRange": "Age range",
       "preferredCountries": "Preferred countries",
-      "preferredMadhhabs": "Preferred madhhabs (comma-separated)",
+      "preferredMadhhabs": "Preferred madhhabs",
       "prayerMin": "Minimum prayer commitment",
       "polygamyStance": "Polygamy stance",
       "polygamyAcceptable": "Open to a polygamous match",

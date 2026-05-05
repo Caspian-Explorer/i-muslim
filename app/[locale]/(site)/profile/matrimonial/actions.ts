@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { requireSiteSession } from "@/lib/auth/session";
 import { getProfileFields } from "@/lib/profile/data";
 import {
-  csvToList,
   matrimonialFieldsSchema,
   type MatrimonialFieldsInput,
 } from "@/lib/profile/schema";
@@ -43,9 +42,6 @@ export async function enableMatrimonialAction(
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid fields" };
   }
   const v = parsed.data;
-  if (v.ageMin > v.ageMax) {
-    return { ok: false, error: "Maximum age must be greater than minimum." };
-  }
 
   const existing = await getProfile(session.uid);
   const now = new Date().toISOString();
@@ -87,9 +83,7 @@ export async function enableMatrimonialAction(
       ageMax: v.ageMax,
       countries: v.preferredCountries,
       locationRadiusKm: null,
-      madhhabs: csvToList(v.preferredMadhhabs).filter((m) =>
-        ["hanafi", "maliki", "shafii", "hanbali", "other", "none"].includes(m),
-      ) as MatrimonialProfile["preferences"]["madhhabs"],
+      madhhabs: v.preferredMadhhabs,
       sects: [],
       prayerMin: v.prayerMin,
       polygamyAcceptable: v.polygamyAcceptable,

@@ -6,13 +6,14 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/sonner";
 import { CountryCombobox } from "@/components/common/CountryCombobox";
+import { MadhhabCombobox } from "@/components/common/MadhhabCombobox";
 import { Section } from "./forms/Section";
 import { Field } from "./forms/Field";
 import { Select } from "./forms/Select";
+import { AgeRangeField } from "./forms/AgeRangeField";
 import {
   matrimonialFieldsSchema,
   type MatrimonialFieldsInput,
@@ -44,7 +45,7 @@ export function MatrimonialEnableForm({ defaultLookingFor = "female" }: Props) {
       ageMin: 22,
       ageMax: 35,
       preferredCountries: [],
-      preferredMadhhabs: "",
+      preferredMadhhabs: [],
       prayerMin: "sometimes",
       polygamyAcceptable: false,
       photoStubs: [],
@@ -66,28 +67,51 @@ export function MatrimonialEnableForm({ defaultLookingFor = "female" }: Props) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <Section title={t("preferencesTitle")} description={t("preferencesDescription")}>
+      <Section title={t("aboutYouTitle")} description={t("aboutYouDescription")}>
+        <Field label={t("polygamyStance")}>
+          <Select {...register("polygamyStance")}>
+            {(["open", "neutral", "closed", "na"] as const).map((p) => (
+              <option key={p} value={p}>
+                {tPolygamy(p)}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      </Section>
+
+      <Section
+        title={t("matchPreferencesTitle")}
+        description={t("matchPreferencesDescription")}
+      >
         <Field label={t("lookingForGender")}>
           <Select {...register("lookingForGender")}>
             <option value="male">{tGenders("male")}</option>
             <option value="female">{tGenders("female")}</option>
           </Select>
         </Field>
-        <Field label={t("ageRange")} error={errors.ageMin?.message ?? errors.ageMax?.message}>
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              min={18}
-              max={99}
-              {...register("ageMin", { valueAsNumber: true })}
-            />
-            <Input
-              type="number"
-              min={18}
-              max={99}
-              {...register("ageMax", { valueAsNumber: true })}
-            />
-          </div>
+        <Field
+          label={t("ageRange")}
+          error={errors.ageMin?.message ?? errors.ageMax?.message}
+        >
+          <Controller
+            control={control}
+            name="ageMin"
+            render={({ field: minField }) => (
+              <Controller
+                control={control}
+                name="ageMax"
+                render={({ field: maxField }) => (
+                  <AgeRangeField
+                    value={[minField.value, maxField.value]}
+                    onChange={([lo, hi]) => {
+                      minField.onChange(lo);
+                      maxField.onChange(hi);
+                    }}
+                  />
+                )}
+              />
+            )}
+          />
         </Field>
         <Field label={t("preferredCountries")}>
           <Controller
@@ -103,22 +127,22 @@ export function MatrimonialEnableForm({ defaultLookingFor = "female" }: Props) {
           />
         </Field>
         <Field label={t("preferredMadhhabs")}>
-          <Input placeholder="hanafi, maliki" {...register("preferredMadhhabs")} />
+          <Controller
+            name="preferredMadhhabs"
+            control={control}
+            render={({ field }) => (
+              <MadhhabCombobox
+                value={field.value ?? []}
+                onChange={field.onChange}
+              />
+            )}
+          />
         </Field>
         <Field label={t("prayerMin")}>
           <Select {...register("prayerMin")}>
             {(["always", "mostly", "sometimes", "rarely", "learning"] as const).map((p) => (
               <option key={p} value={p}>
                 {tPrayer(p)}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label={t("polygamyStance")}>
-          <Select {...register("polygamyStance")}>
-            {(["open", "neutral", "closed", "na"] as const).map((p) => (
-              <option key={p} value={p}>
-                {tPolygamy(p)}
               </option>
             ))}
           </Select>

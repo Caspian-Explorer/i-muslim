@@ -40,17 +40,24 @@ export type ProfileFieldsInput = z.infer<typeof profileFieldsSchema>;
 // Identity+deen is read from the profile fields above, so the matrimonial
 // doc stores nothing identity-related except a denormalized displayName for
 // listing performance.
-export const matrimonialFieldsSchema = z.object({
-  polygamyStance: z.enum(["open", "neutral", "closed", "na"]),
-  lookingForGender: z.enum(["male", "female"]),
-  ageMin: z.number().int().min(18).max(99),
-  ageMax: z.number().int().min(18).max(99),
-  preferredCountries: z.array(z.string().regex(/^[A-Z]{2}$/)).max(50),
-  preferredMadhhabs: z.string().max(120).optional().or(z.literal("")),
-  prayerMin: z.enum(["always", "mostly", "sometimes", "rarely", "learning"]),
-  polygamyAcceptable: z.boolean(),
-  photoStubs: z.array(z.string().url()).max(6),
-});
+export const matrimonialFieldsSchema = z
+  .object({
+    polygamyStance: z.enum(["open", "neutral", "closed", "na"]),
+    lookingForGender: z.enum(["male", "female"]),
+    ageMin: z.number().int().min(18).max(99),
+    ageMax: z.number().int().min(18).max(99),
+    preferredCountries: z.array(z.string().regex(/^[A-Z]{2}$/)).max(50),
+    preferredMadhhabs: z
+      .array(z.enum(["hanafi", "maliki", "shafii", "hanbali", "other", "none"]))
+      .max(6),
+    prayerMin: z.enum(["always", "mostly", "sometimes", "rarely", "learning"]),
+    polygamyAcceptable: z.boolean(),
+    photoStubs: z.array(z.string().url()).max(6),
+  })
+  .refine((v) => v.ageMax >= v.ageMin, {
+    message: "Maximum age must be greater than or equal to minimum.",
+    path: ["ageMax"],
+  });
 
 export type MatrimonialFieldsInput = z.infer<typeof matrimonialFieldsSchema>;
 
