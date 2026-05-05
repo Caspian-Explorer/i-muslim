@@ -32,6 +32,7 @@ import { SubmitBusinessForm } from "@/components/businesses/SubmitBusinessForm";
 import { SubmitMosqueForm } from "@/components/mosque/SubmitMosqueForm";
 import { ArticleEditorClient } from "./articles/ArticleEditorClient";
 import { ArticleCategoryForm } from "./articles/ArticleCategoryForm";
+import { EventCategoryForm } from "./events/EventCategoryForm";
 import type { BusinessCategory } from "@/types/business";
 import type { EventCategoryDoc } from "@/types/event-category";
 import type { ArticleCategoryDoc } from "@/types/blog";
@@ -42,7 +43,8 @@ type ViewId =
   | "business"
   | "mosque"
   | "article"
-  | "articleCategory";
+  | "articleCategory"
+  | "eventCategory";
 
 export const QUICK_CREATE_OPEN_EVENT = "quick-create:open";
 
@@ -68,7 +70,13 @@ interface QuickCreateProps {
 interface QuickCreateItem {
   id: Exclude<ViewId, "selector">;
   icon: LucideIcon;
-  nameKey: "event" | "business" | "mosque" | "article" | "articleCategory";
+  nameKey:
+    | "event"
+    | "business"
+    | "mosque"
+    | "article"
+    | "articleCategory"
+    | "eventCategory";
   shortcut: string;
 }
 
@@ -78,6 +86,7 @@ const ITEMS: QuickCreateItem[] = [
   { id: "mosque", icon: Building2, nameKey: "mosque", shortcut: "M" },
   { id: "article", icon: FileText, nameKey: "article", shortcut: "A" },
   { id: "articleCategory", icon: Tags, nameKey: "articleCategory", shortcut: "C" },
+  { id: "eventCategory", icon: Tags, nameKey: "eventCategory", shortcut: "V" },
 ];
 
 export function QuickCreate({
@@ -140,7 +149,9 @@ export function QuickCreate({
           className={cn(
             "w-[92vw] rounded-2xl",
             isForm
-              ? view === "article" || view === "articleCategory"
+              ? view === "article" ||
+                view === "articleCategory" ||
+                view === "eventCategory"
                 ? "h-[80vh] max-h-[80vh] max-w-[1200px]"
                 : "h-[80vh] max-h-[80vh] max-w-3xl"
               : "h-auto max-h-[80vh] max-w-2xl sm:max-h-[80vh]",
@@ -356,6 +367,26 @@ function FormView({
           onSaved={() => {
             onClose();
             router.push("/admin/articles/categories");
+          }}
+          onCancel={onClose}
+        />
+      </FormShell>
+    );
+  }
+
+  if (view === "eventCategory") {
+    return (
+      <FormShell
+        backButton={BackButton}
+        title={titleFor("eventCategory")}
+        fillHeight
+      >
+        <EventCategoryForm
+          category={null}
+          canPersist={canPersist}
+          onSaved={() => {
+            onClose();
+            router.push("/admin/events/categories");
           }}
           onCancel={onClose}
         />
