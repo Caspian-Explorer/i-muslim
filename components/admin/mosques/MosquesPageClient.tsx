@@ -32,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { NewMosqueButton } from "@/components/admin/mosques/NewMosqueButton";
 import { MosqueViewDialog } from "@/components/admin/mosques/MosqueViewDialog";
+import { openQuickEditMosque } from "@/components/admin/QuickCreate";
 import { toast } from "sonner";
 import { cn, formatRelative } from "@/lib/utils";
 import type { Mosque, MosqueStatus } from "@/types/mosque";
@@ -135,6 +136,17 @@ export function MosquesPageClient({
     if (initialSlug) router.replace(pathname);
   }, [initialSlug, pathname, router]);
 
+  // Edit deep-link (?edit=<slug>): redirected from the legacy edit page so
+  // bookmarks keep working. Opens the UAPOP modal pre-filled and strips the
+  // param so a refresh doesn't re-open.
+  const editSlug = searchParams.get("edit");
+  useEffect(() => {
+    if (!editSlug) return;
+    const target = initialMosques.find((m) => m.slug === editSlug);
+    if (target) openQuickEditMosque(target);
+    router.replace(pathname);
+  }, [editSlug, initialMosques, pathname, router]);
+
   const [, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
@@ -227,11 +239,12 @@ export function MosquesPageClient({
 
   function openRow(mosque: Mosque) {
     // Pending submissions open in a read-only view dialog so the admin can
-    // approve/reject without losing context. Everything else jumps to edit.
+    // approve/reject without losing context. Everything else opens the same
+    // UAPOP form used for creation, pre-filled.
     if (mosque.status === "pending_review") {
       setViewMosque(mosque);
     } else {
-      router.push(`/admin/mosques/${mosque.slug}/edit`);
+      openQuickEditMosque(mosque);
     }
   }
 
@@ -414,10 +427,8 @@ export function MosquesPageClient({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/admin/mosques/${mosque.slug}/edit`}>
-                              <Edit /> {tCommon("edit")}
-                            </Link>
+                          <DropdownMenuItem onClick={() => openQuickEditMosque(mosque)}>
+                            <Edit /> {tCommon("edit")}
                           </DropdownMenuItem>
                           {mosque.status === "published" && (
                             <DropdownMenuItem asChild>

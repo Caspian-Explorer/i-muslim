@@ -8,29 +8,27 @@ import { MOSQUES_COLLECTION, emptyServices } from "@/lib/mosques/constants";
 import { buildMosqueSlug, isReservedSlug, withCollisionSuffix } from "@/lib/mosques/slug";
 import { buildSearchTokens } from "@/lib/mosques/search";
 import { geohashFor } from "@/lib/mosques/geo";
-import { defaultPrayerCalc } from "@/lib/mosques/adhan";
+import { defaultPrayerCalc, suggestPrayerCalc } from "@/lib/mosques/adhan";
 import type { Mosque, MosqueServices, MosqueStatus } from "@/types/mosque";
 import { Timestamp } from "firebase-admin/firestore";
 
-const localizedSchema = z.object({
+// Mosque names/descriptions are English-only in the UI; `ar` is the optional
+// canonical Arabic name (not a translation). Other locales fall back to `en`
+// via the i18n deep-merge in `i18n/request.ts`.
+const nameSchema = z.object({
   en: z.string().min(2),
   ar: z.string().optional().or(z.literal("")),
-  tr: z.string().optional().or(z.literal("")),
-  id: z.string().optional().or(z.literal("")),
 });
 
-const iqamahSchema = z
-  .union([
-    z.object({ mode: z.literal("offset"), minutesAfterAdhan: z.number().int().min(-30).max(120) }),
-    z.object({ mode: z.literal("fixed"), time: z.string().regex(/^\d{1,2}:\d{2}$/) }),
-  ])
+const descriptionSchema = z
+  .object({ en: z.string().optional().or(z.literal("")) })
   .optional();
 
 const mosqueInputSchema = z.object({
-  name: localizedSchema,
+  name: nameSchema,
   legalName: z.string().optional(),
   denomination: z.enum(["sunni", "shia", "ibadi", "ahmadi", "other", "unspecified"]),
-  description: localizedSchema.partial({ en: true }).optional(),
+  description: descriptionSchema,
   address: z.object({
     line1: z.string().min(2),
     line2: z.string().optional(),
@@ -84,16 +82,6 @@ const mosqueInputSchema = z.object({
       highLatitudeRule: z.enum(["MIDDLE_OF_NIGHT", "ANGLE_BASED", "ONE_SEVENTH"]),
     })
     .optional(),
-  iqamah: z
-    .object({
-      fajr: iqamahSchema,
-      dhuhr: iqamahSchema,
-      jumuah: iqamahSchema,
-      asr: iqamahSchema,
-      maghrib: iqamahSchema,
-      isha: iqamahSchema,
-    })
-    .optional(),
   coverImageUrl: z.string().url().optional().or(z.literal("")),
   logoUrl: z.string().url().optional().or(z.literal("")),
   status: z
@@ -110,12 +98,18 @@ export interface ActionResult {
   message?: string;
 }
 
-function trimmedLocalized(input: MosqueInput["name"] | NonNullable<MosqueInput["description"]>): Mosque["name"] {
+function trimmedName(input: MosqueInput["name"]): Mosque["name"] {
   const out: Mosque["name"] = { en: (input.en ?? "").trim() };
   if (input.ar) out.ar = String(input.ar).trim();
-  if (input.tr) out.tr = String(input.tr).trim();
-  if (input.id) out.id = String(input.id).trim();
   return out;
+}
+
+function trimmedDescription(
+  input: NonNullable<MosqueInput["description"]>,
+): Mosque["description"] | undefined {
+  const en = (input.en ?? "").trim();
+  if (!en) return undefined;
+  return { en };
 }
 
 function citySlugFor(city: string): string {
@@ -157,7 +151,7 @@ function buildPersistable(
   const citySlug = citySlugFor(input.city);
   const countrySlug = input.country.toLowerCase();
   const partial = {
-    name: trimmedLocalized(input.name),
+    name: trimmedName(input.name),
     city: input.city,
     country: input.country.toUpperCase(),
     altSpellings: input.altSpellings,
@@ -165,14 +159,13 @@ function buildPersistable(
     denomination: input.denomination,
     address: input.address,
   };
-  const iqamah = stripUndefinedIqamah(input.iqamah);
   return {
     slug,
     status: input.status,
     name: partial.name,
     legalName: input.legalName?.trim() || undefined,
     denomination: input.denomination,
-    description: input.description ? trimmedLocalized({ en: input.description.en ?? "", ar: input.description.ar, tr: input.description.tr, id: input.description.id }) : undefined,
+    description: input.description ? trimmedDescription(input.description) : undefined,
     address: input.address,
     city: input.city,
     citySlug,
@@ -187,8 +180,8 @@ function buildPersistable(
     capacity: input.capacity,
     services,
     languages: input.languages ?? [],
-    prayerCalc: input.prayerCalc ?? defaultPrayerCalc(),
-    iqamah: iqamah && Object.keys(iqamah).length > 0 ? iqamah : undefined,
+    prayerCalc:
+      input.prayerCalc ?? suggestPrayerCalc(partial.country, input.denomination) ?? defaultPrayerCalc(),
     coverImage: input.coverImageUrl ? { url: input.coverImageUrl } : undefined,
     logoUrl: input.logoUrl || undefined,
     submittedBy: { uid, email },
@@ -202,15 +195,6 @@ function buildPersistable(
     updatedAt: Timestamp.fromDate(now),
     publishedAt: publishedAt ? Timestamp.fromDate(publishedAt) : undefined,
   };
-}
-
-function stripUndefinedIqamah(iqamah: MosqueInput["iqamah"]): Mosque["iqamah"] | undefined {
-  if (!iqamah) return undefined;
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(iqamah)) {
-    if (v) out[k] = v;
-  }
-  return out as Mosque["iqamah"];
 }
 
 function cleanObject<T extends Record<string, unknown> | undefined>(obj: T): T | undefined {

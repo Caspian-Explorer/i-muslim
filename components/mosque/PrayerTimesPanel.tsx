@@ -1,12 +1,11 @@
 import { useTranslations } from "next-intl";
 import type { Mosque } from "@/types/mosque";
-import { resolveAdhanAndIqamah } from "@/lib/mosques/iqamah";
+import { resolveAdhan } from "@/lib/mosques/iqamah";
 
 export function PrayerTimesPanel({ mosque, locale }: { mosque: Mosque; locale: string }) {
   const t = useTranslations("mosques.detail");
   const tPrayer = useTranslations("mosques.prayer");
-  const rows = resolveAdhanAndIqamah(mosque, { locale: localeForFormat(locale) });
-  const anyIqamah = rows.some((r) => r.iqamahLabel);
+  const rows = resolveAdhan(mosque, { locale: localeForFormat(locale) });
   return (
     <section className="rounded-xl border border-border bg-card p-5">
       <header className="mb-3 flex items-baseline justify-between gap-2">
@@ -18,22 +17,17 @@ export function PrayerTimesPanel({ mosque, locale }: { mosque: Mosque; locale: s
           <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
             <th className="py-2 text-start font-medium" />
             <th className="py-2 text-end font-medium">{t("adhan")}</th>
-            <th className="py-2 text-end font-medium">{t("iqamah")}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => (
             <tr key={r.prayer} className="border-b border-border last:border-b-0">
               <td className="py-2 font-medium text-foreground">{tPrayer(r.prayer)}</td>
-              <td className="py-2 text-end tabular-nums text-muted-foreground">{r.adhanLabel ?? t("noTime")}</td>
-              <td className="py-2 text-end tabular-nums text-foreground">{r.iqamahLabel ?? t("noTime")}</td>
+              <td className="py-2 text-end tabular-nums text-foreground">{r.adhanLabel ?? t("noTime")}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      {!anyIqamah && (
-        <p className="mt-3 text-xs text-muted-foreground">{t("noIqamahNote")}</p>
-      )}
     </section>
   );
 }

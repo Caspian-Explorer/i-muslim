@@ -32,7 +32,7 @@ export async function loadPaletteIndex(): Promise<PaletteIndex> {
       group: "mosques",
       label: m.name.en,
       hint: hint || undefined,
-      href: `/admin/mosques/${m.slug}/edit`,
+      href: `/admin/mosques?edit=${encodeURIComponent(m.slug)}`,
       keywords: [m.slug, m.name.ar, m.city, m.country, m.legalName].filter(
         (v): v is string => Boolean(v),
       ),

@@ -44,12 +44,6 @@ export type PrayerKey =
   | "maghrib"
   | "isha";
 
-export type IqamahRule =
-  | { mode: "offset"; minutesAfterAdhan: number }
-  | { mode: "fixed"; time: string }; // "HH:mm" local
-
-export type IqamahMap = Partial<Record<PrayerKey, IqamahRule>>;
-
 export interface MosqueServices {
   fridayPrayer: boolean;
   womenSection: boolean;
@@ -134,7 +128,6 @@ export interface Mosque {
   languages: string[];
   // Prayer-time config
   prayerCalc?: PrayerCalcConfig;
-  iqamah?: IqamahMap;
   // Media
   coverImage?: MosqueImage;
   gallery?: MosqueImage[];

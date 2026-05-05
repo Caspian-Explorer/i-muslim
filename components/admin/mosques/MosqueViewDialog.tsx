@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { CheckCircle2, Edit, XCircle } from "lucide-react";
+import { openQuickEditMosque } from "@/components/admin/QuickCreate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -160,10 +160,14 @@ export function MosqueViewDialog({
               <Button variant="secondary" onClick={() => handleOpenChange(false)}>
                 {tCommon("close")}
               </Button>
-              <Button asChild>
-                <Link href={`/admin/mosques/${mosque.slug}/edit`}>
-                  <Edit /> {t("edit")}
-                </Link>
+              <Button
+                onClick={() => {
+                  if (!mosque) return;
+                  handleOpenChange(false);
+                  openQuickEditMosque(mosque);
+                }}
+              >
+                <Edit /> {t("edit")}
               </Button>
             </>
           )}

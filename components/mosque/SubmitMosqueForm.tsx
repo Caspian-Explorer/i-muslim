@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, ArrowRight, Loader2, Pencil, Send } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, MapPin, Pencil, Save, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,15 +13,39 @@ import { MosqueMap } from "@/components/mosque/MosqueMap";
 import { getCallingCode } from "@/lib/countries/calling-codes";
 import { suggestCountryForTimezone } from "@/lib/countries/tz-to-country";
 import { cn } from "@/lib/utils";
-import { DENOMINATIONS } from "@/lib/mosques/constants";
-import { createMosque, type MosqueInput } from "@/app/[locale]/(admin)/admin/mosques/actions";
-import type { Denomination, MosqueStatus } from "@/types/mosque";
+import { DENOMINATIONS, SERVICE_KEYS, emptyServices } from "@/lib/mosques/constants";
+import { defaultPrayerCalc, suggestPrayerCalc } from "@/lib/mosques/adhan";
+import {
+  createMosque,
+  updateMosque,
+  type MosqueInput,
+} from "@/app/[locale]/(admin)/admin/mosques/actions";
+import type {
+  AsrMethod,
+  CalcMethod,
+  Denomination,
+  HighLatitudeRule,
+  Mosque,
+  MosqueServices,
+  MosqueStatus,
+} from "@/types/mosque";
 
 const PUBLIC_STEPS = ["basics", "location", "contact", "review"] as const;
-const ADMIN_STEPS = ["basics", "location", "contact", "admin", "review"] as const;
+const ADMIN_STEPS = [
+  "basics",
+  "location",
+  "contact",
+  "facilities",
+  "prayer",
+  "media",
+  "admin",
+  "review",
+] as const;
 type Step = (typeof ADMIN_STEPS)[number];
 
 const ADMIN_STATUSES: MosqueStatus[] = ["draft", "pending_review", "published", "suspended"];
+const CALC_METHODS: CalcMethod[] = ["MWL", "ISNA", "EGYPT", "MAKKAH", "KARACHI", "TEHRAN", "JAFARI"];
+const HIGH_LAT_RULES: HighLatitudeRule[] = ["MIDDLE_OF_NIGHT", "ANGLE_BASED", "ONE_SEVENTH"];
 
 type GeocodeState =
   | { status: "idle" }
@@ -30,47 +54,132 @@ type GeocodeState =
   | { status: "fail" };
 
 interface FormState {
+  // Basics
   nameEn: string;
   nameAr: string;
+  legalName: string;
   description: string;
   denomination: Denomination;
+  // Location
   addressLine1: string;
+  addressLine2: string;
   city: string;
   region: string;
   countryCode: string;
   postalCode: string;
+  lat: string;
+  lng: string;
+  timezone: string;
+  // Contact + social
   phone: string;
   email: string;
   website: string;
+  facebook: string;
+  instagram: string;
+  youtube: string;
+  whatsapp: string;
   languages: string[];
+  altSpellings: string;
+  capacity: string;
+  // Facilities
+  services: MosqueServices;
+  // Prayer
+  calcMethod: CalcMethod;
+  asrMethod: AsrMethod;
+  highLatitudeRule: HighLatitudeRule;
+  // Media
+  coverImageUrl: string;
+  logoUrl: string;
+  // Admin
   adminStatus: MosqueStatus;
   // honeypot
   website_url_secondary: string;
 }
 
-const empty: FormState = {
-  nameEn: "",
-  nameAr: "",
-  description: "",
-  denomination: "unspecified",
-  addressLine1: "",
-  city: "",
-  region: "",
-  countryCode: "",
-  postalCode: "",
-  phone: "",
-  email: "",
-  website: "",
-  languages: [],
-  adminStatus: "draft",
-  website_url_secondary: "",
-};
+function emptyState(): FormState {
+  const calc = defaultPrayerCalc();
+  return {
+    nameEn: "",
+    nameAr: "",
+    legalName: "",
+    description: "",
+    denomination: "unspecified",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    region: "",
+    countryCode: "",
+    postalCode: "",
+    lat: "",
+    lng: "",
+    timezone: "",
+    phone: "",
+    email: "",
+    website: "",
+    facebook: "",
+    instagram: "",
+    youtube: "",
+    whatsapp: "",
+    languages: [],
+    altSpellings: "",
+    capacity: "",
+    services: emptyServices(),
+    calcMethod: calc.method,
+    asrMethod: calc.asrMethod,
+    highLatitudeRule: calc.highLatitudeRule,
+    coverImageUrl: "",
+    logoUrl: "",
+    adminStatus: "draft",
+    website_url_secondary: "",
+  };
+}
+
+function fromMosque(m: Mosque): FormState {
+  const calc = m.prayerCalc ?? defaultPrayerCalc();
+  return {
+    nameEn: m.name.en ?? "",
+    nameAr: m.name.ar ?? "",
+    legalName: m.legalName ?? "",
+    description: m.description?.en ?? "",
+    denomination: m.denomination,
+    addressLine1: m.address.line1 ?? "",
+    addressLine2: m.address.line2 ?? "",
+    city: m.city ?? "",
+    region: m.region ?? "",
+    countryCode: m.country ?? "",
+    postalCode: m.address.postalCode ?? "",
+    lat: Number.isFinite(m.location?.lat) ? String(m.location.lat) : "",
+    lng: Number.isFinite(m.location?.lng) ? String(m.location.lng) : "",
+    timezone: m.timezone ?? "",
+    phone: m.contact?.phone ?? "",
+    email: m.contact?.email ?? "",
+    website: m.contact?.website ?? "",
+    facebook: m.social?.facebook ?? "",
+    instagram: m.social?.instagram ?? "",
+    youtube: m.social?.youtube ?? "",
+    whatsapp: m.social?.whatsapp ?? "",
+    languages: m.languages ?? [],
+    altSpellings: (m.altSpellings ?? []).join(", "),
+    capacity: typeof m.capacity === "number" ? String(m.capacity) : "",
+    services: { ...emptyServices(), ...m.services },
+    calcMethod: calc.method,
+    asrMethod: calc.asrMethod,
+    highLatitudeRule: calc.highLatitudeRule,
+    coverImageUrl: m.coverImage?.url ?? "",
+    logoUrl: m.logoUrl ?? "",
+    adminStatus: m.status,
+    website_url_secondary: "",
+  };
+}
 
 interface Props {
-  /** The signed-in user's email — submission is auth-gated server-side; this is informational only. */
+  /** Signed-in user's email (server-side enforces auth; this is informational). */
   userEmail: string;
   /** When true, skip honeypot/Turnstile and submit via the admin server action. */
   adminMode?: boolean;
+  /** "edit" requires `initial`; falls back to "create" otherwise. */
+  mode?: "create" | "edit";
+  initial?: Mosque;
   onAdminSaved?: (result: { slug: string }) => void;
   onAdminCancel?: () => void;
 }
@@ -78,25 +187,40 @@ interface Props {
 export function SubmitMosqueForm({
   userEmail,
   adminMode = false,
+  mode = "create",
+  initial,
   onAdminSaved,
   onAdminCancel,
 }: Props) {
-  void userEmail; // referenced via session server-side; prop kept for symmetry with other submit forms
+  void userEmail;
   const t = useTranslations("mosques.submit");
   const tDenominations = useTranslations("mosques.denominations");
+  const tFacilities = useTranslations("mosques.services");
   const tQuick = useTranslations("quickCreate");
   const tStatuses = useTranslations("mosquesAdmin.statuses");
+  const tForm = useTranslations("mosquesAdmin.form");
 
+  const isEdit = adminMode && mode === "edit" && Boolean(initial);
   const STEPS: readonly Step[] = adminMode ? ADMIN_STEPS : PUBLIC_STEPS;
 
-  const [state, setState] = useState<FormState>(empty);
+  const [state, setState] = useState<FormState>(() =>
+    initial ? fromMosque(initial) : emptyState(),
+  );
   const [stepIdx, setStepIdx] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
-  const [geocode, setGeocode] = useState<GeocodeState>({ status: "idle" });
+  const [geocodeBusy, setGeocodeBusy] = useState(false);
+  const [reviewGeocode, setReviewGeocode] = useState<GeocodeState>({ status: "idle" });
+  // Tracks whether the admin has manually touched any prayer field. Once true,
+  // we stop auto-suggesting based on country/denomination changes — otherwise
+  // an admin's deliberate override could be silently overwritten.
+  const prayerCalcDirty = useRef(false);
 
+  // On first mount, default the country from the browser's TZ for nicer UX.
+  // (Edit mode skips this — country is always pre-filled.)
   useEffect(() => {
+    if (initial) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setState((prev) => {
       if (prev.countryCode) return prev;
@@ -109,7 +233,31 @@ export function SubmitMosqueForm({
         return prev;
       }
     });
-  }, []);
+  }, [initial]);
+
+  // Reactively suggest prayer calc based on (country, denomination) — only
+  // until the admin manually edits one of the prayer fields.
+  useEffect(() => {
+    if (!adminMode || prayerCalcDirty.current) return;
+    if (!state.countryCode) return;
+    const suggested = suggestPrayerCalc(state.countryCode, state.denomination);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState((prev) => {
+      if (
+        prev.calcMethod === suggested.method &&
+        prev.asrMethod === suggested.asrMethod &&
+        prev.highLatitudeRule === suggested.highLatitudeRule
+      ) {
+        return prev;
+      }
+      return {
+        ...prev,
+        calcMethod: suggested.method,
+        asrMethod: suggested.asrMethod,
+        highLatitudeRule: suggested.highLatitudeRule,
+      };
+    });
+  }, [adminMode, state.countryCode, state.denomination]);
 
   const reviewAddress =
     state.addressLine1.trim() && state.city.trim() && state.countryCode
@@ -118,15 +266,15 @@ export function SubmitMosqueForm({
           .join(", ")
       : "";
 
+  // Public review step: best-effort geocode preview only (admin step has its
+  // own button + saved coords). Skipped entirely when adminMode is on so we
+  // don't double-fetch the same address.
   useEffect(() => {
+    if (adminMode) return;
     if (STEPS[stepIdx] !== "review" || !reviewAddress) return;
     let cancelled = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setGeocode({ status: "loading" });
-    // Nominatim (the OSM-backed geocoder behind /api/businesses/geocode) often
-    // chokes on verbose multi-comma queries, especially for non-Anglo addresses.
-    // Try progressively simpler queries before giving up so the review map is
-    // useful even when the full address doesn't match an OSM feature.
+    setReviewGeocode({ status: "loading" });
     const queries = Array.from(
       new Set(
         [
@@ -149,19 +297,20 @@ export function SubmitMosqueForm({
           };
           if (cancelled) return;
           if (res.ok && data.ok && typeof data.lat === "number" && typeof data.lng === "number") {
-            setGeocode({ status: "ok", lat: data.lat, lng: data.lng });
+            setReviewGeocode({ status: "ok", lat: data.lat, lng: data.lng });
             return;
           }
         } catch {
           // try the next, less specific query
         }
       }
-      if (!cancelled) setGeocode({ status: "fail" });
+      if (!cancelled) setReviewGeocode({ status: "fail" });
     })();
     return () => {
       cancelled = true;
     };
   }, [
+    adminMode,
     stepIdx,
     reviewAddress,
     STEPS,
@@ -181,6 +330,16 @@ export function SubmitMosqueForm({
       if (state.addressLine1.trim().length < 2) next.addressLine1 = t("validation.addressRequired");
       if (!state.city.trim()) next.city = t("validation.cityRequired");
       if (!/^[A-Za-z]{2}$/.test(state.countryCode.trim())) next.country = t("validation.countryRequired");
+      if (adminMode) {
+        const lat = parseFloat(state.lat);
+        const lng = parseFloat(state.lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+          next.coords = tForm("validation.coordsRequired");
+        } else if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+          next.coords = tForm("validation.coordsRange");
+        }
+        if (!state.timezone.trim()) next.timezone = tForm("validation.coordsRequired");
+      }
     }
     if (step === "contact") {
       const phone = state.phone.trim();
@@ -200,8 +359,36 @@ export function SubmitMosqueForm({
           next.website = t("validation.websiteInvalid");
         }
       }
+      if (adminMode) {
+        for (const [field, val] of [
+          ["facebook", state.facebook],
+          ["instagram", state.instagram],
+          ["youtube", state.youtube],
+        ] as const) {
+          const v = val.trim();
+          if (!v) continue;
+          try {
+            new URL(/^https?:\/\//i.test(v) ? v : `https://${v}`);
+          } catch {
+            next[field] = tForm("validation.urlInvalid");
+          }
+        }
+      }
     }
-    // No validation for "admin" — status select has a default.
+    if (step === "media" && adminMode) {
+      for (const [field, val] of [
+        ["coverImageUrl", state.coverImageUrl],
+        ["logoUrl", state.logoUrl],
+      ] as const) {
+        const v = val.trim();
+        if (!v) continue;
+        try {
+          new URL(v);
+        } catch {
+          next[field] = tForm("validation.urlInvalid");
+        }
+      }
+    }
     return next;
   }
 
@@ -212,9 +399,16 @@ export function SubmitMosqueForm({
       addressLine1: "sub-address",
       city: "sub-city",
       country: "sub-country",
+      coords: "sub-lat",
+      timezone: "sub-tz",
       phone: "sub-phone",
       email: "sub-email",
       website: "sub-website",
+      facebook: "sub-facebook",
+      instagram: "sub-instagram",
+      youtube: "sub-youtube",
+      coverImageUrl: "sub-cover",
+      logoUrl: "sub-logo",
     };
     const first = Object.keys(errs)[0];
     if (!first) return;
@@ -257,34 +451,91 @@ export function SubmitMosqueForm({
     return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
   }
 
+  function normalizedUrl(input: string): string {
+    const trimmed = input.trim();
+    if (!trimmed) return "";
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  }
+
+  async function runGeocode() {
+    const parts = [state.addressLine1, state.city, state.region, state.countryCode]
+      .filter(Boolean)
+      .join(", ");
+    if (!parts) return;
+    setGeocodeBusy(true);
+    try {
+      const res = await fetch(`/api/admin/geocode?q=${encodeURIComponent(parts)}`);
+      if (!res.ok) {
+        toast.error(tForm("geocodeNoResult"));
+        return;
+      }
+      const data = (await res.json()) as { lat?: number; lng?: number; timezone?: string };
+      if (typeof data.lat !== "number" || typeof data.lng !== "number") {
+        toast.error(tForm("geocodeNoResult"));
+        return;
+      }
+      setState((s) => ({
+        ...s,
+        lat: String(data.lat),
+        lng: String(data.lng),
+        timezone: data.timezone ?? s.timezone,
+      }));
+    } finally {
+      setGeocodeBusy(false);
+    }
+  }
+
   function buildAdminInput(): MosqueInput {
     const description = state.description.trim();
     const nameAr = state.nameAr.trim();
     const website = normalizedWebsite();
+    const lat = parseFloat(state.lat);
+    const lng = parseFloat(state.lng);
+    const capacity = state.capacity.trim() === "" ? undefined : Math.max(0, Number(state.capacity));
+    const altSpellings = state.altSpellings
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
     return {
       name: {
         en: state.nameEn.trim(),
         ...(nameAr ? { ar: nameAr } : {}),
       },
+      legalName: state.legalName.trim() || undefined,
       denomination: state.denomination,
       ...(description.length >= 2 ? { description: { en: description } } : {}),
       address: {
         line1: state.addressLine1.trim(),
+        ...(state.addressLine2.trim() ? { line2: state.addressLine2.trim() } : {}),
         ...(state.postalCode.trim() ? { postalCode: state.postalCode.trim() } : {}),
       },
       city: state.city.trim(),
       ...(state.region.trim() ? { region: state.region.trim() } : {}),
       country: state.countryCode.trim().toUpperCase(),
-      // Coordinates and timezone are filled in on the edit page after creation —
-      // matches the public submit route's defaults (route.ts uses lat/lng = 0, tz = "UTC").
-      location: { lat: 0, lng: 0 },
-      timezone: "UTC",
+      location: { lat, lng },
+      timezone: state.timezone.trim(),
       contact: {
         phone: state.phone.trim() || undefined,
         email: state.email.trim() || undefined,
         website: website || undefined,
       },
+      social: {
+        facebook: normalizedUrl(state.facebook) || undefined,
+        instagram: normalizedUrl(state.instagram) || undefined,
+        youtube: normalizedUrl(state.youtube) || undefined,
+        whatsapp: state.whatsapp.trim() || undefined,
+      },
+      capacity: Number.isFinite(capacity) ? capacity : undefined,
+      services: state.services,
       languages: state.languages,
+      altSpellings: altSpellings.length > 0 ? altSpellings : undefined,
+      prayerCalc: {
+        method: state.calcMethod,
+        asrMethod: state.asrMethod,
+        highLatitudeRule: state.highLatitudeRule,
+      },
+      coverImageUrl: state.coverImageUrl.trim() || "",
+      logoUrl: state.logoUrl.trim() || "",
       status: state.adminStatus,
     };
   }
@@ -305,12 +556,13 @@ export function SubmitMosqueForm({
     setSubmitting(true);
     try {
       if (adminMode) {
+        const input = buildAdminInput();
         let result: Awaited<ReturnType<typeof createMosque>>;
         try {
-          result = await createMosque(buildAdminInput());
+          result = isEdit && initial
+            ? await updateMosque(initial.slug, input)
+            : await createMosque(input);
         } catch (err) {
-          // Server actions surface unhandled exceptions as thrown errors on the
-          // client; without this catch the user just sees the spinner stop.
           toast.error(err instanceof Error ? err.message : t("errorGeneric"));
           return;
         }
@@ -319,8 +571,7 @@ export function SubmitMosqueForm({
           return;
         }
         toast.success(t("success"));
-        toast.message(tQuick("adminFields.coordsMissingHint"));
-        onAdminSaved?.({ slug: result.slug ?? "" });
+        onAdminSaved?.({ slug: result.slug ?? initial?.slug ?? "" });
         return;
       }
 
@@ -356,7 +607,7 @@ export function SubmitMosqueForm({
         return;
       }
       toast.success(t("success"));
-      setState(empty);
+      setState(emptyState());
       setDone(true);
     } finally {
       setSubmitting(false);
@@ -392,11 +643,11 @@ export function SubmitMosqueForm({
       )}
 
       <div className={cn(adminMode && "border-b border-border px-4 pb-3 pt-4 md:px-6")}>
-        <ol className="flex items-center gap-2 text-xs">
+        <ol className="flex items-center gap-2 overflow-x-auto text-xs">
           {STEPS.map((s, i) => {
             const active = i === stepIdx;
             const completed = i < stepIdx;
-            const stepLabel = s === "admin" ? tQuick("steps.admin") : t(`steps.${s}`);
+            const stepLabel = stepLabelFor(s, t, tQuick, tForm);
             return (
               <li key={s} className="flex shrink-0 items-center gap-2">
                 <button
@@ -457,6 +708,17 @@ export function SubmitMosqueForm({
               />
             </div>
 
+            {adminMode && (
+              <div className="space-y-1.5">
+                <Label htmlFor="sub-legal-name">{tForm("legalName")}</Label>
+                <Input
+                  id="sub-legal-name"
+                  value={state.legalName}
+                  onChange={(e) => setState((s) => ({ ...s, legalName: e.target.value }))}
+                />
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label htmlFor="sub-denom">{t("fields.denomination")}</Label>
               <select
@@ -511,6 +773,17 @@ export function SubmitMosqueForm({
               {errors.addressLine1 && <p className="text-xs text-danger">{errors.addressLine1}</p>}
             </div>
 
+            {adminMode && (
+              <div className="space-y-1.5">
+                <Label htmlFor="sub-address2">{tForm("addressLine2")}</Label>
+                <Input
+                  id="sub-address2"
+                  value={state.addressLine2}
+                  onChange={(e) => setState((s) => ({ ...s, addressLine2: e.target.value }))}
+                />
+              </div>
+            )}
+
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="sub-city">{t("fields.city")}</Label>
@@ -550,6 +823,50 @@ export function SubmitMosqueForm({
                 />
               </div>
             </div>
+
+            {adminMode && (
+              <>
+                <div className="flex items-end gap-3">
+                  <Button type="button" variant="secondary" onClick={runGeocode} disabled={geocodeBusy}>
+                    {geocodeBusy ? <Loader2 className="animate-spin" /> : <MapPin />}
+                    {geocodeBusy ? tForm("geocodeWorking") : tForm("geocode")}
+                  </Button>
+                  {errors.coords && <p className="text-xs text-danger">{errors.coords}</p>}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-lat">{tForm("lat")}</Label>
+                    <Input
+                      id="sub-lat"
+                      type="number"
+                      step="0.000001"
+                      value={state.lat}
+                      onChange={(e) => setState((s) => ({ ...s, lat: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-lng">{tForm("lng")}</Label>
+                    <Input
+                      id="sub-lng"
+                      type="number"
+                      step="0.000001"
+                      value={state.lng}
+                      onChange={(e) => setState((s) => ({ ...s, lng: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-tz">{tForm("timezone")}</Label>
+                    <Input
+                      id="sub-tz"
+                      placeholder="Europe/Istanbul"
+                      value={state.timezone}
+                      onChange={(e) => setState((s) => ({ ...s, timezone: e.target.value }))}
+                    />
+                    {errors.timezone && <p className="text-xs text-danger">{errors.timezone}</p>}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -602,10 +919,182 @@ export function SubmitMosqueForm({
                 onChange={(codes) => setState((s) => ({ ...s, languages: codes }))}
               />
             </div>
+
+            {adminMode && (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-facebook">{tForm("facebook")}</Label>
+                    <Input
+                      id="sub-facebook"
+                      type="url"
+                      value={state.facebook}
+                      onChange={(e) => setState((s) => ({ ...s, facebook: e.target.value }))}
+                    />
+                    {errors.facebook && <p className="text-xs text-danger">{errors.facebook}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-instagram">{tForm("instagram")}</Label>
+                    <Input
+                      id="sub-instagram"
+                      type="url"
+                      value={state.instagram}
+                      onChange={(e) => setState((s) => ({ ...s, instagram: e.target.value }))}
+                    />
+                    {errors.instagram && <p className="text-xs text-danger">{errors.instagram}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-youtube">{tForm("youtube")}</Label>
+                    <Input
+                      id="sub-youtube"
+                      type="url"
+                      value={state.youtube}
+                      onChange={(e) => setState((s) => ({ ...s, youtube: e.target.value }))}
+                    />
+                    {errors.youtube && <p className="text-xs text-danger">{errors.youtube}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-whatsapp">{tForm("whatsapp")}</Label>
+                    <Input
+                      id="sub-whatsapp"
+                      value={state.whatsapp}
+                      onChange={(e) => setState((s) => ({ ...s, whatsapp: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-alt">{tForm("altSpellings")}</Label>
+                    <Input
+                      id="sub-alt"
+                      value={state.altSpellings}
+                      onChange={(e) => setState((s) => ({ ...s, altSpellings: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-capacity">{tForm("capacity")}</Label>
+                    <Input
+                      id="sub-capacity"
+                      type="number"
+                      min={0}
+                      value={state.capacity}
+                      onChange={(e) => setState((s) => ({ ...s, capacity: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
-        {step === "admin" && (
+        {step === "facilities" && adminMode && (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{tForm("sectionFacilitiesHint")}</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {SERVICE_KEYS.map((k) => (
+                <label key={k} className="inline-flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(state.services[k])}
+                    onChange={(e) =>
+                      setState((s) => ({
+                        ...s,
+                        services: { ...s.services, [k]: e.target.checked },
+                      }))
+                    }
+                  />
+                  {tFacilities(k)}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === "prayer" && adminMode && (
+          <div className="space-y-5">
+            <p className="text-sm text-muted-foreground">{tForm("sectionPrayerHint")}</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="sub-calc">{tForm("calcMethod")}</Label>
+                <select
+                  id="sub-calc"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  value={state.calcMethod}
+                  onChange={(e) => {
+                    prayerCalcDirty.current = true;
+                    setState((s) => ({ ...s, calcMethod: e.target.value as CalcMethod }));
+                  }}
+                >
+                  {CALC_METHODS.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sub-asr">{tForm("asrMethod")}</Label>
+                <select
+                  id="sub-asr"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  value={state.asrMethod}
+                  onChange={(e) => {
+                    prayerCalcDirty.current = true;
+                    setState((s) => ({ ...s, asrMethod: e.target.value as AsrMethod }));
+                  }}
+                >
+                  <option value="shafi">Shafi / Maliki / Hanbali</option>
+                  <option value="hanafi">Hanafi</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sub-highlat">{tForm("highLatRule")}</Label>
+                <select
+                  id="sub-highlat"
+                  className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  value={state.highLatitudeRule}
+                  onChange={(e) => {
+                    prayerCalcDirty.current = true;
+                    setState((s) => ({ ...s, highLatitudeRule: e.target.value as HighLatitudeRule }));
+                  }}
+                >
+                  {HIGH_LAT_RULES.map((r) => (
+                    <option key={r} value={r}>
+                      {r === "MIDDLE_OF_NIGHT" ? "Middle of night" : r === "ANGLE_BASED" ? "Angle-based" : "One seventh"}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === "media" && adminMode && (
+          <div className="space-y-5">
+            <div className="space-y-1.5">
+              <Label htmlFor="sub-cover">{tForm("coverImageUrl")}</Label>
+              <Input
+                id="sub-cover"
+                type="url"
+                value={state.coverImageUrl}
+                onChange={(e) => setState((s) => ({ ...s, coverImageUrl: e.target.value }))}
+              />
+              {errors.coverImageUrl && <p className="text-xs text-danger">{errors.coverImageUrl}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="sub-logo">{tForm("logoUrl")}</Label>
+              <Input
+                id="sub-logo"
+                type="url"
+                value={state.logoUrl}
+                onChange={(e) => setState((s) => ({ ...s, logoUrl: e.target.value }))}
+              />
+              {errors.logoUrl && <p className="text-xs text-danger">{errors.logoUrl}</p>}
+            </div>
+          </div>
+        )}
+
+        {step === "admin" && adminMode && (
           <div className="space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="sub-admin-status">{tQuick("adminFields.status")}</Label>
@@ -639,6 +1128,9 @@ export function SubmitMosqueForm({
               rows={[
                 { label: t("fields.nameEn"), value: state.nameEn },
                 ...(state.nameAr ? [{ label: t("fields.nameAr"), value: state.nameAr }] : []),
+                ...(adminMode && state.legalName
+                  ? [{ label: tForm("legalName"), value: state.legalName }]
+                  : []),
                 { label: t("fields.denomination"), value: tDenominations(state.denomination) },
                 ...(state.description ? [{ label: t("fields.description"), value: state.description }] : []),
               ]}
@@ -651,10 +1143,26 @@ export function SubmitMosqueForm({
               rows={[
                 {
                   label: t("fields.addressLine1"),
-                  value: [state.addressLine1, state.city, state.region, state.postalCode, state.countryCode]
+                  value: [
+                    state.addressLine1,
+                    state.addressLine2,
+                    state.city,
+                    state.region,
+                    state.postalCode,
+                    state.countryCode,
+                  ]
                     .filter(Boolean)
                     .join(", "),
                 },
+                ...(adminMode
+                  ? [
+                      {
+                        label: `${tForm("lat")} / ${tForm("lng")}`,
+                        value: `${state.lat || "—"}, ${state.lng || "—"}`,
+                      },
+                      { label: tForm("timezone"), value: state.timezone || "—" },
+                    ]
+                  : []),
               ]}
             />
 
@@ -669,31 +1177,84 @@ export function SubmitMosqueForm({
                 ...(state.languages.length > 0
                   ? [{ label: t("fields.languages"), value: state.languages.join(", ") }]
                   : []),
+                ...(adminMode && state.facebook ? [{ label: tForm("facebook"), value: state.facebook }] : []),
+                ...(adminMode && state.instagram ? [{ label: tForm("instagram"), value: state.instagram }] : []),
+                ...(adminMode && state.youtube ? [{ label: tForm("youtube"), value: state.youtube }] : []),
+                ...(adminMode && state.whatsapp ? [{ label: tForm("whatsapp"), value: state.whatsapp }] : []),
+                ...(adminMode && state.altSpellings
+                  ? [{ label: tForm("altSpellings"), value: state.altSpellings }]
+                  : []),
+                ...(adminMode && state.capacity
+                  ? [{ label: tForm("capacity"), value: state.capacity }]
+                  : []),
               ]}
             />
 
-            {geocode.status === "loading" && (
+            {adminMode && (
+              <>
+                <ReviewSection
+                  title={tForm("sectionFacilities")}
+                  onEdit={() => jumpToStep(STEPS.indexOf("facilities"))}
+                  editLabel={t("review.editSection", { section: tForm("sectionFacilities") })}
+                  rows={[
+                    {
+                      label: tForm("sectionFacilities"),
+                      value: SERVICE_KEYS.filter((k) => state.services[k])
+                        .map((k) => tFacilities(k))
+                        .join(", ") || "—",
+                    },
+                  ]}
+                />
+                <ReviewSection
+                  title={tForm("sectionPrayer")}
+                  onEdit={() => jumpToStep(STEPS.indexOf("prayer"))}
+                  editLabel={t("review.editSection", { section: tForm("sectionPrayer") })}
+                  rows={[
+                    { label: tForm("calcMethod"), value: state.calcMethod },
+                    { label: tForm("asrMethod"), value: state.asrMethod },
+                    { label: tForm("highLatRule"), value: state.highLatitudeRule },
+                  ]}
+                />
+                <ReviewSection
+                  title={tForm("sectionMedia")}
+                  onEdit={() => jumpToStep(STEPS.indexOf("media"))}
+                  editLabel={t("review.editSection", { section: tForm("sectionMedia") })}
+                  rows={[
+                    ...(state.coverImageUrl
+                      ? [{ label: tForm("coverImageUrl"), value: state.coverImageUrl }]
+                      : []),
+                    ...(state.logoUrl ? [{ label: tForm("logoUrl"), value: state.logoUrl }] : []),
+                  ]}
+                />
+                <ReviewSection
+                  title={tQuick("steps.admin")}
+                  onEdit={() => jumpToStep(STEPS.indexOf("admin"))}
+                  editLabel={t("review.editSection", { section: tQuick("steps.admin") })}
+                  rows={[{ label: tQuick("adminFields.status"), value: tStatuses(state.adminStatus) }]}
+                />
+              </>
+            )}
+
+            {!adminMode && reviewGeocode.status === "loading" && (
               <div className="h-[240px] w-full animate-pulse rounded-md bg-muted" aria-hidden />
             )}
-            {geocode.status === "ok" && (
+            {!adminMode && reviewGeocode.status === "ok" && (
               <MosqueMap
-                lat={geocode.lat}
-                lng={geocode.lng}
+                lat={reviewGeocode.lat}
+                lng={reviewGeocode.lng}
                 className="h-[240px] w-full overflow-hidden rounded-md"
               />
             )}
-            {geocode.status === "fail" && (
+            {!adminMode && reviewGeocode.status === "fail" && (
               <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-700 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
                 {t("review.geocodeFailed")}
               </p>
             )}
-
-            {adminMode && (
-              <ReviewSection
-                title={tQuick("steps.admin")}
-                onEdit={() => jumpToStep(STEPS.indexOf("admin"))}
-                editLabel={t("review.editSection", { section: tQuick("steps.admin") })}
-                rows={[{ label: tQuick("adminFields.status"), value: tStatuses(state.adminStatus) }]}
+            {adminMode && state.lat && state.lng && (
+              <MosqueMap
+                lat={parseFloat(state.lat)}
+                lng={parseFloat(state.lng)}
+                className="h-[240px] w-full overflow-hidden rounded-md"
               />
             )}
           </div>
@@ -731,11 +1292,13 @@ export function SubmitMosqueForm({
           )}
           {isLast && (
             <Button type="submit" disabled={submitting} aria-busy={submitting}>
-              {submitting ? <Loader2 className="animate-spin" /> : <Send />}
+              {submitting ? <Loader2 className="animate-spin" /> : isEdit ? <Save /> : <Send />}
               {submitting
                 ? t("actions.submitting")
                 : adminMode
-                  ? tQuick("create")
+                  ? isEdit
+                    ? tForm("actions.save")
+                    : tQuick("create")
                   : t("actions.submit")}
             </Button>
           )}
@@ -743,6 +1306,26 @@ export function SubmitMosqueForm({
       </div>
     </form>
   );
+}
+
+function stepLabelFor(
+  step: Step,
+  t: ReturnType<typeof useTranslations>,
+  tQuick: ReturnType<typeof useTranslations>,
+  tForm: ReturnType<typeof useTranslations>,
+): string {
+  switch (step) {
+    case "admin":
+      return tQuick("steps.admin");
+    case "facilities":
+      return tForm("sectionFacilities");
+    case "prayer":
+      return tForm("sectionPrayer");
+    case "media":
+      return tForm("sectionMedia");
+    default:
+      return t(`steps.${step}`);
+  }
 }
 
 interface ReviewSectionProps {

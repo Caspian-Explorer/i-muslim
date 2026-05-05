@@ -34,8 +34,6 @@ function rowToInput(row: Record<string, string>): { ok: boolean; input?: MosqueI
     name: {
       en: row.name_en!.trim(),
       ar: row.name_ar?.trim() || undefined,
-      tr: row.name_tr?.trim() || undefined,
-      id: row.name_id?.trim() || undefined,
     },
     legalName: row.legal_name?.trim() || undefined,
     denomination:
@@ -60,7 +58,6 @@ function rowToInput(row: Record<string, string>): { ok: boolean; input?: MosqueI
       .filter(Boolean),
     services: emptyServices(),
     prayerCalc: defaultPrayerCalc(),
-    iqamah: {},
     status: "published",
   };
   return { ok: true, input };

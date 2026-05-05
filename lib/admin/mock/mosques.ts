@@ -22,7 +22,6 @@ type Seed = Pick<
   | "coverImage"
 > & {
   services?: Partial<Mosque["services"]>;
-  iqamah?: Mosque["iqamah"];
   capacity?: number;
   publishedAt?: string;
 };
@@ -496,7 +495,6 @@ function buildMosque(seed: Seed, idx: number): Mosque {
     capacity: seed.capacity,
     services,
     languages: seed.languages,
-    iqamah: seed.iqamah,
     coverImage: seed.coverImage,
     altSpellings: seed.altSpellings,
     searchTokens: buildSearchTokens(partial),

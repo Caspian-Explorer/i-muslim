@@ -6,7 +6,7 @@ import {
   PrayerTimes,
   type CalculationParameters,
 } from "adhan";
-import type { AsrMethod, CalcMethod, HighLatitudeRule, Mosque, PrayerCalcConfig } from "@/types/mosque";
+import type { AsrMethod, CalcMethod, Denomination, HighLatitudeRule, Mosque, PrayerCalcConfig } from "@/types/mosque";
 
 type AdhanHighLatValue = (typeof AdhanHighLatRule)[keyof typeof AdhanHighLatRule];
 
@@ -84,6 +84,24 @@ export function isAsrMethod(v: unknown): v is AsrMethod {
 }
 
 export function defaultPrayerCalc(): PrayerCalcConfig {
+  return { ...DEFAULT_CALC };
+}
+
+const GCC = new Set(["SA", "AE", "BH", "KW", "OM", "QA", "YE"]);
+const SOUTH_ASIA_HANAFI = new Set(["PK", "BD", "IN", "AF"]);
+const NORTH_AMERICA = new Set(["US", "CA"]);
+const EGYPT_REGION = new Set(["EG", "SD", "LY", "TN"]);
+const SHIA_REGION = new Set(["IR", "IQ"]);
+
+export function suggestPrayerCalc(country: string, denomination: Denomination): PrayerCalcConfig {
+  const cc = (country ?? "").toUpperCase();
+  if (GCC.has(cc)) return { method: "MAKKAH", asrMethod: "shafi", highLatitudeRule: "MIDDLE_OF_NIGHT" };
+  if (SOUTH_ASIA_HANAFI.has(cc)) return { method: "KARACHI", asrMethod: "hanafi", highLatitudeRule: "MIDDLE_OF_NIGHT" };
+  if (NORTH_AMERICA.has(cc)) return { method: "ISNA", asrMethod: "shafi", highLatitudeRule: "ANGLE_BASED" };
+  if (EGYPT_REGION.has(cc)) return { method: "EGYPT", asrMethod: "shafi", highLatitudeRule: "MIDDLE_OF_NIGHT" };
+  if (SHIA_REGION.has(cc) && denomination === "shia") {
+    return { method: "TEHRAN", asrMethod: "shafi", highLatitudeRule: "MIDDLE_OF_NIGHT" };
+  }
   return { ...DEFAULT_CALC };
 }
 

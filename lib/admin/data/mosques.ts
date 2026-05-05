@@ -53,7 +53,6 @@ function normalizeMosque(id: string, raw: Record<string, unknown>): Mosque | nul
     services,
     languages: (raw.languages as string[]) ?? [],
     prayerCalc: raw.prayerCalc as Mosque["prayerCalc"],
-    iqamah: raw.iqamah as Mosque["iqamah"],
     coverImage: raw.coverImage as Mosque["coverImage"],
     gallery: raw.gallery as Mosque["gallery"],
     logoUrl: raw.logoUrl as string | undefined,

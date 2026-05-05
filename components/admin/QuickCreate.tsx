@@ -41,6 +41,7 @@ import { CertBodyForm } from "./businesses/CertBodyForm";
 import type { BusinessCategory } from "@/types/business";
 import type { EventCategoryDoc } from "@/types/event-category";
 import type { ArticleCategoryDoc } from "@/types/blog";
+import type { Mosque } from "@/types/mosque";
 
 type ViewId =
   | "selector"
@@ -58,12 +59,23 @@ export const QUICK_CREATE_OPEN_EVENT = "quick-create:open";
 
 interface QuickCreateOpenDetail {
   view?: Exclude<ViewId, "selector">;
+  /** When set with view="mosque", opens UAPOP in edit mode pre-filled with this mosque. */
+  mosque?: Mosque;
 }
 
 export function openQuickCreate(view?: Exclude<ViewId, "selector">) {
   if (typeof window === "undefined") return;
   window.dispatchEvent(
     new CustomEvent<QuickCreateOpenDetail>(QUICK_CREATE_OPEN_EVENT, { detail: { view } }),
+  );
+}
+
+export function openQuickEditMosque(mosque: Mosque) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent<QuickCreateOpenDetail>(QUICK_CREATE_OPEN_EVENT, {
+      detail: { view: "mosque", mosque },
+    }),
   );
 }
 
@@ -114,8 +126,10 @@ export function QuickCreate({
   const t = useTranslations("quickCreate");
   const tTypes = useTranslations("quickCreate.types");
   const tFormTitles = useTranslations("quickCreate.formTitles");
+  const tMosqueAdmin = useTranslations("mosquesAdmin.form");
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<ViewId>("selector");
+  const [editMosque, setEditMosque] = useState<Mosque | null>(null);
 
   function close() {
     setOpen(false);
@@ -123,6 +137,7 @@ export function QuickCreate({
 
   function back() {
     setView("selector");
+    setEditMosque(null);
   }
 
   function handleOpenChange(next: boolean) {
@@ -130,7 +145,10 @@ export function QuickCreate({
     if (!next) {
       // Reset to selector for next open. Defer slightly so the close animation
       // doesn't visually flicker through the selector before fading out.
-      setTimeout(() => setView("selector"), 150);
+      setTimeout(() => {
+        setView("selector");
+        setEditMosque(null);
+      }, 150);
     }
   }
 
@@ -138,6 +156,7 @@ export function QuickCreate({
     function onOpen(e: Event) {
       const detail = (e as CustomEvent<QuickCreateOpenDetail>).detail;
       setView(detail?.view ?? "selector");
+      setEditMosque(detail?.mosque ?? null);
       setOpen(true);
     }
     window.addEventListener(QUICK_CREATE_OPEN_EVENT, onOpen);
@@ -193,12 +212,17 @@ export function QuickCreate({
               onBack={back}
               onClose={close}
               backLabel={t("back")}
-              titleFor={(v) => tFormTitles(v)}
+              titleFor={(v) =>
+                v === "mosque" && editMosque
+                  ? `${tMosqueAdmin("editTitle")} — ${editMosque.name.en}`
+                  : tFormTitles(v)
+              }
               categories={categories}
               eventCategories={eventCategories}
               articleCategories={articleCategories}
               canPersist={canPersist}
               adminEmail={adminEmail}
+              editMosque={editMosque}
               router={router}
             />
           )}
@@ -274,6 +298,7 @@ function FormView({
   articleCategories,
   canPersist,
   adminEmail,
+  editMosque,
   router,
 }: {
   view: Exclude<ViewId, "selector">;
@@ -286,6 +311,7 @@ function FormView({
   articleCategories: ArticleCategoryDoc[];
   canPersist: boolean;
   adminEmail: string;
+  editMosque: Mosque | null;
   router: ReturnType<typeof useRouter>;
 }) {
   const BackButton = (
@@ -338,14 +364,12 @@ function FormView({
       <FormShell backButton={BackButton} title={titleFor("mosque")} fillHeight>
         <SubmitMosqueForm
           adminMode
+          mode={editMosque ? "edit" : "create"}
+          initial={editMosque ?? undefined}
           userEmail={adminEmail}
-          onAdminSaved={({ slug }) => {
+          onAdminSaved={() => {
             onClose();
-            if (slug) {
-              router.push(`/admin/mosques/${slug}/edit`);
-            } else {
-              router.refresh();
-            }
+            router.refresh();
           }}
           onAdminCancel={onClose}
         />
