@@ -583,6 +583,27 @@
       "errorCapacity": "Kapasitas harus berupa bilangan bulat tak negatif.",
       "errorRecurrenceCount": "Jumlah harus antara 1 dan 999.",
       "errorOffsetMinutes": "Selisih harus berupa bilangan bulat menit."
+    },
+    "admin": {
+      "categoriesPageTitle": "Kategori",
+      "taxonomyEmpty": "Belum ada apa-apa di sini.",
+      "taxonomyAddCta": "Tambah",
+      "taxonomyEditCta": "Edit",
+      "taxonomyDeleteCta": "Hapus",
+      "taxonomyDeleteTitle": "Hapus kategori",
+      "taxonomyDeleteDescription": "Ini menghapus \"{name}\" secara permanen. Acara yang ditandai dengan slug ini akan ditampilkan sebagai slug mentah. Tidak dapat dibatalkan.",
+      "taxonomyCreatedToast": "Dibuat.",
+      "taxonomyUpdatedToast": "Diperbarui.",
+      "taxonomyDeletedToast": "Dihapus.",
+      "noPersistToast": "Tidak dapat menyimpan: Firestore tidak dikonfigurasi.",
+      "saving": "Menyimpan…",
+      "save": "Simpan perubahan",
+      "create": "Buat",
+      "slug": "Slug",
+      "iconKey": "Nama ikon",
+      "sortOrder": "Urutan",
+      "isActive": "Aktif",
+      "nameLocale": "Nama ({locale})"
     }
   },
   "eventsPublic": {

@@ -583,6 +583,27 @@
       "errorCapacity": "Kapasite, negatif olmayan bir tam sayı olmalı.",
       "errorRecurrenceCount": "Sayı 1 ile 999 arasında olmalı.",
       "errorOffsetMinutes": "Sapma tam sayı olmalı."
+    },
+    "admin": {
+      "categoriesPageTitle": "Kategoriler",
+      "taxonomyEmpty": "Henüz hiçbir şey yok.",
+      "taxonomyAddCta": "Ekle",
+      "taxonomyEditCta": "Düzenle",
+      "taxonomyDeleteCta": "Sil",
+      "taxonomyDeleteTitle": "Kategoriyi sil",
+      "taxonomyDeleteDescription": "Bu, \"{name}\" girdisini kalıcı olarak siler. Bu kategoriye etiketli mevcut etkinlikler ham slug değerine geri döner. Geri alınamaz.",
+      "taxonomyCreatedToast": "Oluşturuldu.",
+      "taxonomyUpdatedToast": "Güncellendi.",
+      "taxonomyDeletedToast": "Silindi.",
+      "noPersistToast": "Kaydedilemedi: Firestore yapılandırılmamış.",
+      "saving": "Kaydediliyor…",
+      "save": "Değişiklikleri kaydet",
+      "create": "Oluştur",
+      "slug": "Slug",
+      "iconKey": "İkon adı",
+      "sortOrder": "Sıralama",
+      "isActive": "Aktif",
+      "nameLocale": "Ad ({locale})"
     }
   },
   "eventsPublic": {

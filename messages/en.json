@@ -902,6 +902,27 @@
       "errorCapacity": "Capacity must be a non-negative integer.",
       "errorRecurrenceCount": "Count must be between 1 and 999.",
       "errorOffsetMinutes": "Offset must be a whole number of minutes."
+    },
+    "admin": {
+      "categoriesPageTitle": "Categories",
+      "taxonomyEmpty": "Nothing here yet.",
+      "taxonomyAddCta": "Add",
+      "taxonomyEditCta": "Edit",
+      "taxonomyDeleteCta": "Delete",
+      "taxonomyDeleteTitle": "Delete category",
+      "taxonomyDeleteDescription": "This permanently deletes \"{name}\". Existing events tagged with this slug will fall back to the raw slug. This cannot be undone.",
+      "taxonomyCreatedToast": "Created.",
+      "taxonomyUpdatedToast": "Updated.",
+      "taxonomyDeletedToast": "Deleted.",
+      "noPersistToast": "Cannot save: Firestore is not configured.",
+      "saving": "Saving…",
+      "save": "Save changes",
+      "create": "Create",
+      "slug": "Slug",
+      "iconKey": "Icon name",
+      "sortOrder": "Sort order",
+      "isActive": "Active",
+      "nameLocale": "Name ({locale})"
     }
   },
   "eventsPublic": {

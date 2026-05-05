@@ -867,6 +867,27 @@
       "errorCapacity": "يجب أن تكون السعة عددًا صحيحًا غير سالب.",
       "errorRecurrenceCount": "يجب أن يكون العدد بين 1 و 999.",
       "errorOffsetMinutes": "يجب أن تكون الإزاحة عددًا صحيحًا من الدقائق."
+    },
+    "admin": {
+      "categoriesPageTitle": "الفئات",
+      "taxonomyEmpty": "لا يوجد شيء هنا بعد.",
+      "taxonomyAddCta": "إضافة",
+      "taxonomyEditCta": "تعديل",
+      "taxonomyDeleteCta": "حذف",
+      "taxonomyDeleteTitle": "حذف الفئة",
+      "taxonomyDeleteDescription": "سيؤدي هذا إلى حذف \"{name}\" نهائياً. الفعاليات المرتبطة بهذه الفئة ستعرض الرابط المختصر فقط. لا يمكن التراجع.",
+      "taxonomyCreatedToast": "تم الإنشاء.",
+      "taxonomyUpdatedToast": "تم التحديث.",
+      "taxonomyDeletedToast": "تم الحذف.",
+      "noPersistToast": "تعذّر الحفظ: Firestore غير مُهيّأ.",
+      "saving": "جارٍ الحفظ…",
+      "save": "حفظ التغييرات",
+      "create": "إنشاء",
+      "slug": "الرابط المختصر",
+      "iconKey": "اسم الأيقونة",
+      "sortOrder": "ترتيب الفرز",
+      "isActive": "نشط",
+      "nameLocale": "الاسم ({locale})"
     }
   },
   "eventsPublic": {
