@@ -3,33 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import {
-  Bell,
-  CheckCheck,
-  HandCoins,
-  Inbox,
-  Mail,
-  MessageCircleQuestion,
-  ShieldAlert,
-  UserPlus,
-  Zap,
-} from "lucide-react";
+import { Bell, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { formatRelative } from "@/lib/utils";
-import type { AdminNotification, NotificationType } from "@/types/admin";
-
-const TYPE_ICON: Record<NotificationType, typeof UserPlus> = {
-  signup: UserPlus,
-  flagged: ShieldAlert,
-  donation: HandCoins,
-  qa: MessageCircleQuestion,
-  system: Zap,
-  submission: Inbox,
-  contact: Mail,
-};
+import { NotificationTypeIcon } from "@/components/admin/notifications/type-icon";
+import type { AdminNotification } from "@/types/admin";
 
 const POLL_INTERVAL_MS = 60_000;
 
@@ -160,7 +141,7 @@ export function NotificationsPopover({ initialItems }: NotificationsPopoverProps
         <Separator />
         <div className="p-3 text-center">
           <Link
-            href="/admin/activity"
+            href="/admin/notifications"
             className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
           >
             {t("viewAll")}
@@ -201,11 +182,10 @@ function NotificationRow({
   item: AdminNotification;
   onMark: (id: string) => void;
 }) {
-  const Icon = TYPE_ICON[item.type] ?? Zap;
   const inner = (
     <>
       <span className="mt-0.5 inline-flex size-7 items-center justify-center rounded-md bg-muted">
-        <Icon className="size-3.5" />
+        <NotificationTypeIcon type={item.type} className="size-3.5" />
       </span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">

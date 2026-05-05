@@ -125,7 +125,27 @@
     "tabUnread": "Belum dibaca",
     "markAllRead": "Tandai semua sudah dibaca",
     "viewAll": "Lihat semua notifikasi",
-    "empty": "Tidak ada yang ditampilkan."
+    "empty": "Tidak ada yang ditampilkan.",
+    "page": {
+      "title": "Notifikasi",
+      "description": "Tinjau dan kelola notifikasi admin.",
+      "filterAllTypes": "Semua jenis",
+      "filterByType": "Filter berdasarkan jenis",
+      "markRead": "Tandai dibaca",
+      "emptyAll": "Belum ada notifikasi.",
+      "noResults": "Tidak ada notifikasi yang cocok dengan filter saat ini.",
+      "markedAllReadToast": "Semua notifikasi ditandai sudah dibaca.",
+      "markFailedToast": "Tidak dapat memperbarui notifikasi. Silakan coba lagi.",
+      "types": {
+        "signup": "Pendaftaran baru",
+        "flagged": "Konten ditandai",
+        "donation": "Donasi",
+        "qa": "Tanya Jawab",
+        "system": "Sistem",
+        "submission": "Pengiriman",
+        "contact": "Kontak"
+      }
+    }
   },
   "sidebar": {
     "newButton": "Baru",

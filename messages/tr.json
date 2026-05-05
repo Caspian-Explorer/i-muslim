@@ -125,7 +125,27 @@
     "tabUnread": "Okunmamış",
     "markAllRead": "Tümünü okundu işaretle",
     "viewAll": "Tüm bildirimleri görüntüle",
-    "empty": "Gösterilecek bir şey yok."
+    "empty": "Gösterilecek bir şey yok.",
+    "page": {
+      "title": "Bildirimler",
+      "description": "Yönetici bildirimlerini incele ve önceliklendir.",
+      "filterAllTypes": "Tüm türler",
+      "filterByType": "Türe göre filtrele",
+      "markRead": "Okundu işaretle",
+      "emptyAll": "Henüz bildirim yok.",
+      "noResults": "Mevcut filtreye uyan bildirim yok.",
+      "markedAllReadToast": "Tüm bildirimler okundu olarak işaretlendi.",
+      "markFailedToast": "Bildirim güncellenemedi. Lütfen tekrar dene.",
+      "types": {
+        "signup": "Yeni kayıt",
+        "flagged": "İşaretlenen içerik",
+        "donation": "Bağış",
+        "qa": "Soru-Cevap",
+        "system": "Sistem",
+        "submission": "Gönderim",
+        "contact": "İletişim"
+      }
+    }
   },
   "sidebar": {
     "newButton": "Yeni",
