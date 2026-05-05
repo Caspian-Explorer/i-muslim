@@ -20,24 +20,16 @@ import {
 } from "@/components/ui/command";
 import { toast } from "@/components/ui/sonner";
 import { BUNDLED_LOCALES, LOCALE_META, type BundledLocale } from "@/i18n/config";
-import { CATEGORY_SLUGS } from "@/lib/blog/taxonomy";
 import { slugify } from "@/lib/blog/slug";
 import { readingMinutes } from "@/lib/blog/reading-time";
 import { cn } from "@/lib/utils";
-import type { Article, CategorySlug } from "@/types/blog";
+import type { Article, ArticleCategoryDoc, CategorySlug } from "@/types/blog";
 import {
   createArticle,
   updateArticle,
   publishTranslation,
   unpublishTranslation,
 } from "@/app/[locale]/(admin)/admin/articles/_actions";
-
-const CATEGORY_LABELS: Record<CategorySlug, string> = {
-  "prayer-times": "Prayer Times",
-  hijri: "Hijri",
-  "quran-hadith": "Quran & Hadith",
-  qibla: "Qibla",
-};
 
 const EMPTY_TRANSLATION = {
   title: "",
@@ -53,9 +45,12 @@ interface FormState {
   translations: Record<BundledLocale, typeof EMPTY_TRANSLATION>;
 }
 
-function articleToForm(article: Article | null): FormState {
+function articleToForm(
+  article: Article | null,
+  defaultCategory: CategorySlug,
+): FormState {
   const base: FormState = {
-    category: article?.category ?? "prayer-times",
+    category: article?.category ?? defaultCategory,
     heroImageUrl: article?.heroImageUrl ?? "",
     heroImageAlt: article?.heroImageAlt ?? "",
     translations: {
@@ -83,6 +78,8 @@ function articleToForm(article: Article | null): FormState {
 interface Props {
   article: Article | null;
   source: "firestore" | "mock";
+  /** Categories admin can pick from; sourced from the `articleCategories` Firestore collection. */
+  categories: ArticleCategoryDoc[];
   /**
    * "page" — sticky footer in the document scroll (standalone editor route).
    * "dialog" — flex-col container with internal scrollable body and a footer
@@ -98,12 +95,19 @@ interface Props {
 export function ArticleEditorClient({
   article,
   source,
+  categories,
   layout = "page",
   onSaved,
   onCancel,
 }: Props) {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>(() => articleToForm(article));
+  const sortedCategories = useMemo(
+    () => [...categories].sort((a, b) => a.sortOrder - b.sortOrder),
+    [categories],
+  );
+  const defaultCategory: CategorySlug =
+    sortedCategories.find((c) => c.isActive)?.slug ?? sortedCategories[0]?.slug ?? "prayer-times";
+  const [form, setForm] = useState<FormState>(() => articleToForm(article, defaultCategory));
   const [activeLocale, setActiveLocale] = useState<BundledLocale>("en");
   const [pending, startTransition] = useTransition();
   const [previewHtml, setPreviewHtml] = useState<string>("");
@@ -415,11 +419,17 @@ export function ArticleEditorClient({
               className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
               value={form.category}
               onChange={(e) =>
-                setForm((prev) => ({ ...prev, category: e.target.value as CategorySlug }))
+                setForm((prev) => ({ ...prev, category: e.target.value }))
               }
             >
-              {CATEGORY_SLUGS.map((c) => (
-                <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+              {sortedCategories.length === 0 && (
+                <option value={form.category}>{form.category}</option>
+              )}
+              {sortedCategories.map((c) => (
+                <option key={c.slug} value={c.slug} disabled={!c.isActive}>
+                  {c.name.en}
+                  {!c.isActive ? " (inactive)" : ""}
+                </option>
               ))}
             </select>
           </div>

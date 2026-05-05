@@ -7,7 +7,6 @@ import { getAdminSession } from "@/lib/auth/session";
 import { requireDb } from "@/lib/firebase/admin";
 import { LOCALES, type Locale } from "@/i18n/config";
 import { CACHE_TAGS } from "@/lib/blog/cache-tags";
-import { CATEGORY_SLUGS } from "@/lib/blog/taxonomy";
 import { isValidSlug } from "@/lib/blog/slug";
 import { readingMinutes } from "@/lib/blog/reading-time";
 import { normalizeArticle } from "@/lib/blog/data";
@@ -29,7 +28,12 @@ const translationSchema = z.object({
 });
 
 const articleInputSchema = z.object({
-  category: z.enum(CATEGORY_SLUGS as unknown as [string, ...string[]]),
+  category: z
+    .string()
+    .trim()
+    .min(1, "Category is required")
+    .max(80)
+    .refine((s) => isValidSlug(s), "Invalid category slug"),
   heroImageUrl: z.string().url().or(z.literal("")).nullable().optional(),
   heroImageAlt: z.string().max(200).nullable().optional(),
   translations: z.record(localeEnum, translationSchema).optional(),

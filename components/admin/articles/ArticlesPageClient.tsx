@@ -10,26 +10,33 @@ import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { openQuickCreate } from "@/components/admin/QuickCreate";
 import { toast } from "@/components/ui/sonner";
 import { cn, formatRelative } from "@/lib/utils";
-import type { AdminArticleRow, CategorySlug } from "@/types/blog";
-import { CATEGORY_SLUGS } from "@/lib/blog/taxonomy";
+import type {
+  AdminArticleRow,
+  ArticleCategoryDoc,
+  CategorySlug,
+} from "@/types/blog";
 import { deleteArticle } from "@/app/[locale]/(admin)/admin/articles/_actions";
-
-const CATEGORY_LABELS: Record<CategorySlug, string> = {
-  "prayer-times": "Prayer Times",
-  hijri: "Hijri",
-  "quran-hadith": "Quran & Hadith",
-  qibla: "Qibla",
-};
 
 type StatusFilter = "all" | "draft" | "published";
 
 export function ArticlesPageClient({
   initialItems,
   source,
+  categories,
 }: {
   initialItems: AdminArticleRow[];
   source: "firestore" | "mock";
+  categories: ArticleCategoryDoc[];
 }) {
+  const categoryLabel = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of categories) map.set(c.slug, c.name.en);
+    return (slug: string) => map.get(slug) ?? slug;
+  }, [categories]);
+  const categoryOptions = useMemo(
+    () => [...categories].sort((a, b) => a.sortOrder - b.sortOrder),
+    [categories],
+  );
   const [items, setItems] = useState(initialItems);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -108,8 +115,8 @@ export function ArticlesPageClient({
           aria-label="Filter by category"
         >
           <option value="all">All categories</option>
-          {CATEGORY_SLUGS.map((c) => (
-            <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+          {categoryOptions.map((c) => (
+            <option key={c.slug} value={c.slug}>{c.name.en}</option>
           ))}
         </select>
         <div className="ms-auto">
@@ -162,7 +169,7 @@ export function ArticlesPageClient({
                       </Link>
                     </td>
                     <td className="px-3 py-2 align-middle">
-                      <Badge variant="neutral">{CATEGORY_LABELS[row.category]}</Badge>
+                      <Badge variant="neutral">{categoryLabel(row.category)}</Badge>
                     </td>
                     <td className="px-3 py-2 align-middle">
                       <div className="flex flex-wrap gap-1">

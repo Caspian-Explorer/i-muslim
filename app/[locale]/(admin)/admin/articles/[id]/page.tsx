@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { ArticleEditorClient } from "@/components/admin/articles/ArticleEditorClient";
 import { fetchArticleById } from "@/lib/admin/data/articles";
+import { fetchArticleCategories } from "@/lib/admin/data/article-categories";
 import { getFirebaseAdminStatus } from "@/lib/firebase/admin";
 
 export const metadata: Metadata = {
@@ -28,7 +29,10 @@ export default async function EditArticlePage({
       </div>
     );
   }
-  const article = await fetchArticleById(id);
+  const [article, { categories }] = await Promise.all([
+    fetchArticleById(id),
+    fetchArticleCategories(),
+  ]);
   if (!article) notFound();
   const title =
     article.translations.en?.title ||
@@ -46,7 +50,11 @@ export default async function EditArticlePage({
       >
         <ArrowLeft className="size-4" /> Back to articles
       </Link>
-      <ArticleEditorClient article={article} source="firestore" />
+      <ArticleEditorClient
+        article={article}
+        source="firestore"
+        categories={categories}
+      />
     </div>
   );
 }

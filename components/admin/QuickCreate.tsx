@@ -32,6 +32,7 @@ import { SubmitMosqueForm } from "@/components/mosque/SubmitMosqueForm";
 import { ArticleEditorClient } from "./articles/ArticleEditorClient";
 import type { BusinessCategory } from "@/types/business";
 import type { EventCategoryDoc } from "@/types/event-category";
+import type { ArticleCategoryDoc } from "@/types/blog";
 
 type ViewId = "selector" | "event" | "business" | "mosque" | "article";
 
@@ -51,6 +52,7 @@ export function openQuickCreate(view?: Exclude<ViewId, "selector">) {
 interface QuickCreateProps {
   categories: BusinessCategory[];
   eventCategories: EventCategoryDoc[];
+  articleCategories: ArticleCategoryDoc[];
   canPersist: boolean;
   adminEmail: string;
 }
@@ -69,7 +71,13 @@ const ITEMS: QuickCreateItem[] = [
   { id: "article", icon: FileText, nameKey: "article", shortcut: "A" },
 ];
 
-export function QuickCreate({ categories, eventCategories, canPersist, adminEmail }: QuickCreateProps) {
+export function QuickCreate({
+  categories,
+  eventCategories,
+  articleCategories,
+  canPersist,
+  adminEmail,
+}: QuickCreateProps) {
   const router = useRouter();
   const t = useTranslations("quickCreate");
   const tTypes = useTranslations("quickCreate.types");
@@ -151,6 +159,7 @@ export function QuickCreate({ categories, eventCategories, canPersist, adminEmai
               titleFor={(v) => tFormTitles(v)}
               categories={categories}
               eventCategories={eventCategories}
+              articleCategories={articleCategories}
               canPersist={canPersist}
               adminEmail={adminEmail}
               router={router}
@@ -225,6 +234,7 @@ function FormView({
   titleFor,
   categories,
   eventCategories,
+  articleCategories,
   canPersist,
   adminEmail,
   router,
@@ -236,6 +246,7 @@ function FormView({
   titleFor: (view: Exclude<ViewId, "selector">) => string;
   categories: BusinessCategory[];
   eventCategories: EventCategoryDoc[];
+  articleCategories: ArticleCategoryDoc[];
   canPersist: boolean;
   adminEmail: string;
   router: ReturnType<typeof useRouter>;
@@ -311,6 +322,7 @@ function FormView({
         <ArticleEditorClient
           article={null}
           source={canPersist ? "firestore" : "mock"}
+          categories={articleCategories}
           layout="dialog"
           onSaved={({ id }) => {
             onClose();

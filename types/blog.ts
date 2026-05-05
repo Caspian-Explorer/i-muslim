@@ -2,13 +2,33 @@ import type { Locale } from "@/i18n/config";
 
 export type ArticleStatus = "draft" | "published";
 
+/**
+ * Seed slugs used to populate the `articleCategories` Firestore collection on
+ * first read. Once the admin starts editing categories at /admin/articles/categories
+ * the live list replaces these; the seed only matters for fresh installs and
+ * for the read-only public site when Firestore is unavailable.
+ */
 export const CATEGORY_SLUGS = [
   "prayer-times",
   "hijri",
   "quran-hadith",
   "qibla",
 ] as const;
-export type CategorySlug = (typeof CATEGORY_SLUGS)[number];
+
+/**
+ * The slug stored on each article. Was a union of the four seeded slugs; now
+ * a plain string so admins can add new categories from /admin/articles/categories.
+ */
+export type CategorySlug = string;
+
+export interface ArticleCategoryDoc {
+  id: string;
+  slug: CategorySlug;
+  name: { en: string; ar: string; tr: string; id: string };
+  iconKey?: string;
+  sortOrder: number;
+  isActive: boolean;
+}
 
 export interface ArticleTranslation {
   title: string;

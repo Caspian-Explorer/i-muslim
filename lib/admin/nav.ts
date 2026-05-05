@@ -44,6 +44,7 @@ export type NavItemKey =
   | "scholars"
   | "groups"
   | "articles"
+  | "articlesCategories"
   | "quran"
   | "hadith"
   | "duas"
@@ -51,6 +52,7 @@ export type NavItemKey =
   | "media"
   | "prayerTimes"
   | "events"
+  | "eventsCategories"
   | "mosques"
   | "qa"
   | "announcements"
@@ -118,7 +120,14 @@ export const ADMIN_NAV: NavGroup[] = [
   {
     id: "content",
     items: [
-      { labelKey: "articles", href: "/admin/articles", icon: FileText },
+      {
+        labelKey: "articles",
+        href: "/admin/articles",
+        icon: FileText,
+        children: [
+          { labelKey: "articlesCategories", href: "/admin/articles/categories", icon: Tags },
+        ],
+      },
       { labelKey: "quran", href: "/admin/quran", icon: BookOpen },
       { labelKey: "hadith", href: "/admin/hadith", icon: BookMarked },
       { labelKey: "duas", href: "/admin/duas", icon: Sparkles },
@@ -130,7 +139,14 @@ export const ADMIN_NAV: NavGroup[] = [
     id: "worship",
     items: [
       { labelKey: "prayerTimes", href: "/admin/prayer-times", icon: Clock },
-      { labelKey: "events", href: "/admin/events", icon: CalendarDays },
+      {
+        labelKey: "events",
+        href: "/admin/events",
+        icon: CalendarDays,
+        children: [
+          { labelKey: "eventsCategories", href: "/admin/events/categories", icon: Tags },
+        ],
+      },
       { labelKey: "mosques", href: "/admin/mosques", icon: Landmark, badgeKey: "pendingMosques" },
     ],
   },
