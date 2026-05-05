@@ -360,8 +360,6 @@
   },
   "users": {
     "pageTitle": "Kullanıcılar",
-    "subtitleLive": "Firestore'dan canlı.",
-    "subtitleMock": "Örnek veri — gerçek kullanıcıları görmek için Firebase Admin'i yapılandırın.",
     "searchAria": "Kullanıcı ara",
     "searchPlaceholder": "İsim veya e-posta ile ara…",
     "filterByRole": "Role göre filtrele",
@@ -456,8 +454,6 @@
   },
   "events": {
     "pageTitle": "Etkinlikler",
-    "subtitleLive": "Firestore'dan canlı.",
-    "subtitleMock": "Örnek veri — gerçek etkinlikleri yönetmek için Firebase Admin'i yapılandırın.",
     "searchAria": "Etkinliklerde ara",
     "searchPlaceholder": "Başlık, organizatör, mekân ara…",
     "filterByCategory": "Kategoriye göre filtrele",
@@ -1074,8 +1070,6 @@
     },
     "admin": {
       "pageTitle": "Matrimonial",
-      "subtitleLive": "Live from Firestore.",
-      "subtitleMock": "Sample data — configure Firebase Admin to manage real profiles.",
       "tabs": {
         "profiles": "Profiles",
         "reports": "Reports",
@@ -1377,8 +1371,6 @@
   },
   "mosquesAdmin": {
     "pageTitle": "Cami Rehberi",
-    "subtitleLive": "Firestore'dan canlı.",
-    "subtitleMock": "Örnek veri — gerçek camileri yönetmek için Firebase Admin'i yapılandırın.",
     "newMosque": "Yeni cami",
     "importCta": "Toplu içe aktarma",
     "back": "Camilere dön",
@@ -1519,8 +1511,6 @@
   },
   "businesses": {
     "pageTitle": "Helal İşletme Rehberi",
-    "subtitleLive": "Firestore'dan canlı.",
-    "subtitleMock": "Örnek veri — gerçek kayıtları yönetmek için Firebase Admin'i yapılandırın.",
     "publicTitle": "Helal işletmeler",
     "publicSubtitle": "i-muslim ekibi tarafından doğrulanmış kayıtlar.",
     "publicEmpty": "Bu filtrelerle eşleşen kayıt yok.",
@@ -1760,8 +1750,6 @@
   },
   "contactAdmin": {
     "pageTitle": "İletişim mesajları",
-    "subtitleLive": "Firestore'dan canlı.",
-    "subtitleMock": "Örnek veri — gerçek mesajları okumak için Firebase Admin'i yapılandırın.",
     "tabOpen": "Açık",
     "tabResolved": "Kapatıldı",
     "empty": "Burada mesaj yok.",

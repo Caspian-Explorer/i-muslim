@@ -369,8 +369,6 @@
   },
   "users": {
     "pageTitle": "Users",
-    "subtitleLive": "Live from Firestore.",
-    "subtitleMock": "Sample data — configure Firebase Admin to see live users.",
     "searchAria": "Search users",
     "searchPlaceholder": "Search name or email…",
     "filterByRole": "Filter by role",
@@ -761,8 +759,6 @@
   },
   "events": {
     "pageTitle": "Events",
-    "subtitleLive": "Live from Firestore.",
-    "subtitleMock": "Sample data — configure Firebase Admin to manage real events.",
     "searchAria": "Search events",
     "searchPlaceholder": "Search title, organizer, venue…",
     "filterByCategory": "Filter by category",
@@ -1212,8 +1208,6 @@
     },
     "admin": {
       "pageTitle": "Matrimonial",
-      "subtitleLive": "Live from Firestore.",
-      "subtitleMock": "Sample data — configure Firebase Admin to manage real profiles.",
       "tabs": {
         "profiles": "Profiles",
         "reports": "Reports",
@@ -1530,8 +1524,6 @@
   },
   "mosquesAdmin": {
     "pageTitle": "Mosque Directory",
-    "subtitleLive": "Live from Firestore.",
-    "subtitleMock": "Sample data — configure Firebase Admin to manage real mosques.",
     "newMosque": "New mosque",
     "importCta": "Bulk import",
     "back": "Back to mosques",
@@ -2011,8 +2003,6 @@
   },
   "contactAdmin": {
     "pageTitle": "Contact messages",
-    "subtitleLive": "Live from Firestore.",
-    "subtitleMock": "Sample data — configure Firebase Admin to read real submissions.",
     "tabOpen": "Open",
     "tabResolved": "Resolved",
     "empty": "No messages here.",

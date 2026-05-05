@@ -15,14 +15,7 @@ export default async function ArticlesAdminPage() {
   ]);
   return (
     <div>
-      <PageHeader
-        title="Articles & Blog"
-        subtitle={
-          source === "firestore"
-            ? "Live from Firestore."
-            : "Sample data — configure Firebase Admin to manage real articles."
-        }
-      />
+      <PageHeader title="Articles & Blog" />
       <ArticlesPageClient
         initialItems={items}
         source={source}

@@ -19,10 +19,7 @@ export default async function EventsPage() {
 
   return (
     <div>
-      <PageHeader
-        title={t("pageTitle")}
-        subtitle={source === "firestore" ? t("subtitleLive") : t("subtitleMock")}
-      />
+      <PageHeader title={t("pageTitle")} />
       <EventsPageClient initialEvents={events} source={source} categories={categories} />
     </div>
   );

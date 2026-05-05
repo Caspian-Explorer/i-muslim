@@ -361,8 +361,6 @@
   },
   "users": {
     "pageTitle": "المستخدمون",
-    "subtitleLive": "بيانات حيّة من Firestore.",
-    "subtitleMock": "بيانات تجريبية — أعدّ Firebase Admin لعرض المستخدمين الفعليين.",
     "searchAria": "ابحث في المستخدمين",
     "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني…",
     "filterByRole": "تصفية حسب الدور",
@@ -741,8 +739,6 @@
   },
   "events": {
     "pageTitle": "الفعاليات",
-    "subtitleLive": "بيانات حية من Firestore.",
-    "subtitleMock": "بيانات تجريبية — قم بإعداد Firebase Admin لإدارة فعاليات حقيقية.",
     "searchAria": "ابحث في الفعاليات",
     "searchPlaceholder": "ابحث بالعنوان أو المنظم أو المكان…",
     "filterByCategory": "تصفية حسب الفئة",
@@ -1075,8 +1071,6 @@
     },
     "admin": {
       "pageTitle": "Matrimonial",
-      "subtitleLive": "Live from Firestore.",
-      "subtitleMock": "Sample data — configure Firebase Admin to manage real profiles.",
       "tabs": {
         "profiles": "Profiles",
         "reports": "Reports",
@@ -1378,8 +1372,6 @@
   },
   "mosquesAdmin": {
     "pageTitle": "دليل المساجد",
-    "subtitleLive": "بيانات حية من Firestore.",
-    "subtitleMock": "بيانات تجريبية — قم بإعداد Firebase Admin لإدارة مساجد فعلية.",
     "newMosque": "مسجد جديد",
     "importCta": "استيراد بالجملة",
     "back": "العودة إلى المساجد",
@@ -1520,8 +1512,6 @@
   },
   "businesses": {
     "pageTitle": "دليل الأعمال الحلال",
-    "subtitleLive": "مباشر من Firestore.",
-    "subtitleMock": "بيانات تجريبية — قم بتهيئة Firebase Admin لإدارة قوائم حقيقية.",
     "publicTitle": "أعمال حلال",
     "publicSubtitle": "قوائم موثوقة، مختارة بعناية من فريق i-muslim.",
     "publicEmpty": "لا توجد قوائم تطابق هذه المرشحات بعد.",
@@ -1761,8 +1751,6 @@
   },
   "contactAdmin": {
     "pageTitle": "رسائل التواصل",
-    "subtitleLive": "مباشر من Firestore.",
-    "subtitleMock": "بيانات تجريبية — قم بإعداد Firebase Admin لقراءة الرسائل الفعلية.",
     "tabOpen": "مفتوحة",
     "tabResolved": "تم الرد",
     "empty": "لا توجد رسائل هنا.",

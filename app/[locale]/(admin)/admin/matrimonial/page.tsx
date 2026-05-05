@@ -17,10 +17,7 @@ export default async function AdminMatrimonialPage() {
 
   return (
     <div>
-      <PageHeader
-        title={t("pageTitle")}
-        subtitle={source === "firestore" ? t("subtitleLive") : t("subtitleMock")}
-      />
+      <PageHeader title={t("pageTitle")} />
       <MatrimonialPageClient
         initialProfiles={profiles}
         initialReports={reports}

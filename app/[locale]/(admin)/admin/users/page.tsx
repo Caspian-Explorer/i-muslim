@@ -15,10 +15,7 @@ export default async function UsersPage() {
 
   return (
     <div>
-      <PageHeader
-        title={t("pageTitle")}
-        subtitle={source === "firestore" ? t("subtitleLive") : t("subtitleMock")}
-      />
+      <PageHeader title={t("pageTitle")} />
       <UsersPageClient initialUsers={users} source={source} />
     </div>
   );

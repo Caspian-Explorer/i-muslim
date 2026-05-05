@@ -12,10 +12,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AdminContactMessagesPage() {
   const t = await getTranslations("contactAdmin");
   const { messages, source } = await fetchContactMessages();
-  const subtitle = source === "firestore" ? t("subtitleLive") : t("subtitleMock");
   return (
     <div>
-      <PageHeader title={t("pageTitle")} subtitle={subtitle} />
+      <PageHeader title={t("pageTitle")} />
       <ContactMessagesClient
         initialMessages={messages}
         canPersist={source === "firestore"}

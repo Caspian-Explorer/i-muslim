@@ -360,8 +360,6 @@
   },
   "users": {
     "pageTitle": "Pengguna",
-    "subtitleLive": "Langsung dari Firestore.",
-    "subtitleMock": "Data contoh — konfigurasikan Firebase Admin untuk melihat pengguna sungguhan.",
     "searchAria": "Cari pengguna",
     "searchPlaceholder": "Cari nama atau email…",
     "filterByRole": "Filter berdasarkan peran",
@@ -456,8 +454,6 @@
   },
   "events": {
     "pageTitle": "Acara",
-    "subtitleLive": "Langsung dari Firestore.",
-    "subtitleMock": "Data contoh — atur Firebase Admin untuk mengelola acara nyata.",
     "searchAria": "Cari acara",
     "searchPlaceholder": "Cari judul, penyelenggara, tempat…",
     "filterByCategory": "Saring berdasarkan kategori",
@@ -1074,8 +1070,6 @@
     },
     "admin": {
       "pageTitle": "Matrimonial",
-      "subtitleLive": "Live from Firestore.",
-      "subtitleMock": "Sample data — configure Firebase Admin to manage real profiles.",
       "tabs": {
         "profiles": "Profiles",
         "reports": "Reports",
@@ -1377,8 +1371,6 @@
   },
   "mosquesAdmin": {
     "pageTitle": "Direktori Masjid",
-    "subtitleLive": "Live dari Firestore.",
-    "subtitleMock": "Data contoh — konfigurasi Firebase Admin untuk mengelola masjid sungguhan.",
     "newMosque": "Masjid baru",
     "importCta": "Impor massal",
     "back": "Kembali ke masjid",
@@ -1519,8 +1511,6 @@
   },
   "businesses": {
     "pageTitle": "Direktori Bisnis Halal",
-    "subtitleLive": "Langsung dari Firestore.",
-    "subtitleMock": "Data sampel — konfigurasi Firebase Admin untuk mengelola entri sungguhan.",
     "publicTitle": "Bisnis halal",
     "publicSubtitle": "Daftar terverifikasi, dikurasi oleh tim i-muslim.",
     "publicEmpty": "Belum ada entri yang cocok dengan filter ini.",
@@ -1760,8 +1750,6 @@
   },
   "contactAdmin": {
     "pageTitle": "Pesan kontak",
-    "subtitleLive": "Langsung dari Firestore.",
-    "subtitleMock": "Data contoh — konfigurasikan Firebase Admin untuk membaca pesan asli.",
     "tabOpen": "Terbuka",
     "tabResolved": "Selesai",
     "empty": "Tidak ada pesan di sini.",
