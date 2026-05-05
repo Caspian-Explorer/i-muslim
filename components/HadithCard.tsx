@@ -7,6 +7,7 @@ import {
   NoteEditorPanel,
   NoteEditorTrigger,
 } from "@/components/site/NoteEditor";
+import { HadithCommentsButton } from "@/components/comments/HadithCommentsButton";
 
 export type HadithTranslationSlice = {
   requested: LangCode;
@@ -29,6 +30,8 @@ export function HadithCard({
   bookName,
   locale,
   signedIn,
+  currentUid = null,
+  commentCount = 0,
 }: {
   number: number;
   arabic: HadithEntry | null;
@@ -40,6 +43,8 @@ export function HadithCard({
   bookName: string;
   locale: string;
   signedIn: boolean;
+  currentUid?: string | null;
+  commentCount?: number;
 }) {
   // First non-empty translation, used as a short subtitle in favorites/notes.
   const excerptEntry = translations.find((t) => t.entry?.text)?.entry?.text ?? null;
@@ -80,6 +85,16 @@ export function HadithCard({
               </span>
             )}
             <NoteEditorTrigger />
+            <HadithCommentsButton
+              collectionId={collectionId}
+              bookNumber={bookNumber}
+              hadithNumber={number}
+              reference={`${collectionName} — ${bookName} #${number}`}
+              locale={locale}
+              signedIn={signedIn}
+              currentUid={currentUid}
+              initialCount={commentCount}
+            />
             <FavoriteButton
               itemType="hadith"
               itemId={itemId}

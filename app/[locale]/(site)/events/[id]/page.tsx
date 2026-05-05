@@ -21,6 +21,7 @@ import { getHijriParts } from "@/lib/admin/hijri";
 import { RsvpButton } from "@/components/site/RsvpButton";
 import { ShareButtons } from "@/components/site/ShareButtons";
 import { FavoriteButton } from "@/components/site/FavoriteButton";
+import { CommentThread } from "@/components/comments/CommentThread";
 import { getSiteSession } from "@/lib/auth/session";
 import { isFavorited } from "@/lib/profile/data";
 import type { EventCategory } from "@/types/admin";
@@ -294,6 +295,17 @@ export default async function EventDetailPage({ params }: PageContext) {
           </ul>
         </section>
       )}
+
+      <CommentThread
+        entityType="event"
+        entityId={event.id}
+        itemMeta={{
+          title: event.title,
+          subtitle: event.description ?? null,
+          href: `/events/${event.id}`,
+          locale,
+        }}
+      />
     </div>
   );
 }

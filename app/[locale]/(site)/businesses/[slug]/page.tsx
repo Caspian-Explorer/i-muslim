@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { HalalBadge } from "@/components/businesses/HalalBadge";
 import { HoursDisplay } from "@/components/businesses/HoursDisplay";
 import { ReportListingDialog } from "@/components/businesses/ReportListingDialog";
+import { CommentThread } from "@/components/comments/CommentThread";
 import type { Locale } from "@/i18n/config";
 import { pickLocalized } from "@/lib/utils";
 
@@ -269,6 +270,17 @@ export default async function BusinessDetailPage({ params }: RouteParams) {
           </div>
         </aside>
       </section>
+
+      <CommentThread
+        entityType="business"
+        entityId={business.slug}
+        itemMeta={{
+          title: business.name,
+          subtitle: business.description.en ?? null,
+          href: `/businesses/${business.slug}`,
+          locale,
+        }}
+      />
     </article>
   );
 }

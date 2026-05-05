@@ -19,6 +19,8 @@ import { getLanguageSettings } from "@/lib/admin/data/language-settings";
 import { getSiteSession } from "@/lib/auth/session";
 import { getFavoritedSet } from "@/lib/profile/data";
 import { getNotesByItemType } from "@/lib/profile/notes-data";
+import { getCommentCountsForAyahs } from "@/lib/comments/data";
+import { CommentThread } from "@/components/comments/CommentThread";
 
 export async function generateMetadata({
   params,
@@ -78,6 +80,10 @@ export default async function SurahPage({
   for (const [k, v] of ayahNotes) ayahNotesRecord[k] = v;
   if (!chapter) notFound();
   const verses = allVerses.map((v) => filterVerseLangs(v, langs));
+  const commentCounts = await getCommentCountsForAyahs(
+    id,
+    verses.map((v) => v.verse_number),
+  );
 
   const prev = chapters.find((c) => c.id === id - 1);
   const next = chapters.find((c) => c.id === id + 1);
@@ -170,9 +176,22 @@ export default async function SurahPage({
                   surahName={chapter.name_simple}
                   locale={locale}
                   signedIn={Boolean(session)}
+                  currentUid={session?.uid ?? null}
+                  commentCount={commentCounts.get(v.verse_key) ?? 0}
                 />
               ))}
             </div>
+
+            <CommentThread
+              entityType="surah"
+              entityId={surahId}
+              itemMeta={{
+                title: `Surah ${chapter.name_simple}`,
+                subtitle: chapter.translated_name.name,
+                href: surahHref,
+                locale,
+              }}
+            />
 
             <nav className="mt-8 flex items-center justify-between gap-2 text-sm">
               {prev ? (

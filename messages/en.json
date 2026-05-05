@@ -180,6 +180,7 @@
       "announcements": "Announcements",
       "newsletter": "Newsletter",
       "moderation": "Moderation",
+      "comments": "Comments",
       "donations": "Donations",
       "businesses": "Businesses",
       "businessesCategories": "Categories",
@@ -2165,6 +2166,7 @@
       "reading": "Reading progress",
       "favorites": "Favorites",
       "notes": "My notes",
+      "comments": "My comments",
       "submissions": "My submissions",
       "matrimonial": "Matrimonial"
     },
@@ -2354,6 +2356,10 @@
       "articleCategory": {
         "name": "Article Category",
         "description": "Add a category that articles can be tagged with."
+      },
+      "eventCategory": {
+        "name": "Event Category",
+        "description": "Add a category that events can be tagged with."
       }
     },
     "formTitles": {
@@ -2361,7 +2367,8 @@
       "business": "New business",
       "mosque": "New mosque",
       "article": "New article",
-      "articleCategory": "New article category"
+      "articleCategory": "New article category",
+      "eventCategory": "New event category"
     },
     "steps": {
       "admin": "Admin"
@@ -2373,5 +2380,113 @@
       "statusHintMosque": "Draft hides the listing. Pending review queues it for admin verification. Published makes it live.",
       "coordsMissingHint": "Saved without map coordinates — set them in the editor before publishing."
     }
+  },
+  "comments": {
+    "title": "Comments",
+    "empty": "Be the first to share a thoughtful reflection.",
+    "loading": "Loading comments…",
+    "anonymousAuthor": "Member",
+    "deletedTombstone": "[Comment removed]",
+    "deletedToast": "Comment deleted",
+    "savedToast": "Comment updated",
+    "deleteConfirm": "Delete this comment?",
+    "signInPrompt": "Sign in to share your reflection.",
+    "signInCta": "Sign in",
+    "placeholder": "Share a thoughtful reflection…",
+    "disclaimer": "Comments are personal perspectives (reviewed for quality) and should not be taken as authoritative.",
+    "ayahButtonAria": "{count, plural, =0 {No comments yet — open thread} one {1 comment — open thread} other {# comments — open thread}}",
+    "ayahDialogTitle": "{reference}",
+    "hadithButtonAria": "{count, plural, =0 {No comments yet — open thread} one {1 comment — open thread} other {# comments — open thread}}",
+    "hadithDialogTitle": "{reference}",
+    "popupButtonAria": "{count, plural, =0 {No comments yet — open thread} one {1 comment — open thread} other {# comments — open thread}}",
+    "actions": {
+      "post": "Post",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "save": "Save",
+      "delete": "Delete",
+      "reply": "Reply",
+      "flag": "Report",
+      "more": "More actions",
+      "loadMore": "Load more",
+      "viewReplies": "{count, plural, one {View 1 reply} other {View # replies}}",
+      "hideReplies": "Hide replies",
+      "edited": "edited"
+    },
+    "reactions": {
+      "heart": "Heart",
+      "dua": "Dua",
+      "insightful": "Insightful"
+    },
+    "flag": {
+      "title": "Report this comment",
+      "description": "Tell us briefly why this comment is inappropriate. Our moderators will review it.",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "Spam, hate speech, off-topic…",
+      "submit": "Submit report",
+      "submittedToast": "Thanks — our team will review this comment."
+    },
+    "statuses": {
+      "visible": "Visible",
+      "auto_hidden": "Pending review",
+      "hidden": "Hidden",
+      "deleted": "Deleted"
+    },
+    "errors": {
+      "loadFailed": "Couldn't load comments. Please try again.",
+      "tooLong": "Comment is too long.",
+      "signInRequired": "Sign in to comment.",
+      "notOwner": "You can only edit your own comment.",
+      "reactionFailed": "Couldn't update reaction."
+    }
+  },
+  "commentsAdmin": {
+    "pageTitle": "Comments",
+    "subtitle": "Search, filter, and moderate user comments across the site.",
+    "search": "Search comments, authors, entities…",
+    "filterByStatus": "Filter by status",
+    "filterByEntityType": "Filter by entity type",
+    "statusAll": "All statuses",
+    "entityAll": "All entities",
+    "empty": "No comments yet.",
+    "noResults": "No comments match your filters.",
+    "anonymous": "Member",
+    "emptyBody": "(no body)",
+    "hide": "Hide",
+    "restore": "Restore",
+    "dismissFlags": "Dismiss flags",
+    "openSource": "Open source",
+    "viewDialogTitle": "Comment by {name}",
+    "deleteConfirmTitle": "Permanently delete this comment?",
+    "deleteConfirmDescription": "This permanently removes the comment, its reactions, and its flags. Type DELETE to confirm.",
+    "statusUpdatedToast": "Comment status updated.",
+    "flagsDismissedToast": "Flags dismissed.",
+    "deletedToast": "Comment permanently deleted.",
+    "columns": {
+      "author": "Author",
+      "body": "Comment",
+      "entity": "Where",
+      "status": "Status",
+      "flags": "Flags",
+      "created": "Created"
+    },
+    "entityTypes": {
+      "ayah": "Ayah",
+      "hadith": "Hadith",
+      "surah": "Surah",
+      "article": "Article",
+      "mosque": "Mosque",
+      "event": "Event",
+      "business": "Business"
+    }
+  },
+  "profileComments": {
+    "pageTitle": "My comments",
+    "pageDescription": "Every comment you've posted across the site, with its current moderation status.",
+    "empty": "You haven't posted any comments yet.",
+    "emptyBody": "(no body)",
+    "edited": "edited",
+    "replies": "{count, plural, one {1 reply} other {# replies}}",
+    "flags": "{count, plural, one {1 flag} other {# flags}}"
   }
 }

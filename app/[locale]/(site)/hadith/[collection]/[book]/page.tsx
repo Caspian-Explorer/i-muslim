@@ -18,6 +18,7 @@ import { getLanguageSettings } from "@/lib/admin/data/language-settings";
 import { getSiteSession } from "@/lib/auth/session";
 import { getFavoritedSet } from "@/lib/profile/data";
 import { getNotesByItemType } from "@/lib/profile/notes-data";
+import { getCommentCountsForEntities } from "@/lib/comments/data";
 import type { HadithEntry } from "@/types/hadith";
 
 export async function generateMetadata({
@@ -77,6 +78,11 @@ export default async function HadithBookPage({
   ]);
   const hadithNotesRecord: Record<string, { id: string; text: string; updatedAt: string }> = {};
   for (const [k, v] of hadithNotes) hadithNotesRecord[k] = v;
+
+  const commentCounts = await getCommentCountsForEntities(
+    "hadith",
+    hadiths.map((h) => `${collection}:${h.number}`),
+  );
 
   const prev = meta.books.find((b) => b.number === bookNumber - 1);
   const next = meta.books.find((b) => b.number === bookNumber + 1);
@@ -178,6 +184,8 @@ export default async function HadithBookPage({
                       bookName={bookMeta.name}
                       locale={locale}
                       signedIn={Boolean(session)}
+                      currentUid={session?.uid ?? null}
+                      commentCount={commentCounts.get(`${collection}:${h.number}`) ?? 0}
                     />
                   );
                 })}

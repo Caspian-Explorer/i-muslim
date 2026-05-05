@@ -21,6 +21,7 @@ import {
   LayoutDashboard,
   Mail,
   Megaphone,
+  MessageCircle,
   MessageCircleQuestion,
   MessageSquareWarning,
   Mic2,
@@ -58,6 +59,7 @@ export type NavItemKey =
   | "announcements"
   | "newsletter"
   | "moderation"
+  | "comments"
   | "donations"
   | "businesses"
   | "businessesCategories"
@@ -90,7 +92,8 @@ export interface NavItem {
     | "openReports"
     | "pendingMosques"
     | "pendingMatrimonial"
-    | "openContactMessages";
+    | "openContactMessages"
+    | "autoHiddenComments";
   children?: NavItem[];
 }
 
@@ -157,6 +160,12 @@ export const ADMIN_NAV: NavGroup[] = [
       { labelKey: "announcements", href: "/admin/announcements", icon: Megaphone },
       { labelKey: "newsletter", href: "/admin/newsletter", icon: Mail },
       { labelKey: "moderation", href: "/admin/moderation", icon: MessageSquareWarning },
+      {
+        labelKey: "comments",
+        href: "/admin/comments",
+        icon: MessageCircle,
+        badgeKey: "autoHiddenComments",
+      },
       {
         labelKey: "contactMessages",
         href: "/admin/contact",

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { MosqueMap } from "@/components/mosque/MosqueMap";
 import { OpenInMapsLinks } from "@/components/mosque/OpenInMapsLinks";
 import { PrayerTimesPanel } from "@/components/mosque/PrayerTimesPanel";
+import { CommentThread } from "@/components/comments/CommentThread";
 
 export const revalidate = 3600;
 
@@ -231,6 +232,17 @@ export default async function MosqueDetailPage({
           </section>
         </aside>
       </div>
+
+      <CommentThread
+        entityType="mosque"
+        entityId={mosque.slug}
+        itemMeta={{
+          title: localizedName,
+          subtitle: `${mosque.city}, ${countryName(mosque.country)}`,
+          href: `/mosques/${mosque.slug}`,
+          locale,
+        }}
+      />
 
       <script
         type="application/ld+json"

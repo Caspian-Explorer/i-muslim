@@ -14,6 +14,7 @@ import { Disclaimer } from "@/components/articles/Disclaimer";
 import { RelatedArticles } from "@/components/articles/RelatedArticles";
 import { ShareCopyButton } from "@/components/articles/ShareCopyButton";
 import { FavoriteButton } from "@/components/site/FavoriteButton";
+import { CommentThread } from "@/components/comments/CommentThread";
 import { getSiteSession } from "@/lib/auth/session";
 import { isFavorited } from "@/lib/profile/data";
 
@@ -129,6 +130,17 @@ export default async function ArticleDetailPage({
       <Disclaimer />
 
       <RelatedArticles articles={related} />
+
+      <CommentThread
+        entityType="article"
+        entityId={article.id}
+        itemMeta={{
+          title: article.title,
+          subtitle: article.excerpt,
+          href: `/articles/${article.slug}`,
+          locale,
+        }}
+      />
     </article>
   );
 }

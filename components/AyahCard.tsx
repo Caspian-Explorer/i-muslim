@@ -11,6 +11,7 @@ import {
   NoteEditorPanel,
   NoteEditorTrigger,
 } from "@/components/site/NoteEditor";
+import { AyahCommentsButton } from "@/components/comments/AyahCommentsButton";
 
 function stripHtml(s: string): string {
   // Translations from quran.com may contain <sup foot_note="...">N</sup> footnote markers.
@@ -24,6 +25,8 @@ export function AyahCard({
   surahName,
   locale,
   signedIn,
+  currentUid = null,
+  commentCount = 0,
 }: {
   verse: Verse;
   langs: LangCode[];
@@ -31,6 +34,8 @@ export function AyahCard({
   surahName: string;
   locale: string;
   signedIn: boolean;
+  currentUid?: string | null;
+  commentCount?: number;
 }) {
   const nonArabic = langs.filter((l) => l !== "ar");
 
@@ -74,6 +79,15 @@ export function AyahCard({
           </span>
           <div className="flex items-center gap-2">
             <NoteEditorTrigger />
+            <AyahCommentsButton
+              surahId={surahId}
+              ayahNumber={verse.verse_number}
+              surahName={surahName}
+              locale={locale}
+              signedIn={signedIn}
+              currentUid={currentUid}
+              initialCount={commentCount}
+            />
             <FavoriteButton
               itemType="ayah"
               itemId={verse.verse_key}

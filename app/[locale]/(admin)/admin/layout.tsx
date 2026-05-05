@@ -9,6 +9,7 @@ import { countOpenReports } from "@/lib/admin/data/business-reports";
 import { listProfiles } from "@/lib/matrimonial/store";
 import { countPendingMosques } from "@/lib/admin/data/mosques";
 import { countOpenContactMessages } from "@/lib/admin/data/contact-messages";
+import { countAutoHiddenComments } from "@/lib/admin/data/comments";
 import { countPendingUsers } from "@/lib/admin/data/users";
 
 export const dynamic = "force-dynamic";
@@ -50,12 +51,14 @@ export default async function AdminLayout({
     pendingMosques,
     openContactMessages,
     pendingUsers,
+    autoHiddenComments,
   ] = await Promise.all([
     countOpenReports(),
     listProfiles(),
     countPendingMosques(),
     countOpenContactMessages(),
     countPendingUsers(),
+    countAutoHiddenComments(),
   ]);
   const pendingMatrimonial = matrimonialProfiles.filter((p) => p.status === "pending").length;
 
@@ -65,6 +68,7 @@ export default async function AdminLayout({
     pendingMatrimonial,
     pendingMosques,
     openContactMessages,
+    autoHiddenComments,
   };
 
   return (
