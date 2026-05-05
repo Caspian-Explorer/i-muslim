@@ -12,6 +12,7 @@ import {
   EditorDialogTitle,
 } from "@/components/ui/editor-dialog";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { openQuickCreate } from "@/components/admin/QuickCreate";
 import { toast } from "@/components/ui/sonner";
 import { deleteEventCategoryAction } from "@/lib/admin/actions/event-categories";
 import { EventCategoryForm } from "./EventCategoryForm";
@@ -30,10 +31,6 @@ export function CategoriesClient({ initialCategories, canPersist }: Props) {
   const [editing, setEditing] = useState<EventCategoryDoc | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<EventCategoryDoc | null>(null);
 
-  function openCreate() {
-    setEditing(null);
-    setOpen(true);
-  }
   function openEdit(c: EventCategoryDoc) {
     setEditing(c);
     setOpen(true);
@@ -70,7 +67,10 @@ export function CategoriesClient({ initialCategories, canPersist }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button onClick={openCreate} disabled={!canPersist}>
+        <Button
+          onClick={() => openQuickCreate("eventCategory")}
+          disabled={!canPersist}
+        >
           <Plus className="size-4" /> {t("taxonomyAddCta")}
         </Button>
       </div>
@@ -119,9 +119,7 @@ export function CategoriesClient({ initialCategories, canPersist }: Props) {
       <EditorDialog open={open} onOpenChange={setOpen}>
         <EditorDialogContent>
           <EditorDialogHeader>
-            <EditorDialogTitle>
-              {editing ? t("taxonomyEditCta") : t("taxonomyAddCta")}
-            </EditorDialogTitle>
+            <EditorDialogTitle>{t("taxonomyEditCta")}</EditorDialogTitle>
           </EditorDialogHeader>
           <EventCategoryForm
             category={editing}

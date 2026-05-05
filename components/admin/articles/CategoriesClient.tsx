@@ -11,6 +11,7 @@ import {
   EditorDialogTitle,
 } from "@/components/ui/editor-dialog";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { openQuickCreate } from "@/components/admin/QuickCreate";
 import { toast } from "@/components/ui/sonner";
 import { deleteArticleCategoryAction } from "@/lib/admin/actions/article-categories";
 import { ArticleCategoryForm } from "./ArticleCategoryForm";
@@ -27,10 +28,6 @@ export function CategoriesClient({ initialCategories, canPersist }: Props) {
   const [editing, setEditing] = useState<ArticleCategoryDoc | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ArticleCategoryDoc | null>(null);
 
-  function openCreate() {
-    setEditing(null);
-    setOpen(true);
-  }
   function openEdit(c: ArticleCategoryDoc) {
     setEditing(c);
     setOpen(true);
@@ -67,7 +64,10 @@ export function CategoriesClient({ initialCategories, canPersist }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button onClick={openCreate} disabled={!canPersist}>
+        <Button
+          onClick={() => openQuickCreate("articleCategory")}
+          disabled={!canPersist}
+        >
           <Plus className="size-4" /> Add category
         </Button>
       </div>
@@ -117,9 +117,7 @@ export function CategoriesClient({ initialCategories, canPersist }: Props) {
       <EditorDialog open={open} onOpenChange={setOpen}>
         <EditorDialogContent>
           <EditorDialogHeader>
-            <EditorDialogTitle>
-              {editing ? "Edit category" : "Add category"}
-            </EditorDialogTitle>
+            <EditorDialogTitle>Edit category</EditorDialogTitle>
             <p className="text-sm text-muted-foreground">
               Localized labels for the article category. The slug is used in URLs and stored on each article.
             </p>

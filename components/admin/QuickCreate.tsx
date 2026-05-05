@@ -367,6 +367,7 @@ function FormView({
           onSaved={() => {
             onClose();
             router.push("/admin/articles/categories");
+            router.refresh();
           }}
           onCancel={onClose}
         />
@@ -387,6 +388,7 @@ function FormView({
           onSaved={() => {
             onClose();
             router.push("/admin/events/categories");
+            router.refresh();
           }}
           onCancel={onClose}
         />
