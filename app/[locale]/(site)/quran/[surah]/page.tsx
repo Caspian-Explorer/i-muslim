@@ -11,12 +11,14 @@ import { getLocale } from "next-intl/server";
 import { AyahCard } from "@/components/AyahCard";
 import { FavoriteButton } from "@/components/site/FavoriteButton";
 import { FavoritesProvider } from "@/components/site/favorites/FavoritesContext";
+import { NotesProvider } from "@/components/site/notes/NotesContext";
 import { ReadingProgressTracker } from "@/components/site/reading/ReadingProgressTracker";
 import { QuranSidebar } from "@/components/site/quran/QuranSidebar";
 import { QuranMobileDrawer } from "@/components/site/quran/QuranMobileDrawer";
 import { getLanguageSettings } from "@/lib/admin/data/language-settings";
 import { getSiteSession } from "@/lib/auth/session";
 import { getFavoritedSet } from "@/lib/profile/data";
+import { getNotesByItemType } from "@/lib/profile/notes-data";
 
 export async function generateMetadata({
   params,
@@ -53,15 +55,27 @@ export default async function SurahPage({
   const langs = parseLangsParam(langParam);
   const session = await getSiteSession();
   const locale = await getLocale();
-  const [chapter, allVerses, chapters, languageSettings, ayahFavorites, surahFavorites] =
-    await Promise.all([
-      getSurah(id),
-      getAyahsForSurah(id),
-      getSurahs(),
-      getLanguageSettings(),
-      session ? getFavoritedSet(session.uid, "ayah") : Promise.resolve(new Set<string>()),
-      session ? getFavoritedSet(session.uid, "surah") : Promise.resolve(new Set<string>()),
-    ]);
+  const [
+    chapter,
+    allVerses,
+    chapters,
+    languageSettings,
+    ayahFavorites,
+    surahFavorites,
+    ayahNotes,
+  ] = await Promise.all([
+    getSurah(id),
+    getAyahsForSurah(id),
+    getSurahs(),
+    getLanguageSettings(),
+    session ? getFavoritedSet(session.uid, "ayah") : Promise.resolve(new Set<string>()),
+    session ? getFavoritedSet(session.uid, "surah") : Promise.resolve(new Set<string>()),
+    session
+      ? getNotesByItemType(session.uid, "ayah")
+      : Promise.resolve(new Map<string, { id: string; text: string; updatedAt: string }>()),
+  ]);
+  const ayahNotesRecord: Record<string, { id: string; text: string; updatedAt: string }> = {};
+  for (const [k, v] of ayahNotes) ayahNotesRecord[k] = v;
   if (!chapter) notFound();
   const verses = allVerses.map((v) => filterVerseLangs(v, langs));
 
@@ -79,6 +93,7 @@ export default async function SurahPage({
         { itemType: "surah", itemIds: Array.from(surahFavorites) },
       ]}
     >
+      <NotesProvider initialItems={[{ itemType: "ayah", notes: ayahNotesRecord }]}>
       <ReadingProgressTracker variant={{ kind: "quran", surah: id }} />
       <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
         <div className="flex items-center gap-2 pb-3 md:hidden">
@@ -184,6 +199,7 @@ export default async function SurahPage({
           </div>
         </div>
       </div>
+      </NotesProvider>
     </FavoritesProvider>
   );
 }

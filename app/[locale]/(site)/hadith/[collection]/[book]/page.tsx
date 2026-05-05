@@ -10,12 +10,14 @@ import { parseLangsParam } from "@/lib/translations";
 import type { LangCode } from "@/lib/translations";
 import { HadithCard, type HadithTranslationSlice } from "@/components/HadithCard";
 import { FavoritesProvider } from "@/components/site/favorites/FavoritesContext";
+import { NotesProvider } from "@/components/site/notes/NotesContext";
 import { ReadingProgressTracker } from "@/components/site/reading/ReadingProgressTracker";
 import { HadithSidebar } from "@/components/site/hadith/HadithSidebar";
 import { HadithMobileDrawer } from "@/components/site/hadith/HadithMobileDrawer";
 import { getLanguageSettings } from "@/lib/admin/data/language-settings";
 import { getSiteSession } from "@/lib/auth/session";
 import { getFavoritedSet } from "@/lib/profile/data";
+import { getNotesByItemType } from "@/lib/profile/notes-data";
 import type { HadithEntry } from "@/types/hadith";
 
 export async function generateMetadata({
@@ -65,11 +67,16 @@ export default async function HadithBookPage({
 
   const session = await getSiteSession();
   const locale = await getLocale();
-  const [hadiths, languageSettings, hadithFavorites] = await Promise.all([
+  const [hadiths, languageSettings, hadithFavorites, hadithNotes] = await Promise.all([
     getHadithsByBook(collection, bookNumber),
     getLanguageSettings(),
     session ? getFavoritedSet(session.uid, "hadith") : Promise.resolve(new Set<string>()),
+    session
+      ? getNotesByItemType(session.uid, "hadith")
+      : Promise.resolve(new Map<string, { id: string; text: string; updatedAt: string }>()),
   ]);
+  const hadithNotesRecord: Record<string, { id: string; text: string; updatedAt: string }> = {};
+  for (const [k, v] of hadithNotes) hadithNotesRecord[k] = v;
 
   const prev = meta.books.find((b) => b.number === bookNumber - 1);
   const next = meta.books.find((b) => b.number === bookNumber + 1);
@@ -81,6 +88,7 @@ export default async function HadithBookPage({
     <FavoritesProvider
       initialItems={[{ itemType: "hadith", itemIds: Array.from(hadithFavorites) }]}
     >
+      <NotesProvider initialItems={[{ itemType: "hadith", notes: hadithNotesRecord }]}>
       <ReadingProgressTracker
         variant={{ kind: "hadith", collection, book: bookNumber }}
       />
@@ -201,6 +209,7 @@ export default async function HadithBookPage({
           </div>
         </div>
       </div>
+      </NotesProvider>
     </FavoritesProvider>
   );
 }

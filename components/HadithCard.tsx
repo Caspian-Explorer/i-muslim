@@ -2,6 +2,11 @@ import type { HadithEntry } from "@/types/hadith";
 import { LANG_LABELS } from "@/lib/translations";
 import type { LangCode } from "@/lib/translations";
 import { FavoriteButton } from "@/components/site/FavoriteButton";
+import {
+  NoteEditor,
+  NoteEditorPanel,
+  NoteEditorTrigger,
+} from "@/components/site/NoteEditor";
 
 export type HadithTranslationSlice = {
   requested: LangCode;
@@ -36,47 +41,56 @@ export function HadithCard({
   locale: string;
   signedIn: boolean;
 }) {
-  // First non-empty translation, used as a short subtitle in favorites.
+  // First non-empty translation, used as a short subtitle in favorites/notes.
   const excerptEntry = translations.find((t) => t.entry?.text)?.entry?.text ?? null;
   const excerpt = excerptEntry ? excerptEntry.slice(0, 160) : null;
   const itemId = `${collectionId}/${bookNumber}/${number}`;
+  const itemMeta = {
+    title: `${collectionName} — ${bookName} #${number}`,
+    subtitle: excerpt,
+    href: `/hadith/${collectionId}/${bookNumber}#hadith-${number}`,
+    arabic: arabic?.text ?? null,
+    locale,
+  };
 
   return (
     <article
-      className="rounded-xl border border-border bg-background p-5"
+      id={`hadith-${number}`}
+      className="rounded-xl border border-border bg-background p-5 scroll-mt-24"
       data-hadith-number={number}
       data-hadith-id={itemId}
     >
-      <header className="mb-3 flex items-center justify-between gap-2">
-        <span className="text-xs font-medium text-muted-foreground">
-          {collectionShortName} · #{number}
-        </span>
-        <div className="flex items-center gap-2">
-          {arabic?.grades && arabic.grades.length > 0 && (
-            <span
-              className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
-              title={arabic.grades.map((g) => `${g.name}: ${g.grade}`).join("; ")}
-            >
-              {arabic.grades[0].grade}
-            </span>
-          )}
-          <FavoriteButton
-            itemType="hadith"
-            itemId={itemId}
-            itemMeta={{
-              title: `${collectionName} — ${bookName} #${number}`,
-              subtitle: excerpt,
-              href: `/hadith/${collectionId}/${bookNumber}#hadith-${number}`,
-              arabic: arabic?.text ?? null,
-              locale,
-            }}
-            signedIn={signedIn}
-            iconOnly
-          />
-        </div>
-      </header>
+      <NoteEditor
+        itemType="hadith"
+        itemId={itemId}
+        itemMeta={itemMeta}
+        signedIn={signedIn}
+      >
+        <header className="mb-3 flex items-center justify-between gap-2">
+          <span className="text-xs font-medium text-muted-foreground">
+            {collectionShortName} · #{number}
+          </span>
+          <div className="flex items-center gap-2">
+            {arabic?.grades && arabic.grades.length > 0 && (
+              <span
+                className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                title={arabic.grades.map((g) => `${g.name}: ${g.grade}`).join("; ")}
+              >
+                {arabic.grades[0].grade}
+              </span>
+            )}
+            <NoteEditorTrigger />
+            <FavoriteButton
+              itemType="hadith"
+              itemId={itemId}
+              itemMeta={itemMeta}
+              signedIn={signedIn}
+              iconOnly
+            />
+          </div>
+        </header>
 
-      {arabic && (
+        {arabic && (
         <p
           dir="rtl"
           lang="ar"
@@ -119,6 +133,9 @@ export function HadithCard({
           ))}
         </div>
       )}
+
+        <NoteEditorPanel />
+      </NoteEditor>
     </article>
   );
 }
