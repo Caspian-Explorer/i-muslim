@@ -442,6 +442,14 @@ export function EventsPageClient({
             ))}
           </select>
           <div className="ms-auto flex items-center gap-2">
+            <TabsList>
+              <TabsTrigger value="table" aria-label={t("viewTable")} title={t("viewTable")}>
+                <ListTree className="size-4" />
+              </TabsTrigger>
+              <TabsTrigger value="calendar" aria-label={t("viewCalendar")} title={t("viewCalendar")}>
+                <LayoutGrid className="size-4" />
+              </TabsTrigger>
+            </TabsList>
             <Button
               size="sm"
               onClick={() => openQuickCreate("event")}
@@ -452,15 +460,6 @@ export function EventsPageClient({
             </Button>
           </div>
         </div>
-
-        <TabsList>
-          <TabsTrigger value="table" aria-label={t("viewTable")} title={t("viewTable")}>
-            <ListTree className="size-4" />
-          </TabsTrigger>
-          <TabsTrigger value="calendar" aria-label={t("viewCalendar")} title={t("viewCalendar")}>
-            <LayoutGrid className="size-4" />
-          </TabsTrigger>
-        </TabsList>
 
       <TabsContent value="table" className="space-y-4">
       <div className="overflow-hidden rounded-lg border border-border bg-card">

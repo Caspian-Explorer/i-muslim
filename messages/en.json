@@ -55,8 +55,11 @@
   "header": {
     "openMenu": "Open menu",
     "navigation": "Navigation",
-    "searchPlaceholder": "Search pages, users, settings…",
+    "searchPlaceholder": "Search pages, mosques, articles…",
     "searchFallback": "Search",
+    "searchLoading": "Loading…",
+    "groupMosques": "Mosques",
+    "groupArticles": "Articles",
     "openCommandPalette": "Open command palette",
     "languageLabel": "Language: {label}",
     "language": "Language",
@@ -171,6 +174,7 @@
       "media": "Media",
       "prayerTimes": "Prayers",
       "events": "Events",
+      "eventsCategories": "Categories",
       "mosques": "Mosques",
       "qa": "Q&A",
       "announcements": "Announcements",
@@ -1384,6 +1388,12 @@
       "title": "Submit a mosque",
       "subtitle": "Help build the community map. Submissions are reviewed by our team before going live.",
       "guideline": "Please add only mosques you've verified exist. Provide accurate name, address, and contact details.",
+      "steps": {
+        "basics": "Basics",
+        "location": "Location",
+        "contact": "Contact",
+        "review": "Review"
+      },
       "fields": {
         "nameEn": "Name (English)",
         "nameAr": "Name (Arabic)",
@@ -1392,7 +1402,9 @@
         "addressLine1": "Street address",
         "addressLine2": "Address line 2",
         "city": "City",
+        "region": "Region / state",
         "country": "Country",
+        "postalCode": "Postal code",
         "denomination": "Tradition",
         "phone": "Phone",
         "website": "Website",
@@ -1400,18 +1412,27 @@
         "languages": "Languages spoken",
         "description": "Description"
       },
+      "review": {
+        "editSection": "Edit {section}",
+        "geocodeFailed": "We couldn't pinpoint this address on a map. Submission still works — our team will verify the location before publishing."
+      },
       "actions": {
+        "back": "Back",
+        "next": "Next",
         "submit": "Submit for review",
         "submitting": "Submitting…",
         "cancel": "Cancel"
       },
       "validation": {
         "nameRequired": "English name is required.",
+        "descriptionMax": "Description must be 500 characters or fewer.",
         "addressRequired": "Street address is required.",
         "cityRequired": "City is required.",
         "countryRequired": "Country is required (use ISO code).",
+        "phoneInvalid": "Enter a valid phone number.",
         "emailInvalid": "Enter a valid email.",
-        "websiteInvalid": "Enter a valid URL."
+        "websiteInvalid": "Enter a valid URL.",
+        "fixStep": "Fix the highlighted fields before continuing."
       },
       "success": "Thank you — your submission is under review and will appear in the directory once approved.",
       "errorRate": "You've submitted several mosques recently. Please try again later.",
@@ -2324,6 +2345,7 @@
       "status": "Status",
       "statusHintEvent": "Draft hides the event from the public calendar. Published makes it live.",
       "statusHintBusiness": "Draft hides the listing from public search. Published makes it live.",
+      "statusHintMosque": "Draft hides the listing. Pending review queues it for admin verification. Published makes it live.",
       "coordsMissingHint": "Saved without map coordinates — set them in the editor before publishing."
     }
   }
