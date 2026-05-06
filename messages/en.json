@@ -605,22 +605,52 @@
     "bismillah": "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
     "headline": "Read the Quran and Sunnah.",
     "tagline": "A clean, fast reader for the Quran and the major Hadith collections, with Arabic alongside English, Russian, and Azerbaijani translations.",
-    "cards": {
-      "quran": {
-        "title": "Quran",
-        "description": "Browse all 114 surahs, read ayat in Arabic with your chosen translations side-by-side."
-      },
-      "hadith": {
-        "title": "Hadith",
-        "description": "Browse major collections — Bukhari, Muslim, Abu Dawud, Tirmidhi, Nasa'i, Ibn Majah, and more."
-      },
+    "hero": {
+      "ctaQuran": "Read the Quran",
+      "ctaMosques": "Find mosques near you"
+    },
+    "todayPrayer": {
+      "heading": "Today's prayer times",
+      "viewAll": "Full schedule"
+    },
+    "ayahOfDay": {
+      "heading": "Ayah of the day",
+      "ayahLabel": "Ayah {number}",
+      "openSurah": "Open surah"
+    },
+    "hadithOfDay": {
+      "heading": "Hadith of the day",
+      "openCollection": "Open collection"
+    },
+    "recentMosques": {
+      "heading": "Recently added mosques",
+      "subheading": "The newest masjids on the directory.",
+      "viewAll": "Browse all mosques"
+    },
+    "recentBusinesses": {
+      "heading": "Recently added businesses",
+      "subheading": "Halal-friendly places joining the directory.",
+      "viewAll": "Browse all businesses"
+    },
+    "eventsThisWeek": {
+      "headingNear": "This week near {city}",
+      "headingGlobal": "This week's events",
+      "subheading": "Jumu'ah, lectures, iftars, and halaqas in the next 7 days.",
+      "viewAll": "Browse all events",
+      "kmAway": "{km} km away",
+      "venueOnline": "Online"
+    },
+    "tools": {
+      "heading": "Tools",
+      "subheading": "Quick utilities for everyday Muslim life.",
+      "openCta": "Open",
       "zakat": {
-        "title": "Zakat Calculator",
-        "description": "Calculate your zakat al-mal across cash, savings, gold, silver, investments, and business — by mazhab."
+        "title": "Zakat calculator",
+        "description": "Work out your zakat al-mal across cash, gold, silver, investments, and business by mazhab."
       },
-      "prayerTimes": {
-        "title": "Prayer Times",
-        "description": "Today's five daily prayers anywhere in the world — auto-detected, with Hijri date and a live countdown to the next prayer."
+      "hijri": {
+        "title": "Hijri date converter",
+        "description": "Convert any Gregorian date to the Islamic Hijri calendar — and back."
       }
     }
   },

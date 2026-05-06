@@ -779,22 +779,52 @@
     "bismillah": "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
     "headline": "Kur'an ve Sünnet'i okuyun.",
     "tagline": "Kur'an-ı Kerim ve büyük hadis koleksiyonları için temiz ve hızlı bir okuyucu — Arapça metnin yanında İngilizce, Rusça ve Azerice çeviriler.",
-    "cards": {
-      "quran": {
-        "title": "Kur'an",
-        "description": "114 surenin tamamına göz atın, ayetleri Arapça olarak seçtiğiniz çevirilerle yan yana okuyun."
-      },
-      "hadith": {
-        "title": "Hadis",
-        "description": "Büyük koleksiyonları inceleyin — Buhari, Müslim, Ebu Davud, Tirmizi, Nesai, İbn Mace ve diğerleri."
-      },
+    "hero": {
+      "ctaQuran": "Kur'an'ı oku",
+      "ctaMosques": "Yakındaki camileri bul"
+    },
+    "todayPrayer": {
+      "heading": "Bugünün namaz vakitleri",
+      "viewAll": "Tüm program"
+    },
+    "ayahOfDay": {
+      "heading": "Günün ayeti",
+      "ayahLabel": "Ayet {number}",
+      "openSurah": "Sureyi aç"
+    },
+    "hadithOfDay": {
+      "heading": "Günün hadisi",
+      "openCollection": "Koleksiyonu aç"
+    },
+    "recentMosques": {
+      "heading": "Yeni eklenen camiler",
+      "subheading": "Dizinin en yeni camileri.",
+      "viewAll": "Tüm camilere göz at"
+    },
+    "recentBusinesses": {
+      "heading": "Yeni eklenen işletmeler",
+      "subheading": "Dizine katılan helal dostu mekânlar.",
+      "viewAll": "Tüm işletmelere göz at"
+    },
+    "eventsThisWeek": {
+      "headingNear": "Bu hafta {city} yakınında",
+      "headingGlobal": "Bu haftaki etkinlikler",
+      "subheading": "Önümüzdeki 7 gün içindeki Cuma, dersler, iftarlar ve halakalar.",
+      "viewAll": "Tüm etkinliklere göz at",
+      "kmAway": "{km} km uzakta",
+      "venueOnline": "Çevrimiçi"
+    },
+    "tools": {
+      "heading": "Araçlar",
+      "subheading": "Günlük Müslüman hayatı için hızlı araçlar.",
+      "openCta": "Aç",
       "zakat": {
-        "title": "Zekât Hesaplayıcı",
-        "description": "Nakit, mevduat, altın, gümüş, yatırım ve ticaret üzerinden zekât-ı malınızı mezhebe göre hesaplayın."
+        "title": "Zekât hesaplayıcı",
+        "description": "Nakit, altın, gümüş, yatırım ve ticari varlıklar üzerinden zekât-ı malınızı mezhebe göre hesaplayın."
       },
-      "prayerTimes": {
-        "title": "Namaz Vakitleri",
-        "description": "Dünyanın her yerinde bugünün beş vakit namazı — otomatik tespit, Hicri tarih ve sıradaki namaza canlı geri sayım."
+      "hijri": {
+        "title": "Hicri tarih dönüştürücü",
+        "description": "Herhangi bir Miladi tarihi İslami Hicri takvime — ve geri — dönüştürün."
       }
     }
   },

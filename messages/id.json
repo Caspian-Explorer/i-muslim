@@ -779,22 +779,52 @@
     "bismillah": "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
     "headline": "Baca Al-Qur'an dan Sunnah.",
     "tagline": "Pembaca yang bersih dan cepat untuk Al-Qur'an dan koleksi hadis utama, dengan teks Arab beserta terjemahan Inggris, Rusia, dan Azerbaijan.",
-    "cards": {
-      "quran": {
-        "title": "Al-Qur'an",
-        "description": "Telusuri 114 surah, baca ayat dalam bahasa Arab dengan terjemahan pilihan Anda berdampingan."
-      },
-      "hadith": {
-        "title": "Hadis",
-        "description": "Telusuri koleksi utama — Bukhari, Muslim, Abu Dawud, Tirmidzi, Nasa'i, Ibnu Majah, dan lainnya."
-      },
+    "hero": {
+      "ctaQuran": "Baca Al-Qur'an",
+      "ctaMosques": "Cari masjid di sekitar"
+    },
+    "todayPrayer": {
+      "heading": "Waktu salat hari ini",
+      "viewAll": "Jadwal lengkap"
+    },
+    "ayahOfDay": {
+      "heading": "Ayat hari ini",
+      "ayahLabel": "Ayat {number}",
+      "openSurah": "Buka surah"
+    },
+    "hadithOfDay": {
+      "heading": "Hadis hari ini",
+      "openCollection": "Buka koleksi"
+    },
+    "recentMosques": {
+      "heading": "Masjid yang baru ditambahkan",
+      "subheading": "Masjid terbaru di direktori.",
+      "viewAll": "Telusuri semua masjid"
+    },
+    "recentBusinesses": {
+      "heading": "Usaha yang baru ditambahkan",
+      "subheading": "Tempat halal-friendly yang baru bergabung di direktori.",
+      "viewAll": "Telusuri semua usaha"
+    },
+    "eventsThisWeek": {
+      "headingNear": "Pekan ini di sekitar {city}",
+      "headingGlobal": "Acara pekan ini",
+      "subheading": "Jumat, kajian, ifthar, dan halaqah dalam 7 hari ke depan.",
+      "viewAll": "Telusuri semua acara",
+      "kmAway": "{km} km",
+      "venueOnline": "Online"
+    },
+    "tools": {
+      "heading": "Alat",
+      "subheading": "Utilitas cepat untuk kehidupan Muslim sehari-hari.",
+      "openCta": "Buka",
       "zakat": {
-        "title": "Kalkulator Zakat",
-        "description": "Hitung zakat mal Anda dari kas, tabungan, emas, perak, investasi, dan usaha — sesuai mazhab."
+        "title": "Kalkulator zakat",
+        "description": "Hitung zakat mal Anda dari kas, emas, perak, investasi, dan usaha sesuai mazhab."
       },
-      "prayerTimes": {
-        "title": "Waktu Salat",
-        "description": "Lima waktu salat hari ini di mana saja di dunia — terdeteksi otomatis, dengan tanggal Hijriah dan hitung mundur waktu salat berikutnya."
+      "hijri": {
+        "title": "Konverter tanggal Hijriah",
+        "description": "Konversi tanggal Masehi ke kalender Hijriah Islam — dan sebaliknya."
       }
     }
   },
