@@ -11,6 +11,7 @@ import { countPendingMosques } from "@/lib/admin/data/mosques";
 import { countOpenContactMessages } from "@/lib/admin/data/contact-messages";
 import { countAutoHiddenComments } from "@/lib/admin/data/comments";
 import { countPendingUsers } from "@/lib/admin/data/users";
+import { getSiteConfig } from "@/lib/admin/data/site-config";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,7 @@ export default async function AdminLayout({
     openContactMessages,
     pendingUsers,
     autoHiddenComments,
+    siteConfig,
   ] = await Promise.all([
     countOpenReports(),
     listProfiles(),
@@ -59,6 +61,7 @@ export default async function AdminLayout({
     countOpenContactMessages(),
     countPendingUsers(),
     countAutoHiddenComments(),
+    getSiteConfig(),
   ]);
   const pendingMatrimonial = matrimonialProfiles.filter((p) => p.status === "pending").length;
 
@@ -74,10 +77,10 @@ export default async function AdminLayout({
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       <div className="hidden md:block shrink-0">
-        <Sidebar badges={badges} />
+        <Sidebar badges={badges} logoUrl={siteConfig.logoUrl} />
       </div>
       <div className="flex flex-1 flex-col min-w-0">
-        <AdminHeader session={session} badges={badges} />
+        <AdminHeader session={session} badges={badges} logoUrl={siteConfig.logoUrl} />
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-8 md:py-8">
             {children}

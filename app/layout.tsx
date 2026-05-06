@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { dirFor, type Locale } from "@/i18n/config";
+import { getSiteConfig } from "@/lib/admin/data/site-config";
 import "./globals.css";
 
 const inter = Inter({
@@ -26,14 +27,30 @@ const plexArabic = IBM_Plex_Sans_Arabic({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "i-muslim — Read Quran and Sunnah",
-    template: "%s · i-muslim",
-  },
-  description:
-    "A clean, fast reader for the Quran and major Hadith collections with Arabic, English, Russian, and Azerbaijani translations.",
-};
+const FALLBACK_TAGLINE =
+  "A clean, fast reader for the Quran and major Hadith collections with Arabic, English, Russian, and Azerbaijani translations.";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await getSiteConfig();
+  const titleSuffix = config.siteName;
+  const description = config.tagline || FALLBACK_TAGLINE;
+  const meta: Metadata = {
+    title: {
+      default: `${config.siteName} — Read Quran and Sunnah`,
+      template: `%s · ${titleSuffix}`,
+    },
+    description,
+  };
+  if (config.faviconUrl) {
+    meta.icons = { icon: config.faviconUrl };
+  }
+  if (config.ogImageUrl) {
+    meta.openGraph = {
+      images: [{ url: config.ogImageUrl, width: 1200, height: 630 }],
+    };
+  }
+  return meta;
+}
 
 export default async function RootLayout({
   children,

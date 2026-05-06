@@ -17,6 +17,7 @@ import { FavoriteButton } from "@/components/site/FavoriteButton";
 import { CommentThread } from "@/components/comments/CommentThread";
 import { getSiteSession } from "@/lib/auth/session";
 import { isFavorited } from "@/lib/profile/data";
+import { getSiteConfig } from "@/lib/admin/data/site-config";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ?? "http://localhost:7777";
@@ -30,6 +31,8 @@ export async function generateMetadata({
   const locale = (await getLocale()) as Locale;
   const article = await getArticleBySlug(slug, locale);
   if (!article) return { title: "Not found" };
+  const siteConfig = await getSiteConfig();
+  const heroImageUrl = article.heroImageUrl ?? siteConfig.articlePlaceholderUrl;
   const url = `${SITE_URL}/articles/${slug}`;
   return {
     title: article.title,
@@ -42,13 +45,13 @@ export async function generateMetadata({
       title: article.title,
       description: article.excerpt,
       url,
-      images: article.heroImageUrl ? [{ url: article.heroImageUrl }] : undefined,
+      images: heroImageUrl ? [{ url: heroImageUrl }] : undefined,
       publishedTime: article.publishedAt,
       modifiedTime: article.updatedAt,
       authors: ["I-Muslim Editorial"],
     },
     twitter: {
-      card: article.heroImageUrl ? "summary_large_image" : "summary",
+      card: heroImageUrl ? "summary_large_image" : "summary",
       title: article.title,
       description: article.excerpt,
     },
@@ -69,10 +72,12 @@ export default async function ArticleDetailPage({
   const date = new Date(article.publishedAt);
   const url = `${SITE_URL}/articles/${slug}`;
   const session = await getSiteSession();
-  const [related, initialFavorited] = await Promise.all([
+  const [related, initialFavorited, siteConfig] = await Promise.all([
     getRelatedArticles(article.id, article.category, locale, 3),
     session ? isFavorited(session.uid, "article", article.id) : Promise.resolve(false),
+    getSiteConfig(),
   ]);
+  const heroImageUrl = article.heroImageUrl ?? siteConfig.articlePlaceholderUrl;
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
@@ -92,10 +97,10 @@ export default async function ArticleDetailPage({
       </h1>
       <p className="mt-3 text-lg text-muted-foreground">{article.excerpt}</p>
 
-      {article.heroImageUrl && (
+      {heroImageUrl && (
         <div className="relative mt-6 aspect-[16/9] overflow-hidden rounded-lg bg-muted">
           <Image
-            src={article.heroImageUrl}
+            src={heroImageUrl}
             alt={article.heroImageAlt ?? ""}
             fill
             sizes="(min-width: 768px) 768px, 100vw"

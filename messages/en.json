@@ -2090,6 +2090,48 @@
     "noPersistToast": "Configure Firebase Admin to manage contact messages."
   },
   "adminSettings": {
+    "title": "Settings",
+    "description": "Manage site identity, media assets, and language availability.",
+    "nav": {
+      "ariaLabel": "Settings sections",
+      "general": "General",
+      "media": "Media",
+      "languages": "Languages"
+    },
+    "general": {
+      "title": "Site identity",
+      "description": "Site name and tagline. The site name appears in the browser tab, the site header, and the footer.",
+      "siteNameLabel": "Site name",
+      "siteNameHint": "Shown in the browser tab, the public header, and the footer.",
+      "taglineLabel": "Tagline",
+      "taglineHint": "Short description used as the default site description and in the footer.",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "savedToast": "Site identity saved.",
+      "errorToast": "Could not save site identity.",
+      "unsavedChanges": "Unsaved changes"
+    },
+    "media": {
+      "title": "Media",
+      "description": "Upload site-wide imagery. Each upload saves immediately.",
+      "logoLabel": "Logo",
+      "logoHint": "Shown next to the site name in the header, footer, and admin sidebar. Recommended: square PNG or SVG with transparent background, ≥256×256.",
+      "faviconLabel": "Favicon",
+      "faviconHint": "Browser tab icon. ICO, PNG, or SVG, up to 256 KB. Browsers cache favicons aggressively — a hard reload may be required to see the change.",
+      "ogImageLabel": "Default social-share image",
+      "ogImageHint": "Used as the default Open Graph image when a page does not provide its own. Recommended: 1200×630 PNG or JPEG.",
+      "articlePlaceholderLabel": "Article placeholder image",
+      "articlePlaceholderHint": "Fallback shown for articles that do not have a featured image.",
+      "upload": "Upload",
+      "replace": "Replace",
+      "remove": "Remove",
+      "uploading": "Uploading…",
+      "typeError": "Unsupported file type for this slot.",
+      "sizeError": "File is too large for this slot.",
+      "uploadFailed": "Upload failed. Please try again.",
+      "savedToast": "Saved.",
+      "savedError": "Could not save. Please try again."
+    },
     "languages": {
       "title": "Languages",
       "description": "Choose which languages are visible to visitors. Disabled languages disappear from public switchers, but existing URLs keep working.",

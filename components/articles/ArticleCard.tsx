@@ -3,6 +3,7 @@ import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from "@/components/site/FavoriteButton";
+import { getSiteConfig } from "@/lib/admin/data/site-config";
 import type { ArticleListItem } from "@/types/blog";
 
 export async function ArticleCard({
@@ -15,6 +16,8 @@ export async function ArticleCard({
   const t = await getTranslations("articles");
   const tCat = await getTranslations("articles.categories");
   const locale = await getLocale();
+  const siteConfig = await getSiteConfig();
+  const heroUrl = article.heroImageUrl ?? siteConfig.articlePlaceholderUrl;
   const date = new Date(article.publishedAt);
   const href = `/articles/${article.slug}`;
   return (
@@ -35,10 +38,10 @@ export async function ArticleCard({
           iconOnly
         />
       </div>
-      {article.heroImageUrl && (
+      {heroUrl && (
         <div className="relative z-0 aspect-[16/9] overflow-hidden rounded-md bg-muted">
           <Image
-            src={article.heroImageUrl}
+            src={heroUrl}
             alt={article.heroImageAlt ?? ""}
             fill
             sizes="(min-width: 768px) 384px, 100vw"

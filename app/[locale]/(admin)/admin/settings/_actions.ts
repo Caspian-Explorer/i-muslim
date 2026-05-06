@@ -20,6 +20,10 @@ import {
   updateUiLocaleMessages,
   type UiLocaleDoc,
 } from "@/lib/admin/data/ui-locales";
+import {
+  setSiteIdentity,
+  type SiteConfig,
+} from "@/lib/admin/data/site-config";
 
 const inputSchema = z.object({
   uiEnabled: z.array(z.enum(LOCALES as unknown as [Locale, ...Locale[]])),
@@ -127,6 +131,34 @@ export async function updateUiLocaleMessagesAction(
     return { ok: true, locale };
   } catch (err) {
     console.warn("[admin/settings/_actions] updateMessages failed:", err);
+    return { ok: false, error: "write-failed" };
+  }
+}
+
+const siteIdentitySchema = z.object({
+  siteName: z.string().trim().min(1).max(80),
+  tagline: z.string().trim().max(160),
+});
+
+export type UpdateSiteIdentityResult =
+  | { ok: true; config: SiteConfig }
+  | { ok: false; error: string };
+
+export async function updateSiteIdentityAction(
+  rawInput: unknown,
+): Promise<UpdateSiteIdentityResult> {
+  const session = await requireAdminSession();
+  const parsed = siteIdentitySchema.safeParse(rawInput);
+  if (!parsed.success) {
+    return { ok: false, error: "invalid-input" };
+  }
+  try {
+    const config = await setSiteIdentity(parsed.data, session.email);
+    // Title and metadata read from this in the root layout — invalidate broadly.
+    revalidatePath("/", "layout");
+    return { ok: true, config };
+  } catch (err) {
+    console.warn("[admin/settings/_actions] updateSiteIdentity failed:", err);
     return { ok: false, error: "write-failed" };
   }
 }

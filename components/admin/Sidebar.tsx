@@ -56,9 +56,10 @@ interface SidebarProps {
   badges?: SidebarBadges;
   variant?: "desktop" | "drawer";
   onNavigate?: () => void;
+  logoUrl?: string | null;
 }
 
-export function Sidebar({ badges = {}, variant = "desktop", onNavigate }: SidebarProps) {
+export function Sidebar({ badges = {}, variant = "desktop", onNavigate, logoUrl }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useCollapse(variant === "desktop");
   const t = useTranslations("sidebar");
@@ -94,9 +95,18 @@ export function Sidebar({ badges = {}, variant = "desktop", onNavigate }: Sideba
             onClick={onNavigate}
             className="flex items-center gap-2 font-semibold"
           >
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm">
-              ۞
-            </span>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoUrl}
+                alt=""
+                className="h-7 w-7 rounded-md object-contain"
+              />
+            ) : (
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm">
+                ۞
+              </span>
+            )}
             {showLabels && <span className="text-sm">{tBrand("admin")}</span>}
           </Link>
           {variant === "desktop" && showLabels && (

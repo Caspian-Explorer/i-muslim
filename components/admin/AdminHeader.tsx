@@ -21,9 +21,10 @@ import { getFirebaseAdminStatus } from "@/lib/firebase/admin";
 interface AdminHeaderProps {
   session: AdminSession;
   badges?: SidebarBadges;
+  logoUrl?: string | null;
 }
 
-export async function AdminHeader({ session, badges }: AdminHeaderProps) {
+export async function AdminHeader({ session, badges, logoUrl }: AdminHeaderProps) {
   const [
     activated,
     { items: notifications },
@@ -43,7 +44,7 @@ export async function AdminHeader({ session, badges }: AdminHeaderProps) {
   const canPersist = getFirebaseAdminStatus().configured;
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
-      <MobileSidebarDrawer badges={badges} />
+      <MobileSidebarDrawer badges={badges} logoUrl={logoUrl} />
       <div className="hidden md:flex flex-1 min-w-0 items-center gap-4">
         <Breadcrumbs />
       </div>

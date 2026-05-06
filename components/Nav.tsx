@@ -5,20 +5,31 @@ import { SearchButton } from "./SearchButton";
 import { SiteUserMenu } from "./site/SiteUserMenu";
 import { getSiteSession } from "@/lib/auth/session";
 import { isAdminEmail } from "@/lib/auth/allowlist";
+import { getSiteConfig } from "@/lib/admin/data/site-config";
 
 export async function Nav() {
   const t = await getTranslations("nav");
   const locale = await getLocale();
   const session = await getSiteSession();
+  const siteConfig = await getSiteConfig();
   const isAdmin = isAdminEmail(session?.email);
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
         <Link href="/" className="flex items-center gap-2 font-semibold">
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent text-accent-foreground text-sm">
-            ۞
-          </span>
-          <span className="hidden sm:inline">i-muslim</span>
+          {siteConfig.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={siteConfig.logoUrl}
+              alt=""
+              className="h-7 w-7 rounded-md object-contain"
+            />
+          ) : (
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent text-accent-foreground text-sm">
+              ۞
+            </span>
+          )}
+          <span className="hidden sm:inline">{siteConfig.siteName}</span>
         </Link>
 
         <nav className="flex items-center gap-1 text-sm">

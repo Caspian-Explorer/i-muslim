@@ -3,14 +3,16 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { getLanguageSettings } from "@/lib/admin/data/language-settings";
 import { listActivatedReservedLocales } from "@/lib/admin/data/ui-locales";
+import { getSiteConfig } from "@/lib/admin/data/site-config";
 import { BUNDLED_LOCALES, type Locale } from "@/i18n/config";
 
 export async function Footer() {
-  const [t, locale, languageSettings, activated] = await Promise.all([
+  const [t, locale, languageSettings, activated, siteConfig] = await Promise.all([
     getTranslations("footer"),
     getLocale(),
     getLanguageSettings(),
     listActivatedReservedLocales(),
+    getSiteConfig(),
   ]);
   const year = new Date().getFullYear();
 
@@ -29,12 +31,21 @@ export async function Footer() {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-10 text-sm sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-3">
           <Link href="/" className="flex items-center gap-2 font-semibold">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent text-accent-foreground text-sm">
-              ۞
-            </span>
-            <span>i-muslim</span>
+            {siteConfig.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={siteConfig.logoUrl}
+                alt=""
+                className="h-7 w-7 rounded-md object-contain"
+              />
+            ) : (
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-accent text-accent-foreground text-sm">
+                ۞
+              </span>
+            )}
+            <span>{siteConfig.siteName}</span>
           </Link>
-          <p className="text-muted-foreground">{t("tagline")}</p>
+          <p className="text-muted-foreground">{siteConfig.tagline || t("tagline")}</p>
         </div>
 
         <nav aria-label={t("colWorship")} className="space-y-3">
