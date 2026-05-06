@@ -812,10 +812,6 @@
         "description": "Bacaan panjang tentang topik Islam, sejarah, dan kehidupan kontemporer."
       }
     },
-    "todayPrayer": {
-      "heading": "Waktu salat hari ini",
-      "viewAll": "Jadwal lengkap"
-    },
     "ayahOfDay": {
       "heading": "Ayat hari ini",
       "ayahLabel": "Ayat {number}",

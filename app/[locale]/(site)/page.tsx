@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { HomeHero } from "@/components/home/HomeHero";
-import { HomePrayerTimes } from "@/components/home/HomePrayerTimes";
 import { HomeFeatures } from "@/components/home/HomeFeatures";
 import { AyahOfTheDay } from "@/components/home/AyahOfTheDay";
 import { HadithOfTheDay } from "@/components/home/HadithOfTheDay";
@@ -13,10 +12,6 @@ export default function Home() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
       <HomeHero />
-
-      <div className="mt-10">
-        <HomePrayerTimes />
-      </div>
 
       <div className="mt-10 grid gap-5 lg:grid-cols-2">
         <Suspense fallback={null}>

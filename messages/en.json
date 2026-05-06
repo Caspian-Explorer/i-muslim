@@ -638,10 +638,6 @@
         "description": "Long-form reading on Islamic topics, history, and contemporary life."
       }
     },
-    "todayPrayer": {
-      "heading": "Today's prayer times",
-      "viewAll": "Full schedule"
-    },
     "ayahOfDay": {
       "heading": "Ayah of the day",
       "ayahLabel": "Ayah {number}",

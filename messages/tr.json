@@ -812,10 +812,6 @@
         "description": "İslami konular, tarih ve çağdaş yaşam üzerine uzun yazılar."
       }
     },
-    "todayPrayer": {
-      "heading": "Bugünün namaz vakitleri",
-      "viewAll": "Tüm program"
-    },
     "ayahOfDay": {
       "heading": "Günün ayeti",
       "ayahLabel": "Ayet {number}",
