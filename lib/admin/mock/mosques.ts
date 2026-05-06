@@ -1,7 +1,7 @@
 import type { Mosque } from "@/types/mosque";
 import { buildSearchTokens } from "@/lib/mosques/search";
 import { geohashFor } from "@/lib/mosques/geo";
-import { emptyServices } from "@/lib/mosques/constants";
+import { deriveFacilitiesFromServices } from "@/lib/mosques/constants";
 import { slugify } from "@/lib/mosques/slug";
 
 type Seed = Pick<
@@ -463,7 +463,10 @@ const SEEDS: Seed[] = [
 ];
 
 function buildMosque(seed: Seed, idx: number): Mosque {
-  const services = { ...emptyServices(), ...(seed.services ?? {}) };
+  // Mock seeds were authored against the legacy `services` boolean map; derive
+  // the new `facilities[]` slug array so the rest of the app sees the unified
+  // shape regardless of which data path is hit.
+  const facilities = deriveFacilitiesFromServices(seed.services);
   const citySlug = slugify(seed.city);
   const countrySlug = seed.country.toLowerCase();
   const now = new Date(Date.UTC(2026, 0, 15) - idx * 86_400_000).toISOString();
@@ -493,7 +496,7 @@ function buildMosque(seed: Seed, idx: number): Mosque {
     timezone: seed.timezone,
     contact: seed.contact,
     capacity: seed.capacity,
-    services,
+    facilities,
     languages: seed.languages,
     coverImage: seed.coverImage,
     altSpellings: seed.altSpellings,

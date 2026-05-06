@@ -3,7 +3,7 @@ import { z } from "zod";
 import { Timestamp } from "firebase-admin/firestore";
 import { getDb } from "@/lib/firebase/admin";
 import { getSiteSession } from "@/lib/auth/session";
-import { MOSQUES_COLLECTION, emptyServices } from "@/lib/mosques/constants";
+import { MOSQUES_COLLECTION } from "@/lib/mosques/constants";
 import { defaultPrayerCalc } from "@/lib/mosques/adhan";
 import {
   buildMosqueSlug,
@@ -148,7 +148,7 @@ export async function POST(req: Request) {
     location: { lat: 0, lng: 0 }, // admin will geocode + set on review
     geohash: "",
     timezone: "UTC",
-    services: emptyServices(),
+    facilities: [],
     languages: data.languages,
     prayerCalc: defaultPrayerCalc(),
     submittedBy: { uid: session.uid, email: session.email },

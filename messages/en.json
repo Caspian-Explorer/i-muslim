@@ -183,6 +183,7 @@
       "events": "Events",
       "eventsCategories": "Categories",
       "mosques": "Mosques",
+      "mosquesFacilities": "Facilities",
       "qa": "Q&A",
       "announcements": "Announcements",
       "newsletter": "Newsletter",
@@ -1591,6 +1592,9 @@
       "highLatRule": "High-latitude rule",
       "coverImageUrl": "Cover image URL",
       "logoUrl": "Logo URL",
+      "coverImageLabel": "Cover image",
+      "logoLabel": "Logo",
+      "facilitiesEmpty": "No facilities defined yet. Add some under /admin/mosques/facilities first.",
       "status": "Status",
       "actions": {
         "save": "Save changes",
@@ -1648,6 +1652,37 @@
       "importing": "Importing…",
       "successToast": "Imported {count} mosques.",
       "noPersistNote": "Importing requires Firebase Admin to be configured."
+    },
+    "facilities": {
+      "pageTitle": "Mosque Facilities",
+      "addCta": "Add facility",
+      "empty": "No facilities yet. Add the first to populate the mosque form.",
+      "editTitle": "Edit facility",
+      "deleteTitle": "Delete facility",
+      "deleteDescription": "Remove \"{name}\" from the facility list. Mosques that reference it will keep the slug until re-saved.",
+      "deleteCta": "Delete",
+      "name": "Name",
+      "slug": "Slug",
+      "slugHint": "Lowercase kebab-case. Used as the document id and reference key.",
+      "iconKey": "Icon key",
+      "sortOrder": "Sort",
+      "save": "Save changes",
+      "create": "Create facility",
+      "saving": "Saving…",
+      "createdToast": "Facility created.",
+      "updatedToast": "Facility updated.",
+      "deletedToast": "Facility deleted.",
+      "noPersistToast": "Firebase Admin must be configured to save facilities."
+    },
+    "media": {
+      "typeError": "Use JPEG, PNG, or WebP.",
+      "sizeError": "Image must be under 5 MB.",
+      "uploadFailed": "Upload failed. Please try again.",
+      "uploading": "Uploading…",
+      "upload": "Upload",
+      "replace": "Replace",
+      "remove": "Remove image",
+      "limitHint": "JPEG / PNG / WebP, up to 5 MB."
     }
   },
   "businesses": {
@@ -2360,6 +2395,10 @@
       "businessCertBody": {
         "name": "Certification Body",
         "description": "Add a halal certification body that businesses can claim."
+      },
+      "mosqueFacility": {
+        "name": "Mosque Facility",
+        "description": "Add a facility that mosques can advertise (e.g. women's section, parking)."
       }
     },
     "formTitles": {
@@ -2371,7 +2410,8 @@
       "eventCategory": "New event category",
       "businessCategory": "New business category",
       "businessAmenity": "New business amenity",
-      "businessCertBody": "New certification body"
+      "businessCertBody": "New certification body",
+      "mosqueFacility": "New mosque facility"
     },
     "steps": {
       "admin": "Admin"

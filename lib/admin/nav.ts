@@ -55,6 +55,7 @@ export type NavItemKey =
   | "events"
   | "eventsCategories"
   | "mosques"
+  | "mosquesFacilities"
   | "qa"
   | "announcements"
   | "newsletter"
@@ -141,7 +142,15 @@ export const ADMIN_NAV: NavGroup[] = [
           { labelKey: "eventsCategories", href: "/admin/events/categories", icon: Tags },
         ],
       },
-      { labelKey: "mosques", href: "/admin/mosques", icon: Landmark, badgeKey: "pendingMosques" },
+      {
+        labelKey: "mosques",
+        href: "/admin/mosques",
+        icon: Landmark,
+        badgeKey: "pendingMosques",
+        children: [
+          { labelKey: "mosquesFacilities", href: "/admin/mosques/facilities", icon: ConciergeBell },
+        ],
+      },
       {
         labelKey: "businesses",
         href: "/admin/businesses",

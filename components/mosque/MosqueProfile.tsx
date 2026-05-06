@@ -16,15 +16,24 @@ function hasRealCoordinates(loc: { lat: number; lng: number } | undefined): bool
   return loc.lat !== 0 || loc.lng !== 0;
 }
 
+/**
+ * Render a facility slug as a human-friendly label. The public profile doesn't
+ * fetch the admin facility taxonomy, so display falls back to a humanized slug
+ * — good enough for the bulk of common cases ("friday-prayer" → "Friday prayer").
+ */
+function humanizeFacility(slug: string): string {
+  const cleaned = slug.replace(/[-_]+/g, " ").trim();
+  if (!cleaned) return slug;
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
+
 export function MosqueProfile({ mosque }: { mosque: Mosque }) {
   const locale = useLocale();
   const t = useTranslations("mosques.detail");
-  const tFacilities = useTranslations("mosques.services");
   const tDenomination = useTranslations("mosques.denominations");
   const tActions = useTranslations("mosques.actions");
 
-  const enabledServices = (Object.keys(mosque.services) as Array<keyof typeof mosque.services>)
-    .filter((k) => mosque.services[k]);
+  const facilities = mosque.facilities ?? [];
 
   const localizedName = pickLocalized(mosque.name, locale, "en") ?? mosque.name.en;
   const localizedDesc = mosque.description
@@ -102,13 +111,13 @@ export function MosqueProfile({ mosque }: { mosque: Mosque }) {
             )}
           </section>
 
-          {enabledServices.length > 0 && (
+          {facilities.length > 0 && (
             <section className="rounded-xl border border-border bg-card p-5">
               <h2 className="text-base font-semibold text-foreground">{t("facilities")}</h2>
               <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-                {enabledServices.map((s) => (
-                  <li key={s} className="text-sm text-muted-foreground">
-                    · {tFacilities(s)}
+                {facilities.map((slug) => (
+                  <li key={slug} className="text-sm text-muted-foreground">
+                    · {humanizeFacility(slug)}
                   </li>
                 ))}
               </ul>

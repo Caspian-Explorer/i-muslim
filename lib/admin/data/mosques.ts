@@ -9,7 +9,7 @@ import type {
   MosqueSource,
   MosqueStatus,
 } from "@/types/mosque";
-import { MOSQUES_COLLECTION, emptyServices } from "@/lib/mosques/constants";
+import { MOSQUES_COLLECTION, deriveFacilitiesFromServices } from "@/lib/mosques/constants";
 import { mosqueMatchesQuery } from "@/lib/mosques/search";
 import { distanceKm, sortByDistance } from "@/lib/mosques/geo";
 import type { Timestamp } from "firebase-admin/firestore";
@@ -28,7 +28,15 @@ function normalizeMosque(id: string, raw: Record<string, unknown>): Mosque | nul
   if (!raw || typeof raw !== "object") return null;
   const name = (raw.name as Mosque["name"]) ?? { en: id };
   if (!name.en) return null;
-  const services = { ...emptyServices(), ...((raw.services as Partial<MosqueServices>) ?? {}) };
+  const rawServices = (raw.services as Partial<MosqueServices> | undefined) ?? undefined;
+  const rawFacilities = Array.isArray(raw.facilities) ? (raw.facilities as string[]) : undefined;
+  // New shape wins. For older records that only have the legacy `services`
+  // boolean map, derive an equivalent slug array so the rest of the app sees
+  // a single normalized field.
+  const facilities =
+    rawFacilities && rawFacilities.length > 0
+      ? rawFacilities.filter((s) => typeof s === "string" && s.length > 0)
+      : deriveFacilitiesFromServices(rawServices);
   const location = raw.location as Mosque["location"] | undefined;
   if (!location || typeof location.lat !== "number" || typeof location.lng !== "number") return null;
   return {
@@ -50,12 +58,14 @@ function normalizeMosque(id: string, raw: Record<string, unknown>): Mosque | nul
     contact: raw.contact as Mosque["contact"],
     social: raw.social as Mosque["social"],
     capacity: raw.capacity as number | undefined,
-    services,
+    facilities,
+    services: rawServices as MosqueServices | undefined,
     languages: (raw.languages as string[]) ?? [],
     prayerCalc: raw.prayerCalc as Mosque["prayerCalc"],
     coverImage: raw.coverImage as Mosque["coverImage"],
     gallery: raw.gallery as Mosque["gallery"],
     logoUrl: raw.logoUrl as string | undefined,
+    logoStoragePath: raw.logoStoragePath as string | undefined,
     submittedBy: raw.submittedBy as Mosque["submittedBy"],
     moderation: raw.moderation as Mosque["moderation"],
     searchTokens: (raw.searchTokens as string[]) ?? [],
@@ -117,8 +127,8 @@ function applyFilters(mosques: Mosque[], filters: MosqueFilters): Mosque[] {
   if (filters.denomination) {
     out = out.filter((m) => m.denomination === filters.denomination);
   }
-  if (filters.services && filters.services.length > 0) {
-    out = out.filter((m) => filters.services!.every((s) => m.services[s]));
+  if (filters.facilities && filters.facilities.length > 0) {
+    out = out.filter((m) => filters.facilities!.every((slug) => m.facilities.includes(slug)));
   }
   if (filters.near) {
     const { lat, lng, radiusKm } = filters.near;

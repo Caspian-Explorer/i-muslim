@@ -15,6 +15,7 @@ import { fetchNotifications } from "@/lib/admin/data/notifications";
 import { fetchCategories } from "@/lib/admin/data/business-taxonomies";
 import { fetchEventCategories } from "@/lib/admin/data/event-categories";
 import { fetchArticleCategories } from "@/lib/admin/data/article-categories";
+import { fetchMosqueFacilities } from "@/lib/admin/data/mosque-facilities";
 import { getFirebaseAdminStatus } from "@/lib/firebase/admin";
 
 interface AdminHeaderProps {
@@ -29,12 +30,14 @@ export async function AdminHeader({ session, badges }: AdminHeaderProps) {
     { categories },
     { categories: eventCategories },
     { categories: articleCategories },
+    { facilities: mosqueFacilities },
   ] = await Promise.all([
     listActivatedReservedLocales(),
     fetchNotifications({ limit: 50 }),
     fetchCategories(),
     fetchEventCategories(),
     fetchArticleCategories(),
+    fetchMosqueFacilities(),
   ]);
   const availableLocales = [...BUNDLED_LOCALES, ...activated];
   const canPersist = getFirebaseAdminStatus().configured;
@@ -59,6 +62,7 @@ export async function AdminHeader({ session, badges }: AdminHeaderProps) {
           categories={categories}
           eventCategories={eventCategories}
           articleCategories={articleCategories}
+          mosqueFacilities={mosqueFacilities}
           canPersist={canPersist}
           adminEmail={session.email}
         />

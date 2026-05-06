@@ -60,6 +60,46 @@ export function emptyServices(): MosqueServices {
   };
 }
 
+export const MOSQUE_FACILITIES_COLLECTION = "mosqueFacilities";
+
+/**
+ * Slug + label seed list for the `mosqueFacilities` taxonomy. Written once on
+ * first admin read if the collection is empty. The slug ordering mirrors
+ * SERVICE_KEYS so legacy `services` boolean maps can be deterministically
+ * derived into `facilities[]` for back-compat.
+ */
+export const DEFAULT_MOSQUE_FACILITIES: ReadonlyArray<{
+  slug: string;
+  name: string;
+  legacyKey: keyof MosqueServices;
+  iconKey?: string;
+}> = [
+  { slug: "friday-prayer", name: "Friday prayer", legacyKey: "fridayPrayer" },
+  { slug: "womens-section", name: "Women's section", legacyKey: "womenSection" },
+  { slug: "wudu-facilities", name: "Wudu facilities", legacyKey: "wuduFacilities" },
+  { slug: "wheelchair-access", name: "Wheelchair access", legacyKey: "wheelchairAccess" },
+  { slug: "parking", name: "Parking", legacyKey: "parking" },
+  { slug: "quran-classes", name: "Quran classes", legacyKey: "quranClasses" },
+  { slug: "library", name: "Library", legacyKey: "library" },
+  { slug: "funeral-services", name: "Funeral services", legacyKey: "funeralServices" },
+  { slug: "nikah-services", name: "Nikah services", legacyKey: "nikahServices" },
+  { slug: "itikaf-accommodation", name: "I'tikaf accommodation", legacyKey: "accommodatesItikaf" },
+];
+
+const LEGACY_TO_SLUG: Record<keyof MosqueServices, string> = Object.fromEntries(
+  DEFAULT_MOSQUE_FACILITIES.map((f) => [f.legacyKey, f.slug]),
+) as Record<keyof MosqueServices, string>;
+
+/** Translate a legacy `services` boolean map into the new `facilities[]` slug list. */
+export function deriveFacilitiesFromServices(services: Partial<MosqueServices> | undefined): string[] {
+  if (!services) return [];
+  const out: string[] = [];
+  for (const key of SERVICE_KEYS) {
+    if (services[key]) out.push(LEGACY_TO_SLUG[key]);
+  }
+  return out;
+}
+
 // Resolved at request time when we need absolute URLs (sitemap, JSON-LD, OG).
 export function getSiteUrl(): string {
   return (

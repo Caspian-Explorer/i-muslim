@@ -4,12 +4,17 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/auth/session";
 import { getDb } from "@/lib/firebase/admin";
-import { MOSQUES_COLLECTION, emptyServices } from "@/lib/mosques/constants";
+import { MOSQUES_COLLECTION } from "@/lib/mosques/constants";
 import { buildMosqueSlug, isReservedSlug, withCollisionSuffix } from "@/lib/mosques/slug";
 import { buildSearchTokens } from "@/lib/mosques/search";
 import { geohashFor } from "@/lib/mosques/geo";
 import { defaultPrayerCalc, suggestPrayerCalc } from "@/lib/mosques/adhan";
-import type { Mosque, MosqueServices, MosqueStatus } from "@/types/mosque";
+import {
+  createMosqueUploadUrl,
+  deleteMosqueStorageObject,
+  type MosqueUploadInput,
+} from "@/lib/mosques/storage";
+import type { Mosque, MosqueStatus } from "@/types/mosque";
 import { Timestamp } from "firebase-admin/firestore";
 
 // Mosque names/descriptions are English-only in the UI; `ar` is the optional
@@ -58,21 +63,7 @@ const mosqueInputSchema = z.object({
     })
     .optional(),
   capacity: z.number().int().nonnegative().optional(),
-  services: z
-    .object({
-      fridayPrayer: z.boolean(),
-      womenSection: z.boolean(),
-      wuduFacilities: z.boolean(),
-      wheelchairAccess: z.boolean(),
-      parking: z.boolean(),
-      quranClasses: z.boolean(),
-      library: z.boolean(),
-      funeralServices: z.boolean(),
-      nikahServices: z.boolean(),
-      accommodatesItikaf: z.boolean(),
-    })
-    .partial()
-    .optional(),
+  facilities: z.array(z.string()).default([]),
   languages: z.array(z.string()).default([]),
   altSpellings: z.array(z.string()).optional(),
   prayerCalc: z
@@ -83,7 +74,9 @@ const mosqueInputSchema = z.object({
     })
     .optional(),
   coverImageUrl: z.string().url().optional().or(z.literal("")),
+  coverImageStoragePath: z.string().optional().or(z.literal("")),
   logoUrl: z.string().url().optional().or(z.literal("")),
+  logoStoragePath: z.string().optional().or(z.literal("")),
   status: z
     .enum(["draft", "pending_review", "published", "rejected", "suspended"])
     .default("draft"),
@@ -147,7 +140,6 @@ function buildPersistable(
   now: Date,
   publishedAt?: Date,
 ): Record<string, unknown> {
-  const services: MosqueServices = { ...emptyServices(), ...(input.services as Partial<MosqueServices> ?? {}) };
   const citySlug = citySlugFor(input.city);
   const countrySlug = input.country.toLowerCase();
   const partial = {
@@ -178,12 +170,20 @@ function buildPersistable(
     contact: cleanObject(input.contact),
     social: cleanObject(input.social),
     capacity: input.capacity,
-    services,
+    // The `services` boolean map is no longer written. New records persist
+    // facility selections under the unified `facilities[]` slug array.
+    facilities: input.facilities ?? [],
     languages: input.languages ?? [],
     prayerCalc:
       input.prayerCalc ?? suggestPrayerCalc(partial.country, input.denomination) ?? defaultPrayerCalc(),
-    coverImage: input.coverImageUrl ? { url: input.coverImageUrl } : undefined,
+    coverImage: input.coverImageUrl
+      ? {
+          url: input.coverImageUrl,
+          ...(input.coverImageStoragePath ? { storagePath: input.coverImageStoragePath } : {}),
+        }
+      : undefined,
     logoUrl: input.logoUrl || undefined,
+    logoStoragePath: input.logoStoragePath || undefined,
     submittedBy: { uid, email },
     moderation: {
       reviewedBy: uid,
@@ -326,6 +326,42 @@ export async function rejectMosque(slug: string, reason: string): Promise<Action
   });
   revalidatePath("/admin/mosques");
   return { ok: true, slug };
+}
+
+export async function getMosqueUploadUrlAction(
+  input: MosqueUploadInput,
+): Promise<
+  | { ok: true; data: { url: string; storagePath: string; expiresAt: string } }
+  | { ok: false; error: string }
+> {
+  try {
+    await requireAdminSession();
+  } catch {
+    return { ok: false, error: "unauthorized" };
+  }
+  if (!input.slug) return { ok: false, error: "missing_slug" };
+  try {
+    const result = await createMosqueUploadUrl(input);
+    return { ok: true, data: result };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to create upload URL";
+    return { ok: false, error: msg };
+  }
+}
+
+export async function deleteMosqueImageAction(
+  storagePath: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await requireAdminSession();
+  } catch {
+    return { ok: false, error: "unauthorized" };
+  }
+  if (!storagePath) return { ok: false, error: "missing_path" };
+  // Best-effort: orphaned blobs are tolerable; missing the delete must not
+  // block the form save flow.
+  await deleteMosqueStorageObject(storagePath);
+  return { ok: true };
 }
 
 export async function bulkImport(rows: unknown[]): Promise<{ ok: boolean; created: number; failed: number; errors: string[] }> {

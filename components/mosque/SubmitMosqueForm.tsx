@@ -10,10 +10,11 @@ import { Label } from "@/components/ui/label";
 import { CountryCombobox } from "@/components/common/CountryCombobox";
 import { LanguageCombobox } from "@/components/common/LanguageCombobox";
 import { MosqueMap } from "@/components/mosque/MosqueMap";
+import { MosqueImageUploader } from "@/components/admin/mosques/MosqueImageUploader";
 import { getCallingCode } from "@/lib/countries/calling-codes";
 import { suggestCountryForTimezone } from "@/lib/countries/tz-to-country";
 import { cn } from "@/lib/utils";
-import { DENOMINATIONS, SERVICE_KEYS, emptyServices } from "@/lib/mosques/constants";
+import { DENOMINATIONS, deriveFacilitiesFromServices } from "@/lib/mosques/constants";
 import { defaultPrayerCalc, suggestPrayerCalc } from "@/lib/mosques/adhan";
 import {
   createMosque,
@@ -26,7 +27,7 @@ import type {
   Denomination,
   HighLatitudeRule,
   Mosque,
-  MosqueServices,
+  MosqueFacility,
   MosqueStatus,
 } from "@/types/mosque";
 
@@ -81,15 +82,17 @@ interface FormState {
   languages: string[];
   altSpellings: string;
   capacity: string;
-  // Facilities
-  services: MosqueServices;
+  // Facilities — slugs into the admin-managed mosqueFacilities collection
+  facilities: string[];
   // Prayer
   calcMethod: CalcMethod;
   asrMethod: AsrMethod;
   highLatitudeRule: HighLatitudeRule;
   // Media
   coverImageUrl: string;
+  coverImageStoragePath: string;
   logoUrl: string;
+  logoStoragePath: string;
   // Admin
   adminStatus: MosqueStatus;
   // honeypot
@@ -123,12 +126,14 @@ function emptyState(): FormState {
     languages: [],
     altSpellings: "",
     capacity: "",
-    services: emptyServices(),
+    facilities: [],
     calcMethod: calc.method,
     asrMethod: calc.asrMethod,
     highLatitudeRule: calc.highLatitudeRule,
     coverImageUrl: "",
+    coverImageStoragePath: "",
     logoUrl: "",
+    logoStoragePath: "",
     adminStatus: "draft",
     website_url_secondary: "",
   };
@@ -161,12 +166,19 @@ function fromMosque(m: Mosque): FormState {
     languages: m.languages ?? [],
     altSpellings: (m.altSpellings ?? []).join(", "),
     capacity: typeof m.capacity === "number" ? String(m.capacity) : "",
-    services: { ...emptyServices(), ...m.services },
+    // Prefer the new `facilities[]` shape; fall back to deriving from the
+    // legacy `services{}` boolean map for records saved before the taxonomy
+    // existed. This is read-only back-compat — the form writes `facilities[]`.
+    facilities: m.facilities && m.facilities.length > 0
+      ? [...m.facilities]
+      : deriveFacilitiesFromServices(m.services),
     calcMethod: calc.method,
     asrMethod: calc.asrMethod,
     highLatitudeRule: calc.highLatitudeRule,
     coverImageUrl: m.coverImage?.url ?? "",
+    coverImageStoragePath: m.coverImage?.storagePath ?? "",
     logoUrl: m.logoUrl ?? "",
+    logoStoragePath: m.logoStoragePath ?? "",
     adminStatus: m.status,
     website_url_secondary: "",
   };
@@ -180,6 +192,11 @@ interface Props {
   /** "edit" requires `initial`; falls back to "create" otherwise. */
   mode?: "create" | "edit";
   initial?: Mosque;
+  /**
+   * Admin-managed facility taxonomy used to render the Facilities step. Only
+   * required in adminMode — public submissions don't include the step.
+   */
+  facilities?: MosqueFacility[];
   onAdminSaved?: (result: { slug: string }) => void;
   onAdminCancel?: () => void;
 }
@@ -189,13 +206,13 @@ export function SubmitMosqueForm({
   adminMode = false,
   mode = "create",
   initial,
+  facilities = [],
   onAdminSaved,
   onAdminCancel,
 }: Props) {
   void userEmail;
   const t = useTranslations("mosques.submit");
   const tDenominations = useTranslations("mosques.denominations");
-  const tFacilities = useTranslations("mosques.services");
   const tQuick = useTranslations("quickCreate");
   const tStatuses = useTranslations("mosquesAdmin.statuses");
   const tForm = useTranslations("mosquesAdmin.form");
@@ -526,7 +543,7 @@ export function SubmitMosqueForm({
         whatsapp: state.whatsapp.trim() || undefined,
       },
       capacity: Number.isFinite(capacity) ? capacity : undefined,
-      services: state.services,
+      facilities: state.facilities,
       languages: state.languages,
       altSpellings: altSpellings.length > 0 ? altSpellings : undefined,
       prayerCalc: {
@@ -535,7 +552,9 @@ export function SubmitMosqueForm({
         highLatitudeRule: state.highLatitudeRule,
       },
       coverImageUrl: state.coverImageUrl.trim() || "",
+      coverImageStoragePath: state.coverImageStoragePath || "",
       logoUrl: state.logoUrl.trim() || "",
+      logoStoragePath: state.logoStoragePath || "",
       status: state.adminStatus,
     };
   }
@@ -962,25 +981,13 @@ export function SubmitMosqueForm({
                     />
                   </div>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sub-alt">{tForm("altSpellings")}</Label>
-                    <Input
-                      id="sub-alt"
-                      value={state.altSpellings}
-                      onChange={(e) => setState((s) => ({ ...s, altSpellings: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sub-capacity">{tForm("capacity")}</Label>
-                    <Input
-                      id="sub-capacity"
-                      type="number"
-                      min={0}
-                      value={state.capacity}
-                      onChange={(e) => setState((s) => ({ ...s, capacity: e.target.value }))}
-                    />
-                  </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="sub-alt">{tForm("altSpellings")}</Label>
+                  <Input
+                    id="sub-alt"
+                    value={state.altSpellings}
+                    onChange={(e) => setState((s) => ({ ...s, altSpellings: e.target.value }))}
+                  />
                 </div>
               </>
             )}
@@ -988,24 +995,45 @@ export function SubmitMosqueForm({
         )}
 
         {step === "facilities" && adminMode && (
-          <div className="space-y-3">
+          <div className="space-y-5">
             <p className="text-sm text-muted-foreground">{tForm("sectionFacilitiesHint")}</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {SERVICE_KEYS.map((k) => (
-                <label key={k} className="inline-flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(state.services[k])}
-                    onChange={(e) =>
-                      setState((s) => ({
-                        ...s,
-                        services: { ...s.services, [k]: e.target.checked },
-                      }))
-                    }
-                  />
-                  {tFacilities(k)}
-                </label>
-              ))}
+            {facilities.length === 0 ? (
+              <p className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
+                {tForm("facilitiesEmpty")}
+              </p>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {facilities.map((f) => {
+                  const checked = state.facilities.includes(f.slug);
+                  return (
+                    <label key={f.slug} className="inline-flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) =>
+                          setState((s) => ({
+                            ...s,
+                            facilities: e.target.checked
+                              ? [...s.facilities, f.slug]
+                              : s.facilities.filter((slug) => slug !== f.slug),
+                          }))
+                        }
+                      />
+                      {f.name}
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+            <div className="space-y-1.5 max-w-xs">
+              <Label htmlFor="sub-capacity">{tForm("capacity")}</Label>
+              <Input
+                id="sub-capacity"
+                type="number"
+                min={0}
+                value={state.capacity}
+                onChange={(e) => setState((s) => ({ ...s, capacity: e.target.value }))}
+              />
             </div>
           </div>
         )}
@@ -1070,26 +1098,38 @@ export function SubmitMosqueForm({
         )}
 
         {step === "media" && adminMode && (
-          <div className="space-y-5">
-            <div className="space-y-1.5">
-              <Label htmlFor="sub-cover">{tForm("coverImageUrl")}</Label>
-              <Input
-                id="sub-cover"
-                type="url"
-                value={state.coverImageUrl}
-                onChange={(e) => setState((s) => ({ ...s, coverImageUrl: e.target.value }))}
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label>{tForm("coverImageLabel")}</Label>
+              <MosqueImageUploader
+                slug={initial?.slug ?? "_new"}
+                kind="cover"
+                value={state.coverImageStoragePath}
+                previewUrl={state.coverImageUrl}
+                onChange={(next) =>
+                  setState((s) => ({
+                    ...s,
+                    coverImageStoragePath: next?.storagePath ?? "",
+                    coverImageUrl: next?.url ?? "",
+                  }))
+                }
               />
-              {errors.coverImageUrl && <p className="text-xs text-danger">{errors.coverImageUrl}</p>}
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="sub-logo">{tForm("logoUrl")}</Label>
-              <Input
-                id="sub-logo"
-                type="url"
-                value={state.logoUrl}
-                onChange={(e) => setState((s) => ({ ...s, logoUrl: e.target.value }))}
+            <div className="space-y-2">
+              <Label>{tForm("logoLabel")}</Label>
+              <MosqueImageUploader
+                slug={initial?.slug ?? "_new"}
+                kind="logo"
+                value={state.logoStoragePath}
+                previewUrl={state.logoUrl}
+                onChange={(next) =>
+                  setState((s) => ({
+                    ...s,
+                    logoStoragePath: next?.storagePath ?? "",
+                    logoUrl: next?.url ?? "",
+                  }))
+                }
               />
-              {errors.logoUrl && <p className="text-xs text-danger">{errors.logoUrl}</p>}
             </div>
           </div>
         )}
@@ -1184,9 +1224,6 @@ export function SubmitMosqueForm({
                 ...(adminMode && state.altSpellings
                   ? [{ label: tForm("altSpellings"), value: state.altSpellings }]
                   : []),
-                ...(adminMode && state.capacity
-                  ? [{ label: tForm("capacity"), value: state.capacity }]
-                  : []),
               ]}
             />
 
@@ -1199,10 +1236,13 @@ export function SubmitMosqueForm({
                   rows={[
                     {
                       label: tForm("sectionFacilities"),
-                      value: SERVICE_KEYS.filter((k) => state.services[k])
-                        .map((k) => tFacilities(k))
+                      value: state.facilities
+                        .map((slug) => facilities.find((f) => f.slug === slug)?.name ?? slug)
                         .join(", ") || "—",
                     },
+                    ...(state.capacity
+                      ? [{ label: tForm("capacity"), value: state.capacity }]
+                      : []),
                   ]}
                 />
                 <ReviewSection

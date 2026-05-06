@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { bulkImport, type MosqueInput } from "@/app/[locale]/(admin)/admin/mosques/actions";
 import { defaultPrayerCalc } from "@/lib/mosques/adhan";
-import { emptyServices } from "@/lib/mosques/constants";
 
 interface ParsedRow {
   ok: boolean;
@@ -56,7 +55,7 @@ function rowToInput(row: Record<string, string>): { ok: boolean; input?: MosqueI
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean),
-    services: emptyServices(),
+    facilities: [],
     prayerCalc: defaultPrayerCalc(),
     status: "published",
   };

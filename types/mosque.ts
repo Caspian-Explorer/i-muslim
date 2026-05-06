@@ -124,7 +124,18 @@ export interface Mosque {
   social?: MosqueSocial;
   // Facets
   capacity?: number;
-  services: MosqueServices;
+  /**
+   * Slugs into the `mosqueFacilities` taxonomy. Source of truth for facilities
+   * going forward. Older records may have only `services` set; the read path
+   * derives `facilities` from `services` for back-compat.
+   */
+  facilities: string[];
+  /**
+   * @deprecated Legacy hardcoded boolean map. Retained for read-path back-compat
+   * only — new writes set `facilities` instead. Will be dropped once all
+   * records have been re-saved through the unified form.
+   */
+  services?: MosqueServices;
   languages: string[];
   // Prayer-time config
   prayerCalc?: PrayerCalcConfig;
@@ -132,6 +143,9 @@ export interface Mosque {
   coverImage?: MosqueImage;
   gallery?: MosqueImage[];
   logoUrl?: string;
+  /** Storage path for `logoUrl`, retained so the upload UI can clean up the
+   *  previous blob when the admin replaces the logo. */
+  logoStoragePath?: string;
   // Provenance / moderation
   submittedBy?: { uid?: string; email?: string };
   moderation?: MosqueModeration;
@@ -144,6 +158,19 @@ export interface Mosque {
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
+}
+
+/**
+ * Admin-managed facility taxonomy. Each Mosque references zero or more by
+ * slug. Names are English-only — non-English UI locales fall back to the
+ * English label at render time, matching the rest of the mosque domain.
+ */
+export interface MosqueFacility {
+  id: string;
+  slug: string;
+  name: string;
+  iconKey?: string;
+  sortOrder: number;
 }
 
 export type MosqueSource = "firestore" | "mock";
@@ -161,7 +188,8 @@ export interface MosqueFilters {
   citySlug?: string;
   countrySlug?: string;
   denomination?: Denomination;
-  services?: Array<keyof MosqueServices>;
+  /** Slugs into the mosqueFacilities taxonomy. */
+  facilities?: string[];
   near?: { lat: number; lng: number; radiusKm: number };
   limit?: number;
 }

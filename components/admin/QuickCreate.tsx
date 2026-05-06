@@ -38,10 +38,11 @@ import { EventCategoryForm } from "./events/EventCategoryForm";
 import { BusinessCategoryForm } from "./businesses/BusinessCategoryForm";
 import { BusinessAmenityForm } from "./businesses/BusinessAmenityForm";
 import { CertBodyForm } from "./businesses/CertBodyForm";
+import { MosqueFacilityForm } from "./mosques/MosqueFacilityForm";
 import type { BusinessCategory } from "@/types/business";
 import type { EventCategoryDoc } from "@/types/event-category";
 import type { ArticleCategoryDoc } from "@/types/blog";
-import type { Mosque } from "@/types/mosque";
+import type { Mosque, MosqueFacility } from "@/types/mosque";
 
 type ViewId =
   | "selector"
@@ -53,7 +54,8 @@ type ViewId =
   | "eventCategory"
   | "businessCategory"
   | "businessAmenity"
-  | "businessCertBody";
+  | "businessCertBody"
+  | "mosqueFacility";
 
 export const QUICK_CREATE_OPEN_EVENT = "quick-create:open";
 
@@ -83,6 +85,7 @@ interface QuickCreateProps {
   categories: BusinessCategory[];
   eventCategories: EventCategoryDoc[];
   articleCategories: ArticleCategoryDoc[];
+  mosqueFacilities: MosqueFacility[];
   canPersist: boolean;
   adminEmail: string;
 }
@@ -99,7 +102,8 @@ interface QuickCreateItem {
     | "eventCategory"
     | "businessCategory"
     | "businessAmenity"
-    | "businessCertBody";
+    | "businessCertBody"
+    | "mosqueFacility";
   shortcut: string;
 }
 
@@ -113,12 +117,14 @@ const ITEMS: QuickCreateItem[] = [
   { id: "businessCategory", icon: Tags, nameKey: "businessCategory", shortcut: "G" },
   { id: "businessAmenity", icon: ConciergeBell, nameKey: "businessAmenity", shortcut: "Y" },
   { id: "businessCertBody", icon: BadgeCheck, nameKey: "businessCertBody", shortcut: "F" },
+  { id: "mosqueFacility", icon: ConciergeBell, nameKey: "mosqueFacility", shortcut: "Q" },
 ];
 
 export function QuickCreate({
   categories,
   eventCategories,
   articleCategories,
+  mosqueFacilities,
   canPersist,
   adminEmail,
 }: QuickCreateProps) {
@@ -220,6 +226,7 @@ export function QuickCreate({
               categories={categories}
               eventCategories={eventCategories}
               articleCategories={articleCategories}
+              mosqueFacilities={mosqueFacilities}
               canPersist={canPersist}
               adminEmail={adminEmail}
               editMosque={editMosque}
@@ -296,6 +303,7 @@ function FormView({
   categories,
   eventCategories,
   articleCategories,
+  mosqueFacilities,
   canPersist,
   adminEmail,
   editMosque,
@@ -309,6 +317,7 @@ function FormView({
   categories: BusinessCategory[];
   eventCategories: EventCategoryDoc[];
   articleCategories: ArticleCategoryDoc[];
+  mosqueFacilities: MosqueFacility[];
   canPersist: boolean;
   adminEmail: string;
   editMosque: Mosque | null;
@@ -366,6 +375,7 @@ function FormView({
           adminMode
           mode={editMosque ? "edit" : "create"}
           initial={editMosque ?? undefined}
+          facilities={mosqueFacilities}
           userEmail={adminEmail}
           onAdminSaved={() => {
             onClose();
@@ -492,6 +502,23 @@ function FormView({
           onSaved={() => {
             onClose();
             router.push("/admin/businesses/cert-bodies");
+            router.refresh();
+          }}
+          onCancel={onClose}
+        />
+      </FormShell>
+    );
+  }
+
+  if (view === "mosqueFacility") {
+    return (
+      <FormShell backButton={BackButton} title={titleFor("mosqueFacility")} fillHeight>
+        <MosqueFacilityForm
+          facility={null}
+          canPersist={canPersist}
+          onSaved={() => {
+            onClose();
+            router.push("/admin/mosques/facilities");
             router.refresh();
           }}
           onCancel={onClose}
