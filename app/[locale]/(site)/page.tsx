@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HomePrayerTimes } from "@/components/home/HomePrayerTimes";
+import { HomeFeatures } from "@/components/home/HomeFeatures";
 import { AyahOfTheDay } from "@/components/home/AyahOfTheDay";
 import { HadithOfTheDay } from "@/components/home/HadithOfTheDay";
 import { RecentMasjids } from "@/components/home/RecentMasjids";
@@ -25,6 +26,8 @@ export default function Home() {
           <HadithOfTheDay />
         </Suspense>
       </div>
+
+      <HomeFeatures />
 
       <Suspense fallback={null}>
         <RecentMasjids />

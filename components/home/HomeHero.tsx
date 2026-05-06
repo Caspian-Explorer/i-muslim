@@ -1,11 +1,11 @@
 import { getTranslations } from "next-intl/server";
-import { ArrowRight, BookOpen, MapPin } from "lucide-react";
+import { ArrowRight, BookOpen, ScrollText } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 
 export async function HomeHero() {
   const t = await getTranslations("home");
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-selected via-background to-background px-6 py-14 text-center sm:px-10 sm:py-20">
+    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-selected via-background to-background px-6 py-14 text-center sm:px-10 sm:py-20">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 opacity-[0.06] dark:opacity-[0.08]"
@@ -37,11 +37,11 @@ export async function HomeHero() {
           <ArrowRight className="size-3.5 rtl:rotate-180" />
         </Link>
         <Link
-          href="/mosques"
+          href="/hadith"
           className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-accent"
         >
-          <MapPin className="size-4" />
-          {t("hero.ctaMosques")}
+          <ScrollText className="size-4" />
+          {t("hero.ctaHadith")}
         </Link>
       </div>
     </section>

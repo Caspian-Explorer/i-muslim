@@ -607,7 +607,36 @@
     "tagline": "A clean, fast reader for the Quran and the major Hadith collections, with Arabic alongside English, Russian, and Azerbaijani translations.",
     "hero": {
       "ctaQuran": "Read the Quran",
-      "ctaMosques": "Find mosques near you"
+      "ctaHadith": "Read Hadith"
+    },
+    "features": {
+      "heading": "Explore i-muslim",
+      "subheading": "Everything the app brings together in one place.",
+      "openCta": "Open",
+      "quran": {
+        "title": "Quran",
+        "description": "All 114 surahs with Arabic alongside your chosen translations."
+      },
+      "hadith": {
+        "title": "Hadith",
+        "description": "Bukhari, Muslim, Abu Dawud, Tirmidhi, Nasa'i, Ibn Majah, Nawawi 40 and more."
+      },
+      "mosques": {
+        "title": "Mosques",
+        "description": "Find masjids near you, with prayer times, facilities, and contact details."
+      },
+      "matrimonial": {
+        "title": "Matrimonial",
+        "description": "A respectful platform for Muslims seeking marriage, with privacy controls."
+      },
+      "events": {
+        "title": "Events",
+        "description": "Jumu'ah, lectures, iftars, and halaqas from your local community."
+      },
+      "articles": {
+        "title": "Articles",
+        "description": "Long-form reading on Islamic topics, history, and contemporary life."
+      }
     },
     "todayPrayer": {
       "heading": "Today's prayer times",

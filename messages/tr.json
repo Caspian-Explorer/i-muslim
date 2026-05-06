@@ -781,7 +781,36 @@
     "tagline": "Kur'an-ı Kerim ve büyük hadis koleksiyonları için temiz ve hızlı bir okuyucu — Arapça metnin yanında İngilizce, Rusça ve Azerice çeviriler.",
     "hero": {
       "ctaQuran": "Kur'an'ı oku",
-      "ctaMosques": "Yakındaki camileri bul"
+      "ctaHadith": "Hadis oku"
+    },
+    "features": {
+      "heading": "i-muslim'i keşfet",
+      "subheading": "Uygulamanın bir araya getirdiği her şey tek yerde.",
+      "openCta": "Aç",
+      "quran": {
+        "title": "Kur'an",
+        "description": "114 sure tamamı, Arapçanın yanında seçtiğiniz çevirilerle."
+      },
+      "hadith": {
+        "title": "Hadis",
+        "description": "Buhari, Müslim, Ebu Davud, Tirmizi, Nesai, İbn Mace, Nevevi 40 ve daha fazlası."
+      },
+      "mosques": {
+        "title": "Camiler",
+        "description": "Yakındaki camileri bulun — namaz vakitleri, olanaklar ve iletişim bilgileri."
+      },
+      "matrimonial": {
+        "title": "Evlilik",
+        "description": "Evlilik arayan Müslümanlar için saygılı bir platform — gizlilik kontrolleriyle."
+      },
+      "events": {
+        "title": "Etkinlikler",
+        "description": "Yerel topluluğunuzdan Cuma, dersler, iftarlar ve halakalar."
+      },
+      "articles": {
+        "title": "Makaleler",
+        "description": "İslami konular, tarih ve çağdaş yaşam üzerine uzun yazılar."
+      }
     },
     "todayPrayer": {
       "heading": "Bugünün namaz vakitleri",

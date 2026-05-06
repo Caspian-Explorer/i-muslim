@@ -781,7 +781,36 @@
     "tagline": "Pembaca yang bersih dan cepat untuk Al-Qur'an dan koleksi hadis utama, dengan teks Arab beserta terjemahan Inggris, Rusia, dan Azerbaijan.",
     "hero": {
       "ctaQuran": "Baca Al-Qur'an",
-      "ctaMosques": "Cari masjid di sekitar"
+      "ctaHadith": "Baca Hadis"
+    },
+    "features": {
+      "heading": "Jelajahi i-muslim",
+      "subheading": "Semua yang dirangkum aplikasi ini dalam satu tempat.",
+      "openCta": "Buka",
+      "quran": {
+        "title": "Al-Qur'an",
+        "description": "114 surah lengkap dalam bahasa Arab beserta terjemahan pilihan Anda."
+      },
+      "hadith": {
+        "title": "Hadis",
+        "description": "Bukhari, Muslim, Abu Dawud, Tirmidzi, Nasa'i, Ibnu Majah, Nawawi 40, dan lainnya."
+      },
+      "mosques": {
+        "title": "Masjid",
+        "description": "Cari masjid di sekitar Anda — waktu salat, fasilitas, dan kontak."
+      },
+      "matrimonial": {
+        "title": "Ta'aruf",
+        "description": "Platform terhormat bagi Muslim yang mencari pernikahan, dengan kontrol privasi."
+      },
+      "events": {
+        "title": "Acara",
+        "description": "Jumat, kajian, ifthar, dan halaqah dari komunitas lokal Anda."
+      },
+      "articles": {
+        "title": "Artikel",
+        "description": "Bacaan panjang tentang topik Islam, sejarah, dan kehidupan kontemporer."
+      }
     },
     "todayPrayer": {
       "heading": "Waktu salat hari ini",
