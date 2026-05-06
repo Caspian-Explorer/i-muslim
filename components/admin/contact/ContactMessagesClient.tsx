@@ -2,10 +2,19 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Check, Mail, RotateCcw, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Check,
+  Mail,
+  RotateCcw,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -27,22 +36,99 @@ interface Props {
   canPersist: boolean;
 }
 
+type StatusFilter = "all" | ContactMessageStatus;
+type SortKey = "name" | "subject" | "status" | "createdAt";
+type SortDir = "asc" | "desc";
+
+const STATUS_FILTERS: StatusFilter[] = ["all", "open", "resolved"];
+
+function statusVariant(s: ContactMessageStatus): "success" | "warning" {
+  return s === "resolved" ? "success" : "warning";
+}
+
+function defaultDirFor(key: SortKey): SortDir {
+  return key === "createdAt" ? "desc" : "asc";
+}
+
+function SortHeader({
+  label,
+  active,
+  dir,
+  onToggle,
+  align = "start",
+}: {
+  label: string;
+  active: boolean;
+  dir: SortDir;
+  onToggle: () => void;
+  align?: "start" | "end";
+}) {
+  const Icon = !active ? ArrowUpDown : dir === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`inline-flex items-center gap-1 hover:text-foreground ${
+        align === "end" ? "justify-end" : ""
+      }`}
+    >
+      <span>{label}</span>
+      <Icon className={`size-3 ${active ? "text-foreground" : "opacity-60"}`} />
+    </button>
+  );
+}
+
 export function ContactMessagesClient({ initialMessages, canPersist }: Props) {
   const t = useTranslations("contactAdmin");
   const tCommon = useTranslations("common");
+  const tStatuses = useTranslations("contactAdmin.statuses");
   const locale = useLocale();
   const [messages, setMessages] = useState(initialMessages);
-  const [tab, setTab] = useState<ContactMessageStatus>("open");
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("createdAt");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [viewing, setViewing] = useState<ContactMessage | null>(null);
   const [deleting, setDeleting] = useState<ContactMessage | null>(null);
 
-  const filtered = useMemo(
-    () =>
-      messages
-        .filter((m) => m.status === tab)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    [messages, tab],
-  );
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = messages.filter((m) => {
+      if (statusFilter !== "all" && m.status !== statusFilter) return false;
+      if (!q) return true;
+      return (
+        m.name.toLowerCase().includes(q) ||
+        m.email.toLowerCase().includes(q) ||
+        m.subject.toLowerCase().includes(q) ||
+        m.message.toLowerCase().includes(q)
+      );
+    });
+    const sign = sortDir === "asc" ? 1 : -1;
+    const sorted = [...list].sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "createdAt") {
+        cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      } else if (sortKey === "name") {
+        cmp = a.name.localeCompare(b.name);
+      } else if (sortKey === "subject") {
+        cmp = a.subject.localeCompare(b.subject);
+      } else if (sortKey === "status") {
+        cmp = a.status.localeCompare(b.status);
+      }
+      if (cmp !== 0) return cmp * sign;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    return sorted;
+  }, [messages, query, statusFilter, sortKey, sortDir]);
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir(defaultDirFor(key));
+    }
+  }
 
   async function resolve(id: string) {
     if (!canPersist) {
@@ -99,94 +185,143 @@ export function ContactMessagesClient({ initialMessages, canPersist }: Props) {
   }
 
   return (
-    <>
-      <Tabs value={tab} onValueChange={(v) => setTab(v as ContactMessageStatus)}>
-        <TabsList>
-          <TabsTrigger value="open">{t("tabOpen")}</TabsTrigger>
-          <TabsTrigger value="resolved">{t("tabResolved")}</TabsTrigger>
-        </TabsList>
-        {(["open", "resolved"] as ContactMessageStatus[]).map((s) => (
-          <TabsContent key={s} value={s} className="mt-4">
-            {filtered.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                {t("empty")}
-              </p>
-            ) : (
-              <div className="overflow-hidden rounded-md border border-border">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2">{t("columns.from")}</th>
-                      <th className="px-3 py-2">{t("columns.subject")}</th>
-                      <th className="px-3 py-2">{t("columns.received")}</th>
-                      <th className="px-3 py-2 text-end">{t("columns.actions")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((m) => (
-                      <tr key={m.id} className="border-t border-border align-top">
-                        <td className="px-3 py-2.5">
-                          <div className="font-medium text-foreground">{m.name}</div>
-                          <div className="text-xs text-muted-foreground">{m.email}</div>
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <button
-                            type="button"
-                            onClick={() => setViewing(m)}
-                            className="text-left font-medium text-foreground hover:underline"
-                          >
-                            {m.subject}
-                          </button>
-                          <p className="mt-1 line-clamp-2 max-w-md text-xs text-muted-foreground">
-                            {m.message}
-                          </p>
-                        </td>
-                        <td className="px-3 py-2.5 text-xs text-muted-foreground">
-                          {new Date(m.createdAt).toLocaleString(locale)}
-                        </td>
-                        <td className="px-3 py-2.5 text-end">
-                          <div className="flex justify-end gap-1.5">
-                            <Button size="sm" variant="ghost" onClick={() => setViewing(m)}>
-                              {t("viewMessage")}
-                            </Button>
-                            {m.status === "open" ? (
-                              <Button
-                                size="sm"
-                                onClick={() => resolve(m.id)}
-                                disabled={!canPersist}
-                              >
-                                <Check className="size-4" /> {t("markResolved")}
-                              </Button>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => reopen(m.id)}
-                                disabled={!canPersist}
-                              >
-                                <RotateCcw className="size-4" /> {t("reopen")}
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setDeleting(m)}
-                              disabled={!canPersist}
-                              aria-label={t("delete")}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative">
+          <Search className="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder={t("search")}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="ps-8 w-64"
+            aria-label={t("search")}
+          />
+        </div>
+        <select
+          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+          aria-label={t("filterByStatus")}
+        >
+          {STATUS_FILTERS.map((v) => (
+            <option key={v} value={v}>
+              {tStatuses(v)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          {messages.length === 0 ? t("empty") : t("noResults")}
+        </p>
+      ) : (
+        <div className="overflow-hidden rounded-md border border-border">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2">
+                  <SortHeader
+                    label={t("columns.from")}
+                    active={sortKey === "name"}
+                    dir={sortDir}
+                    onToggle={() => toggleSort("name")}
+                  />
+                </th>
+                <th className="px-3 py-2">
+                  <SortHeader
+                    label={t("columns.subject")}
+                    active={sortKey === "subject"}
+                    dir={sortDir}
+                    onToggle={() => toggleSort("subject")}
+                  />
+                </th>
+                <th className="px-3 py-2">
+                  <SortHeader
+                    label={t("columns.status")}
+                    active={sortKey === "status"}
+                    dir={sortDir}
+                    onToggle={() => toggleSort("status")}
+                  />
+                </th>
+                <th className="px-3 py-2">
+                  <SortHeader
+                    label={t("columns.received")}
+                    active={sortKey === "createdAt"}
+                    dir={sortDir}
+                    onToggle={() => toggleSort("createdAt")}
+                  />
+                </th>
+                <th className="px-3 py-2 text-end">{t("columns.actions")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((m) => (
+                <tr key={m.id} className="border-t border-border align-top">
+                  <td className="px-3 py-2.5">
+                    <div className="font-medium text-foreground">{m.name}</div>
+                    <div className="text-xs text-muted-foreground">{m.email}</div>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setViewing(m)}
+                      className="text-left font-medium text-foreground hover:underline"
+                    >
+                      {m.subject}
+                    </button>
+                    <p className="mt-1 line-clamp-2 max-w-md text-xs text-muted-foreground">
+                      {m.message}
+                    </p>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <Badge variant={statusVariant(m.status)}>
+                      {tStatuses(m.status)}
+                    </Badge>
+                  </td>
+                  <td className="px-3 py-2.5 text-xs text-muted-foreground">
+                    {new Date(m.createdAt).toLocaleString(locale)}
+                  </td>
+                  <td className="px-3 py-2.5 text-end">
+                    <div className="flex justify-end gap-1.5">
+                      <Button size="sm" variant="ghost" onClick={() => setViewing(m)}>
+                        {t("viewMessage")}
+                      </Button>
+                      {m.status === "open" ? (
+                        <Button
+                          size="sm"
+                          onClick={() => resolve(m.id)}
+                          disabled={!canPersist}
+                        >
+                          <Check className="size-4" /> {t("markResolved")}
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => reopen(m.id)}
+                          disabled={!canPersist}
+                        >
+                          <RotateCcw className="size-4" /> {t("reopen")}
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setDeleting(m)}
+                        disabled={!canPersist}
+                        aria-label={t("delete")}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>
         <DialogContent className="sm:max-w-2xl">
@@ -215,7 +350,7 @@ export function ContactMessagesClient({ initialMessages, canPersist }: Props) {
                   {viewing.message}
                 </div>
                 {viewing.status === "resolved" && (
-                  <Badge variant="neutral">{t("tabResolved")}</Badge>
+                  <Badge variant="success">{tStatuses("resolved")}</Badge>
                 )}
               </div>
               <DialogFooter>
@@ -275,6 +410,6 @@ export function ContactMessagesClient({ initialMessages, canPersist }: Props) {
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

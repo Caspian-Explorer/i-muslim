@@ -38,10 +38,7 @@ export default async function MySubmissionsPage() {
   const t = await getTranslations("profileSubmissions");
   const tNav = await getTranslations("profileNav");
 
-  const { events, businesses, mosques } = await listMySubmissions(
-    session.uid,
-    session.email,
-  );
+  const { events, businesses, mosques } = await listMySubmissions(session.uid);
 
   const total = events.length + businesses.length + mosques.length;
 

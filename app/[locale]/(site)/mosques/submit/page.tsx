@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { getSiteSession } from "@/lib/auth/session";
 import { SubmitMosqueForm } from "@/components/mosque/SubmitMosqueForm";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -8,6 +10,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SubmitMosquePage() {
+  const session = await getSiteSession();
+  if (!session) redirect("/login?callbackUrl=/mosques/submit");
+
   const t = await getTranslations("mosques.submit");
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
@@ -19,7 +24,7 @@ export default async function SubmitMosquePage() {
         </p>
       </header>
       <div className="mt-6">
-        <SubmitMosqueForm />
+        <SubmitMosqueForm userEmail={session.email} />
       </div>
     </div>
   );

@@ -3,5 +3,16 @@
     "database": "main",
     "indexes": "firestore.indexes.json",
     "rules": "firestore.rules"
+  },
+  "apphosting": {
+    "backendId": "i-muslim",
+    "rootDir": "/",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "functions"
+    ]
   }
 }
