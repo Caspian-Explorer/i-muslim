@@ -147,10 +147,46 @@
       }
     }
   },
+  "profileForm": {
+    "save": "Değişiklikleri kaydet",
+    "saving": "Kaydediliyor…",
+    "savedToast": "Profil kaydedildi",
+    "unsavedChanges": "Kaydedilmemiş değişiklikler",
+    "sections": {
+      "identity": "Kimlik",
+      "identityDescription": "Profilinde gösterilen ve uygulama genelinde kullanılan temel bilgiler.",
+      "religion": "Din",
+      "background": "Geçmiş",
+      "bio": "Hakkında",
+      "bioDescription": "Kendini anlatan kısa bir paragraf. Evlilik özelliği etkinse evlilik profilinde de görünür."
+    },
+    "displayName": "Görünen ad",
+    "displayNamePlaceholder": "Sana nasıl hitap edilmesini istersin",
+    "gender": "Cinsiyet",
+    "dateOfBirth": "Doğum tarihi",
+    "country": "Ülke",
+    "city": "Şehir",
+    "ethnicity": "Etnik köken",
+    "languages": "Diller",
+    "madhhab": "Mezhep",
+    "sect": "Akım",
+    "prayerCommitment": "Namaz düzeni",
+    "hijab": "Hicab",
+    "beard": "Sakal",
+    "revert": "İslam'a sonradan girdim",
+    "education": "Eğitim",
+    "profession": "Meslek",
+    "maritalHistory": "Evlilik geçmişi",
+    "hasChildren": "Çocuklarım var",
+    "wantsChildren": "Çocuk istiyor",
+    "bio": "Hakkında",
+    "bioPlaceholder": "Aradığın şey, seni sen yapan özellikler, inanç yolculuğun…"
+  },
   "sidebar": {
     "newButton": "Yeni",
     "expand": "Genişlet",
     "collapse": "Kenar çubuğunu daralt",
+    "soonBadge": "Yakında",
     "groups": {
       "overview": "Genel Bakış",
       "community": "Topluluk",

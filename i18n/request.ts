@@ -42,10 +42,18 @@ export default getRequestConfig(async ({ requestLocale }) => {
     locale = isLocale(raw) ? raw : routing.defaultLocale ?? DEFAULT_LOCALE;
   }
 
-  // Bundled locales: load the static JSON shipped with the build.
+  // Bundled locales: load the static JSON shipped with the build. Non-English
+  // bundles deep-merge over English so any key not yet translated renders in
+  // English instead of leaking the raw dotted key into the UI.
   if (isBundled(locale)) {
-    const messages = (await import(`../messages/${locale}.json`)).default;
-    return { locale, messages };
+    if (locale === DEFAULT_LOCALE) {
+      const messages = (await import(`../messages/${locale}.json`)).default;
+      return { locale, messages };
+    }
+    const englishBase = (await import(`../messages/en.json`)).default as Messages;
+    const localeMessages = (await import(`../messages/${locale}.json`))
+      .default as Messages;
+    return { locale, messages: deepMerge(englishBase, localeMessages) };
   }
 
   // Reserved locales: read uploaded translations from Firestore and deep-merge

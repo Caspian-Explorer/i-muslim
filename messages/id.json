@@ -147,10 +147,46 @@
       }
     }
   },
+  "profileForm": {
+    "save": "Simpan perubahan",
+    "saving": "Menyimpan…",
+    "savedToast": "Profil tersimpan",
+    "unsavedChanges": "Perubahan belum tersimpan",
+    "sections": {
+      "identity": "Identitas",
+      "identityDescription": "Info dasar yang ditampilkan di profilmu dan digunakan di seluruh aplikasi.",
+      "religion": "Agama",
+      "background": "Latar belakang",
+      "bio": "Tentang kamu",
+      "bioDescription": "Paragraf singkat tentang dirimu. Akan tampil di profil pernikahan jika fitur pernikahan aktif."
+    },
+    "displayName": "Nama tampilan",
+    "displayNamePlaceholder": "Bagaimana kamu ingin disapa",
+    "gender": "Jenis kelamin",
+    "dateOfBirth": "Tanggal lahir",
+    "country": "Negara",
+    "city": "Kota",
+    "ethnicity": "Etnis",
+    "languages": "Bahasa",
+    "madhhab": "Mazhab",
+    "sect": "Aliran",
+    "prayerCommitment": "Komitmen salat",
+    "hijab": "Hijab",
+    "beard": "Jenggot",
+    "revert": "Saya seorang muallaf",
+    "education": "Pendidikan",
+    "profession": "Profesi",
+    "maritalHistory": "Riwayat pernikahan",
+    "hasChildren": "Saya memiliki anak",
+    "wantsChildren": "Ingin punya anak",
+    "bio": "Tentang",
+    "bioPlaceholder": "Apa yang kamu cari, apa yang membuatmu unik, perjalanan imanmu…"
+  },
   "sidebar": {
     "newButton": "Baru",
     "expand": "Perluas",
     "collapse": "Ciutkan bilah samping",
+    "soonBadge": "Segera",
     "groups": {
       "overview": "Ikhtisar",
       "community": "Komunitas",

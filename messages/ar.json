@@ -147,10 +147,46 @@
       }
     }
   },
+  "profileForm": {
+    "save": "حفظ التغييرات",
+    "saving": "جارٍ الحفظ…",
+    "savedToast": "تم حفظ الملف الشخصي",
+    "unsavedChanges": "تغييرات غير محفوظة",
+    "sections": {
+      "identity": "الهوية",
+      "identityDescription": "معلومات أساسية تظهر على ملفك الشخصي وتُستخدم في التطبيق.",
+      "religion": "الدين",
+      "background": "الخلفية",
+      "bio": "نبذة عنك",
+      "bioDescription": "فقرة قصيرة تصف نفسك. تظهر في ملف الزواج إذا كان مفعّلًا."
+    },
+    "displayName": "الاسم الظاهر",
+    "displayNamePlaceholder": "كيف تحب أن تُنادى",
+    "gender": "الجنس",
+    "dateOfBirth": "تاريخ الميلاد",
+    "country": "الدولة",
+    "city": "المدينة",
+    "ethnicity": "العرق",
+    "languages": "اللغات",
+    "madhhab": "المذهب",
+    "sect": "الطائفة",
+    "prayerCommitment": "الالتزام بالصلاة",
+    "hijab": "الحجاب",
+    "beard": "اللحية",
+    "revert": "مسلم جديد",
+    "education": "التعليم",
+    "profession": "المهنة",
+    "maritalHistory": "الحالة الاجتماعية",
+    "hasChildren": "لديّ أطفال",
+    "wantsChildren": "أرغب في الإنجاب",
+    "bio": "نبذة",
+    "bioPlaceholder": "ما الذي تبحث عنه، ما يميّزك، رحلتك مع الإيمان…"
+  },
   "sidebar": {
     "newButton": "جديد",
     "expand": "توسيع",
     "collapse": "طيّ الشريط الجانبي",
+    "soonBadge": "قريبًا",
     "groups": {
       "overview": "نظرة عامة",
       "community": "المجتمع",
