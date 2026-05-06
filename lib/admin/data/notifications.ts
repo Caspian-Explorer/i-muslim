@@ -39,6 +39,19 @@ function asOptionalString(v: unknown): string | undefined {
   return typeof v === "string" && v.length > 0 ? v : undefined;
 }
 
+// Old notification docs in Firestore reference admin paths that have since been
+// removed or restructured. Rewrite known-dead patterns at the read boundary so
+// stale entries open the current canonical page instead of 404-ing.
+function remapStaleAdminLink(link: string): string {
+  if (link === "/admin/mosques/queue" || link.startsWith("/admin/mosques/queue?")) {
+    return "/admin/mosques";
+  }
+  if (link.startsWith("/admin/mosques?submission=")) {
+    return "/admin/mosques";
+  }
+  return link;
+}
+
 export function normalizeNotification(
   id: string,
   raw: Record<string, unknown>,
@@ -50,6 +63,7 @@ export function normalizeNotification(
   const type: NotificationType = TYPES.includes(typeRaw as NotificationType)
     ? (typeRaw as NotificationType)
     : "system";
+  const link = asOptionalString(raw.link);
   return {
     id,
     type,
@@ -57,7 +71,7 @@ export function normalizeNotification(
     body: asString(raw.body),
     createdAt: asIso(raw.createdAt),
     read: raw.read === true,
-    link: asOptionalString(raw.link),
+    link: link ? remapStaleAdminLink(link) : undefined,
   };
 }
 
